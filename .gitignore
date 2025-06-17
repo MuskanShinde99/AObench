@@ -1,0 +1,27 @@
+# Ignore Python caches
+__pycache__/
+*.pyc
+
+# Ignore outputs
+outputs/
+*.pfs
+
+# Ignore temporary or backup files
+*.bak
+*.tmp
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore virtual environments (if any)
+.venv/
+env/
+
+# Ignore common folders not needed in Git
+old_files/
+files_with_4s_pyramid/
+files_with_ueye_camera/
+outputs/
+slm-cam_tests/
+
