@@ -24,14 +24,25 @@ from matplotlib import pyplot as plt
 from PIL import Image
 from astropy.io import fits
 from hcipy import *
+import sys
+from pathlib import Path
 
-# Set the working directory
-os.chdir('/home/ristretto-dao/optlab-master')
+# Configure root paths without changing the working directory
+OPT_LAB_ROOT = Path(os.environ.get("OPT_LAB_ROOT", "/home/ristretto-dao/optlab-master"))
+PROJECT_ROOT = Path(os.environ.get("PROJECT_ROOT", OPT_LAB_ROOT / "PROJECTS_3/RISTRETTO/Banc AO"))
+sys.path.append(str(OPT_LAB_ROOT))
+sys.path.append(str(PROJECT_ROOT))
+ROOT_DIR = PROJECT_ROOT
+
+# Output folders
+folder_calib = ROOT_DIR / 'outputs/Calibration_files'
+folder_pyr_mask = ROOT_DIR / 'outputs/3s_pyr_mask'
+folder_transformation_matrices = ROOT_DIR / 'outputs/Transformation_matrices'
+folder_closed_loop_tests = ROOT_DIR / 'outputs/Closed_loop_tests'
+folder_turbulence = ROOT_DIR / 'outputs/Phase_screens'
+folder_slm_tests = ROOT_DIR / 'outputs/SLM_tests'
 from DEVICES_3.Basler_Pylon.test_pylon import *
 import dao
-
-# Set the Working Directory
-os.chdir('/home/ristretto-dao/optlab-master/PROJECTS_3/RISTRETTO/Banc AO')
 
 # Import Specific Modules
 import src.dao_setup as dao_setup  # Import the setup file
@@ -129,18 +140,16 @@ for i in range(iterations):
     # Plot mean flux
     plt.plot(tgrab_, mean_values)
 
-folder ='/home/ristretto-dao/RISTRETTO_AO_bench/SLM_tests'
-
 # Finalize the plot
 plt.tight_layout()
-plt.savefig(os.path.join(folder, f'slm_response_time_test_iterations_{iterations}.png'))
+plt.savefig(os.path.join(folder_slm_tests, f'slm_response_time_test_iterations_{iterations}.png'))
 plt.show()
 
 plt.figure(), plt.plot(tslm)
 plt.xlabel('Iterations')
 plt.ylabel('Time [s]')
 plt.title('SLM latency')
-plt.savefig(os.path.join(folder, f'slm_latency_iterations_{iterations}.png'))
+plt.savefig(os.path.join(folder_slm_tests, f'slm_latency_iterations_{iterations}.png'))
 plt.show()
 camera_wfs.StopGrabbing()
 

@@ -13,13 +13,26 @@ from hcipy import *
 import time
 from astropy.io import fits
 import os
+import sys
 import scipy
 from DEVICES_3.Basler_Pylon.test_pylon import *
 import dao
 import matplotlib.animation as animation
+from pathlib import Path
 
-# Set the Working Directory
-os.chdir('/home/laboptic/Documents/optlab-master/PROJECTS_3/RISTRETTO/Banc AO')
+# Configure root paths without changing the working directory
+OPT_LAB_ROOT = Path(os.environ.get("OPT_LAB_ROOT", "/home/ristretto-dao/optlab-master"))
+PROJECT_ROOT = Path(os.environ.get("PROJECT_ROOT", OPT_LAB_ROOT / "PROJECTS_3/RISTRETTO/Banc AO"))
+sys.path.append(str(OPT_LAB_ROOT))
+sys.path.append(str(PROJECT_ROOT))
+ROOT_DIR = PROJECT_ROOT
+
+# Output folders
+folder_calib = ROOT_DIR / 'outputs/Calibration_files'
+folder_pyr_mask = ROOT_DIR / 'outputs/3s_pyr_mask'
+folder_transformation_matrices = ROOT_DIR / 'outputs/Transformation_matrices'
+folder_closed_loop_tests = ROOT_DIR / 'outputs/Closed_loop_tests'
+folder_turbulence = ROOT_DIR / 'outputs/Phase_screens'
 
 # Import Specific Modules
 from src.create_circular_pupil import *
@@ -70,23 +83,20 @@ print('Pupil successfully created on the SLM.')
 #%% Create transformation matrices
 
 # Define folder path
-folder = '/home/laboptic/Documents/RISTRETTO_AO_bench/Transformation_matrices'
-
 KL2Phs, Phs2KL = compute_KL2Phs(nact, small_pupil_grid_Npix, pupil_size, small_pupil_grid, small_pupil_mask, verbose=True)
 
 #%%
 
 # Load first turbulence data
-folder = '/home/laboptic/Documents/RISTRETTO_AO_bench/Phase_screens/Papyrus'
 filename = 'turbulence_cube_phase_seeing_2arcsec_L_40m_tau0_5ms_lambda_500nm_pup_1.52m_1.0kHz.fits'
-hdul = fits.open(os.path.join(folder, filename))
+hdul = fits.open(os.path.join(folder_turbulence / 'Papyrus', filename))
 hdu = hdul[0]
 turb_hcipy = hdu.data[0, :, :]
 KL_modes_turb_hcipy = turb_hcipy.flatten() @ Phs2KL
 
 # Load second turbulence data
 filename = 'turbOpd_seeing500_2.00_wind_5.0_Dtel_1.5.fits'
-hdul = fits.open(os.path.join(folder, filename))
+hdul = fits.open(os.path.join(folder_turbulence / 'Papyrus', filename))
 hdu = hdul[0]
 turb_oomao = np.zeros((550, 550))
 turb_oomao[25:525, 25:525] = hdu.data[0, :, :]
@@ -110,7 +120,6 @@ plt.show()
 
 #%%
 # Load turbulence data
-folder = '/home/laboptic/Documents/RISTRETTO_AO_bench/Phase_screens/Papyrus'
 filename_hcipy = 'turbulence_cube_phase_seeing_2arcsec_L_40m_tau0_5ms_lambda_500nm_pup_1.52m_1.0kHz_cube2.fits'
 filename_oomao = 'turbOpd_seeing500_2.00_wind_5.0_Dtel_1.5.fits'
 
@@ -118,7 +127,7 @@ filename_oomao = 'turbOpd_seeing500_2.00_wind_5.0_Dtel_1.5.fits'
 num_frames = 500
 
 # Load HCIPy turbulence
-hdul = fits.open(os.path.join(folder, filename_hcipy))
+hdul = fits.open(os.path.join(folder_turbulence / 'Papyrus', filename_hcipy))
 hdu = hdul[0]
 turb_hcipy = hdu.data[:num_frames, :, :]  
 hdul.close()
@@ -127,7 +136,7 @@ hdul.close()
 KL_modes_hcipy = np.array([frame.flatten() @ Phs2KL for frame in turb_hcipy])
 
 # Load OOMAO turbulence
-hdul = fits.open(os.path.join(folder, filename_oomao))
+hdul = fits.open(os.path.join(folder_turbulence / 'Papyrus', filename_oomao))
 hdu = hdul[0]
 turb_oomao = np.zeros((num_frames, 550, 550))
 

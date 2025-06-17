@@ -13,9 +13,24 @@ from astropy.io import fits
 from hcipy import *
 from src.kl_basis_eigenmodes import *
 from src.utils import matrix_exists
+import sys
+from pathlib import Path
 
-# Define folder path globally
-folder = '/home/ristretto-dao/RISTRETTO_AO_bench/Transformation_matrices'
+# Configure root paths without changing the working directory
+OPT_LAB_ROOT = Path(os.environ.get("OPT_LAB_ROOT", "/home/ristretto-dao/optlab-master"))
+PROJECT_ROOT = Path(os.environ.get("PROJECT_ROOT", OPT_LAB_ROOT / "PROJECTS_3/RISTRETTO/Banc AO"))
+sys.path.append(str(OPT_LAB_ROOT))
+sys.path.append(str(PROJECT_ROOT))
+ROOT_DIR = PROJECT_ROOT
+
+# Output folders
+folder_calib = ROOT_DIR / 'outputs/Calibration_files'
+folder_pyr_mask = ROOT_DIR / 'outputs/3s_pyr_mask'
+folder_transformation_matrices = ROOT_DIR / 'outputs/Transformation_matrices'
+folder_closed_loop_tests = ROOT_DIR / 'outputs/Closed_loop_tests'
+folder_turbulence = ROOT_DIR / 'outputs/Phase_screens'
+
+# Default folder for storing transformation matrices
 
 # Compute actuator-to-phase matrix
 def compute_Act2Phs(nact, npix, IFs, folder, verbose=False):

@@ -15,27 +15,34 @@ import time
 from astropy.io import fits
 import os
 import dao
-from skimage.transform import resize  
+from skimage.transform import resize
+from pathlib import Path
+import sys
 
-# Set the working directory
-os.chdir('/home/ristretto-dao/optlab-master')
+# Configure root directories using environment variables with reasonable defaults
+OPT_LAB_ROOT = Path(os.environ.get("OPT_LAB_ROOT", "/home/ristretto-dao/optlab-master"))
+PROJECT_ROOT = Path(
+    os.environ.get("PROJECT_ROOT", OPT_LAB_ROOT / "PROJECTS_3/RISTRETTO/Banc AO")
+)
+
+# Ensure required modules are importable without changing the working directory
+sys.path.append(str(OPT_LAB_ROOT))
+sys.path.append(str(PROJECT_ROOT))
+
 from DEVICES_3.Basler_Pylon.test_pylon import *
 from DEVICES_3.Thorlabs.MCLS1 import mcls1
-
-# Set the working directory
-os.chdir('/home/ristretto-dao/optlab-master/PROJECTS_3/RISTRETTO/Banc AO/')
 
 # Import specific modules
 from src.create_circular_pupil import *
 from src.tilt import *
 from src.utils import *
 
-ROOT_DIR = '/home/ristretto-dao/optlab-master/PROJECTS_3/RISTRETTO/Banc AO/'
-folder_calib = os.path.join(ROOT_DIR, 'outputs/Calibration_files')
-folder_pyr_mask = os.path.join(ROOT_DIR, 'outputs/3s_pyr_mask')
-folder_transformation_matrices = os.path.join(ROOT_DIR, 'outputs/Transformation_matrices')
-folder_closed_loop_tests = os.path.join(ROOT_DIR, 'outputs/Closed_loop_tests')
-folder_turbulence = os.path.join(ROOT_DIR, 'outputs/Phase_screens')
+ROOT_DIR = PROJECT_ROOT
+folder_calib = ROOT_DIR / "outputs/Calibration_files"
+folder_pyr_mask = ROOT_DIR / "outputs/3s_pyr_mask"
+folder_transformation_matrices = ROOT_DIR / "outputs/Transformation_matrices"
+folder_closed_loop_tests = ROOT_DIR / "outputs/Closed_loop_tests"
+folder_turbulence = ROOT_DIR / "outputs/Phase_screens"
 #%% Start the laser
 
 channel = 1

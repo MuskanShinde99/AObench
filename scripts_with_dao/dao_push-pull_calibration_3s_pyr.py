@@ -15,12 +15,25 @@ from hcipy import *
 import time
 from astropy.io import fits
 import os
+import sys
 import scipy
 from DEVICES_3.Basler_Pylon.test_pylon import *
 import dao
+from pathlib import Path
 
-# Set the Working Directory
-os.chdir('/home/laboptic/Documents/optlab-master/PROJECTS_3/RISTRETTO/Banc AO')
+# Configure root paths without changing the working directory
+OPT_LAB_ROOT = Path(os.environ.get("OPT_LAB_ROOT", "/home/ristretto-dao/optlab-master"))
+PROJECT_ROOT = Path(os.environ.get("PROJECT_ROOT", OPT_LAB_ROOT / "PROJECTS_3/RISTRETTO/Banc AO"))
+sys.path.append(str(OPT_LAB_ROOT))
+sys.path.append(str(PROJECT_ROOT))
+ROOT_DIR = PROJECT_ROOT
+
+# Output folders
+folder_calib = ROOT_DIR / 'outputs/Calibration_files'
+folder_pyr_mask = ROOT_DIR / 'outputs/3s_pyr_mask'
+folder_transformation_matrices = ROOT_DIR / 'outputs/Transformation_matrices'
+folder_closed_loop_tests = ROOT_DIR / 'outputs/Closed_loop_tests'
+folder_turbulence = ROOT_DIR / 'outputs/Phase_screens'
 
 # Import Specific Modules
 from src.create_circular_pupil import *
@@ -128,9 +141,8 @@ plt.title('Reference Image')
 plt.show()
 
 # Save the reference image to a FITS file
-folder = '/home/laboptic/Documents/RISTRETTO_AO_bench/Calibration_files'
 filename = f'binned_ref_img_pup_{pupil_size}mm_3s_pyr.fits'
-fits.writeto(os.path.join(folder, filename), np.asarray(img), overwrite=True)
+fits.writeto(os.path.join(folder_calib, filename), np.asarray(img), overwrite=True)
 
 #%% Perform Push-Pull Calibration
 
@@ -141,23 +153,23 @@ pull_images, push_images, push_pull_images = perform_push_pull_calibration(slm, 
 # Save pull images to FITS files
 print('Saving pull images')
 filename = f'binned_response_cube_Act_only_pull_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
-fits.writeto(os.path.join(folder, filename), np.asarray(pull_images), overwrite=True)
+fits.writeto(os.path.join(folder_calib, filename), np.asarray(pull_images), overwrite=True)
 
 # Save push images to FITS files
 print('Saving push images')
 filename = f'binned_response_cube_Act_only_push_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
-fits.writeto(os.path.join(folder, filename), np.asarray(push_images), overwrite=True)
+fits.writeto(os.path.join(folder_calib, filename), np.asarray(push_images), overwrite=True)
 
 # Save push-pull images to FITS files
 print('Saving push-pull images')
 filename = f'binned_response_cube_Act_push-pull_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
-fits.writeto(os.path.join(folder, filename), np.asarray(push_pull_images), overwrite=True)
+fits.writeto(os.path.join(folder_calib, filename), np.asarray(push_pull_images), overwrite=True)
 
 #%% Load Calibration Mask
 
 # Load the calibration mask for processing images.
 mask_filename = f'binned_mask_pup_{pupil_size}mm_3s_pyr.fits'
-mask = fits.getdata(os.path.join(folder, mask_filename))
+mask = fits.getdata(os.path.join(folder_calib, mask_filename))
 print(f"Mask dimensions: {mask.shape}")
 
 # Get valid pixel indices from the cropped mask
@@ -165,7 +177,7 @@ valid_pixels_indices = np.where(mask > 0)
 
 # Load reference image
 reference_image_filename = f'binned_ref_img_pup_{pupil_size}mm_3s_pyr.fits'
-reference_image = fits.getdata(os.path.join(folder, reference_image_filename))
+reference_image = fits.getdata(os.path.join(folder_calib, reference_image_filename))
 
 #%% Process Pull Images and Generate Response Matrix
 
@@ -178,7 +190,7 @@ processed_pull_images = process_response_images_3s_pyr(pull_images, mask, refere
 
 # Save processed pull images as a FITS file
 output_filename = f'binned_processed_response_cube_{calib}_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
-output_file_path = os.path.join(folder, output_filename)
+output_file_path = os.path.join(folder_calib, output_filename)
 fits.writeto(output_file_path, processed_pull_images, overwrite=True)
 
 # Display the first processed pull image
@@ -198,7 +210,7 @@ print("Pull Response matrix shape:", response_matrix.shape)
 
 # Save the response matrix as a FITS file
 response_matrix_filename = f'binned_response_matrix_{calib}_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
-response_matrix_file_path = os.path.join(folder, response_matrix_filename)
+response_matrix_file_path = os.path.join(folder_calib, response_matrix_filename)
 fits.writeto(response_matrix_file_path, response_matrix, overwrite=True)
 
 #%% Process Push Images and Generate Response Matrix
@@ -212,7 +224,7 @@ processed_push_images = process_response_images_3s_pyr(push_images, mask, refere
 
 # Save processed push images as a FITS file
 output_filename = f'binned_processed_response_cube_{calib}_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
-output_file_path = os.path.join(folder, output_filename)
+output_file_path = os.path.join(folder_calib, output_filename)
 fits.writeto(output_file_path, processed_push_images, overwrite=True)
 
 # Display the first processed push image
@@ -232,7 +244,7 @@ print("Push Response matrix shape:", response_matrix.shape)
 
 # Save the response matrix as a FITS file
 response_matrix_filename = f'binned_response_matrix_{calib}_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
-response_matrix_file_path = os.path.join(folder, response_matrix_filename)
+response_matrix_file_path = os.path.join(folder_calib, response_matrix_filename)
 fits.writeto(response_matrix_file_path, response_matrix, overwrite=True)
 
 #%% Generate Response Push-Pull Matrix
@@ -245,7 +257,7 @@ processed_push_pull_images = (processed_pull_images - processed_push_images)
 
 # Save the processed push-pull images as a FITS file
 output_filename = f'binned_processed_response_cube_{calib}_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
-output_file_path = os.path.join(folder, output_filename)
+output_file_path = os.path.join(folder_calib, output_filename)
 fits.writeto(output_file_path, processed_push_pull_images, overwrite=True)
 
 # Display the first processed push-pull image
@@ -265,7 +277,7 @@ print("Push-Pull Response matrix shape:", response_matrix.shape)
 
 # Save the response matrix as a FITS file
 response_matrix_filename = f'binned_response_matrix_{calib}_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
-response_matrix_file_path = os.path.join(folder, response_matrix_filename)
+response_matrix_file_path = os.path.join(folder_calib, response_matrix_filename)
 fits.writeto(response_matrix_file_path, response_matrix, overwrite=True)
 
 # Example usage
@@ -276,7 +288,7 @@ binned_response = bin_matrix_2d(response_matrix, new_rows, new_cols)
 print(binned_response.shape)  # Expected: (441, 1627)
 # Save the response matrix as a FITS file
 response_matrix_filename = f'binned_response_matrix_{calib}_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
-response_matrix_file_path = os.path.join(folder, response_matrix_filename)
+response_matrix_file_path = os.path.join(folder_calib, response_matrix_filename)
 fits.writeto(response_matrix_file_path, binned_response, overwrite=True)
 
 

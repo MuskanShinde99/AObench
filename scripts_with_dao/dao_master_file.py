@@ -17,13 +17,16 @@ from PIL import Image
 from astropy.io import fits
 from hcipy import *
 import dao
+import sys
+from pathlib import Path
 
-# Set the working directory
-os.chdir('/home/ristretto-dao/optlab-master')
+# Configure root paths without changing the working directory
+OPT_LAB_ROOT = Path(os.environ.get("OPT_LAB_ROOT", "/home/ristretto-dao/optlab-master"))
+PROJECT_ROOT = Path(os.environ.get("PROJECT_ROOT", OPT_LAB_ROOT / "PROJECTS_3/RISTRETTO/Banc AO"))
+sys.path.append(str(OPT_LAB_ROOT))
+sys.path.append(str(PROJECT_ROOT))
+ROOT_DIR = PROJECT_ROOT
 from DEVICES_3.Basler_Pylon.test_pylon import *
-
-# Set the Working Directory
-os.chdir('/home/ristretto-dao/optlab-master/PROJECTS_3/RISTRETTO/Banc AO')
 
 # Import Specific Modules
 import src.dao_setup as dao_setup  # Import the setup file
@@ -34,10 +37,9 @@ from src.dao_create_flux_filtering_mask import *
 from src.psf_centring_algorithm import *
 from src.create_transformation_matrices import *
 
-ROOT_DIR = '/home/ristretto-dao/optlab-master/PROJECTS_3/RISTRETTO/Banc AO/'
-folder_calib = os.path.join(ROOT_DIR, 'outputs/Calibration_files')
-folder_pyr_mask = os.path.join(ROOT_DIR, 'outputs/3s_pyr_mask')
-folder_transformation_matrices = os.path.join(ROOT_DIR, 'outputs/Transformation_matrices')
+folder_calib = ROOT_DIR / 'outputs/Calibration_files'
+folder_pyr_mask = ROOT_DIR / 'outputs/3s_pyr_mask'
+folder_transformation_matrices = ROOT_DIR / 'outputs/Transformation_matrices'
 
 
 #%% Accessing Devices

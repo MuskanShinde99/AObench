@@ -9,6 +9,8 @@ from matplotlib import pyplot as plt
 from hcipy import *
 import numpy as np
 import os
+import sys
+from pathlib import Path
 from astropy.io import fits
 import time
 
@@ -81,7 +83,20 @@ plt.show()
 
 #%%
 
-folder = '/home/laboptic/Documents/RISTRETTO_AO_bench/Phase_screens/Papyrus'
+# Configure root paths without changing the working directory
+OPT_LAB_ROOT = Path(os.environ.get("OPT_LAB_ROOT", "/home/ristretto-dao/optlab-master"))
+PROJECT_ROOT = Path(os.environ.get("PROJECT_ROOT", OPT_LAB_ROOT / "PROJECTS_3/RISTRETTO/Banc AO"))
+sys.path.append(str(OPT_LAB_ROOT))
+sys.path.append(str(PROJECT_ROOT))
+ROOT_DIR = PROJECT_ROOT
+
+# Output folders
+folder_calib = ROOT_DIR / 'outputs/Calibration_files'
+folder_pyr_mask = ROOT_DIR / 'outputs/3s_pyr_mask'
+folder_transformation_matrices = ROOT_DIR / 'outputs/Transformation_matrices'
+folder_closed_loop_tests = ROOT_DIR / 'outputs/Closed_loop_tests'
+folder_turbulence = ROOT_DIR / 'outputs/Phase_screens'
+
 
 # Define parameters
 wavelengths = [500e-9]  # Measurement wavelengths in meters
@@ -122,7 +137,7 @@ for framerate in framerates:
         # Construct output filename
         output_filename = (f'turbulence_cube_phase_seeing_{seeing}arcsec_L_{outer_scale}m_tau0_5ms_'
                            f'lambda_{wl*1e9:.0f}nm_pup_{turbulence_pupil_size}m_{framerate:.1f}kHz_cube3.fits')
-        output_file_path = os.path.join(folder, output_filename)
+        output_file_path = os.path.join(folder_turbulence / 'Papyrus', output_filename)
 
         # Save the 3D data cube as a FITS file with overwrite enabled
         fits.writeto(output_file_path, phase_cube, overwrite=True)
