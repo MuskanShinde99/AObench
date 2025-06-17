@@ -12,23 +12,10 @@ import matplotlib.pyplot as plt
 from astropy.io import fits
 from hcipy import *
 from src.kl_basis_eigenmodes import *
+from src.utils import matrix_exists
 
 # Define folder path globally
 folder = '/home/ristretto-dao/RISTRETTO_AO_bench/Transformation_matrices'
-
-
-# Check if a matrix file exists in the specified folder
-def matrix_exists(folder, filename):
-    """
-    Check if a given matrix file exists in the predefined folder.
-
-    Parameters:
-    filename (str): The name of the matrix file.
-
-    Returns:
-    bool: True if the file exists, False otherwise.
-    """
-    return os.path.exists(os.path.join(folder, filename))
 
 # Compute actuator-to-phase matrix
 def compute_Act2Phs(nact, npix, IFs, folder, verbose=False):
