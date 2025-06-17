@@ -34,7 +34,7 @@ ROOT_DIR = '/home/ristretto-dao/optlab-master/PROJECTS_3/RISTRETTO/Banc AO/'
 folder_calib = os.path.join(ROOT_DIR, 'outputs/Calibration_files')
 folder_pyr_mask = os.path.join(ROOT_DIR, 'outputs/3s_pyr_mask')
 folder_transformation_matrices = os.path.join(ROOT_DIR, 'outputs/Transformation_matrices')
-floder_closed_loop_tests = os.path.join(ROOT_DIR, 'outputs/Closed_loop_tests')
+folder_closed_loop_tests = os.path.join(ROOT_DIR, 'outputs/Closed_loop_tests')
 folder_turbulence = os.path.join(ROOT_DIR, 'outputs/Phase_screens')
 #%% Start the laser
 
