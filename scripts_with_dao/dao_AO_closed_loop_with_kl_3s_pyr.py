@@ -44,7 +44,7 @@ ROOT_DIR = '/home/ristretto-dao/optlab-master/PROJECTS_3/RISTRETTO/Banc AO/'
 folder_calib = os.path.join(ROOT_DIR, 'outputs/Calibration_files')
 folder_pyr_mask = os.path.join(ROOT_DIR, 'outputs/3s_pyr_mask')
 folder_transformation_matrices = os.path.join(ROOT_DIR, 'outputs/Transformation_matrices')
-floder_closed_loop_tests = os.path.join(ROOT_DIR, 'outputs/Closed_loop_tests')
+folder_closed_loop_tests = os.path.join(ROOT_DIR, 'outputs/Closed_loop_tests')
 folder_turbulence = os.path.join(ROOT_DIR, 'outputs/Phase_screens')
 
 #%% Accessing Devices
@@ -216,7 +216,7 @@ gain = 1
 leakage = 0
 delay=0
 
-anim_path= floder_closed_loop_tests
+anim_path= folder_closed_loop_tests
 anim_name= f'closed_loop_test_KL_mode_{mode}_amp_{amp}.gif'
 anim_title= f'KL mode {mode} amp {amp}'
 
@@ -323,7 +323,7 @@ for seeing in seeing_values:
     num_iterations = 500
     gain = 1
 
-    anim_path = os.path.join(floder_closed_loop_tests, 'Papyrus') 
+    anim_path = os.path.join(folder_closed_loop_tests, 'Papyrus') 
     anim_name = f'AO_bench_closed_loop_seeing_{seeing}arcsec_L_40m_tau0_5ms_lambda_{wl}nm_pup_{pup}m_{loopspeed}kHz_gain_{gain}_iterations_{num_iterations}.gif'
     anim_title = f'Seeing: {seeing} arcsec, λ: {wl} nm, Loop speed: {loopspeed} kHz'
 
@@ -392,7 +392,7 @@ data_phase_screen = data_phase_screen*small_pupil_mask*(500/wl)*((seeing/2)**(5/
 num_iterations = 1
 gain =  1# Fixed gain value
 
-anim_path= os.path.join(floder_closed_loop_tests, 'Papyrus') 
+anim_path= os.path.join(folder_closed_loop_tests, 'Papyrus') 
 anim_name= f'closed_loop_sturbOpd_seeing500_{seeing}_wind_5.0_Dtel_1.5_lambda_{wl}nm.gif'
 anim_title= f'Seeing: {seeing} arcsec, λ: {wl} nm, Loop speed: {loopspeed} kHz'
 
