@@ -9,6 +9,7 @@ from matplotlib import pyplot as plt
 from hcipy import *
 from PIL import Image
 import numpy as np
+import os
 
 # Set the Working Directory
 os.chdir('/home/laboptic/Documents/optlab-master/PROJECTS_3/RISTRETTO/Banc AO')
