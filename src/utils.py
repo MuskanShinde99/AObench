@@ -11,7 +11,7 @@ from astropy.io import fits
 from scipy.ndimage import center_of_mass
 from scipy.interpolate import interp2d
 from scipy.ndimage import center_of_mass
-import src.dao_setup as dao_setup
+from src.dao_setup import *  # Import all variables from setup
 
 
 # Add and wrap data within the pupil mask
@@ -34,10 +34,10 @@ def compute_data_slm(data_dm=0, data_phase_screen=0, **kwargs):
     - data_slm (ndarray): Resulting SLM data.
     """
     
-    data_pupil_inner = kwargs.get("data_pupil_inner", dao_setup.data_pupil_inner)
-    data_pupil_outer = kwargs.get("data_pupil_outer", dao_setup.data_pupil_outer)
-    pupil_mask = kwargs.get("pupil_mask", dao_setup.pupil_mask)
-    small_pupil_mask = kwargs.get("small_pupil_mask", dao_setup.small_pupil_mask)
+    data_pupil_inner = kwargs.get("data_pupil_inner", data_pupil_inner)
+    data_pupil_outer = kwargs.get("data_pupil_outer", data_pupil_outer)
+    pupil_mask = kwargs.get("pupil_mask", pupil_mask)
+    small_pupil_mask = kwargs.get("small_pupil_mask", small_pupil_mask)
 
     data_slm = data_pupil_outer.copy()
     data_inner = (((data_pupil_inner + data_dm + data_phase_screen) * 256) % 256)

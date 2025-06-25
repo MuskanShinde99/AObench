@@ -12,7 +12,7 @@ from DEVICES_3.Basler_Pylon.test_pylon import *
 from hcipy import *
 import time
 from matplotlib import pyplot as plt
-import src.dao_setup as dao_setup # Import the setup file
+from src.dao_setup import *  # Import all variables from setup
 from src.tilt import *
 from src.utils import *
 import matplotlib.colors as mcolors
@@ -41,16 +41,14 @@ def create_flux_filtering_mask(modulation_angles, modulation_amp, verbose=False,
     """
 
     # Use kwargs or default from dao_setup
-    camera = kwargs.get("camera", dao_setup.camera_wfs)
-    slm = kwargs.get("slm", dao_setup.slm)
-    data_pupil = kwargs.get("data_pupil", dao_setup.data_pupil)
-    pupil_size = kwargs.get("pupil_size", dao_setup.pupil_size)
-    pupil_mask = kwargs.get("pupil_mask", dao_setup.pupil_mask)
-    small_pupil_mask = kwargs.get("small_pupil_mask", dao_setup.small_pupil_mask)
+    camera = kwargs.get("camera", camera_wfs)
+    slm = kwargs.get("slm", slm)
+    data_pupil = kwargs.get("data_pupil", data_pupil)
+    pupil_size = kwargs.get("pupil_size", pupil_size)
+    pupil_mask = kwargs.get("pupil_mask", pupil_mask)
+    small_pupil_mask = kwargs.get("small_pupil_mask", small_pupil_mask)
 
-    dataWidth = dao_setup.dataWidth
-    dataHeight = dao_setup.dataHeight
-    pixel_size_mm = dao_setup.pixel_size
+    pixel_size_mm = pixel_size
     Npix = pupil_size / pixel_size_mm  # replaced npix_pupil with Npix
 
     modulation_img_arr = []
@@ -73,7 +71,7 @@ def create_flux_filtering_mask(modulation_angles, modulation_amp, verbose=False,
         data_slm = compute_data_slm(data_dm=data_modulation)
         slm.set_data(data_slm)
 
-        time.sleep(dao_setup.wait_time)  # wait for SLM update
+        time.sleep(wait_time)  # wait for SLM update
 
         # Capture image using pylon SDK wrapper function
         img = camera.get_data()
@@ -106,22 +104,20 @@ def create_flux_filtering_mask_trial(n_iter, verbose=False, verbose_plot=False, 
     - verbose: whether to print/display progress
     - verbose_plot: if True, live image display is updated
     - kwargs:
-        - slm: SLM instance (default: dao_setup.slm)
-        - camera: initialized camera object (default: dao_setup.camera_wfs)
-        - deformable_mirror: DM object with actuator control (default: dao_setup.deformable_mirror)
-        - npix_small_pupil_grid: resolution of the inner grid (default: dao_setup.npix_small_pupil_grid)
+        - slm: SLM instance (default: slm)
+        - camera: initialized camera object (default: camera_wfs)
+        - deformable_mirror: DM object with actuator control (default: deformable_mirror)
+        - npix_small_pupil_grid: resolution of the inner grid (default: npix_small_pupil_grid)
 
     Returns:
     - summed_image: result of push-pull image subtraction summed over all modes
     """
 
-    slm = kwargs.get("slm", dao_setup.slm)
-    camera = kwargs.get("camera", dao_setup.camera_wfs)
-    deformable_mirror = kwargs.get("deformable_mirror", dao_setup.deformable_mirror)
-    npix_small_pupil_grid = kwargs.get("npix_small_pupil_grid", dao_setup.npix_small_pupil_grid)
+    slm = kwargs.get("slm", slm)
+    camera = kwargs.get("camera", camera_wfs)
+    deformable_mirror = kwargs.get("deformable_mirror", deformable_mirror)
+    npix_small_pupil_grid = kwargs.get("npix_small_pupil_grid", npix_small_pupil_grid)
 
-    dataWidth = dao_setup.dataWidth
-    dataHeight = dao_setup.dataHeight
 
     nact_total = int(deformable_mirror.num_actuators)
     data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
@@ -147,7 +143,7 @@ def create_flux_filtering_mask_trial(n_iter, verbose=False, verbose_plot=False, 
         data_dm[:, :] = deformable_mirror.opd.shaped
         data_slm = compute_data_slm(data_dm=data_dm)
         slm.set_data(data_slm)
-        time.sleep(dao_setup.wait_time)
+        time.sleep(wait_time)
         push_img = camera.get_data()
 
         # Pull
@@ -155,7 +151,7 @@ def create_flux_filtering_mask_trial(n_iter, verbose=False, verbose_plot=False, 
         data_dm[:, :] = deformable_mirror.opd.shaped
         data_slm = compute_data_slm(data_dm=data_dm)
         slm.set_data(data_slm)
-        time.sleep(dao_setup.wait_time)
+        time.sleep(wait_time)
         pull_img = camera.get_data()
 
         push_pull_img = push_img - pull_img

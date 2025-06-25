@@ -37,7 +37,7 @@ from src.create_circular_pupil import *
 from src.tilt import *
 from src.utils import *
 from src.calibration_functions import *
-import src.dao_setup as dao_setup  # Import the setup file
+from src.dao_setup import *  # Import all variables from setup
 from src.kl_basis_eigenmodes import computeEigenModes, computeEigenModes_notsquarepupil
 from src.create_transformation_matrices import *
 from src.ao_loop import *
@@ -51,19 +51,12 @@ folder_turbulence = ROOT_DIR / 'outputs/Phase_screens'
 #%% Accessing Devices
 
 # Initialize Spatial Light Modulator (SLM)
-slm = dao_setup.slm
 
 # Initialize Cameras
-camera_wfs = dao_setup.camera_wfs
-camera_fp = dao_setup.camera_fp
 
 #%% Creating and Displaying a Circular Pupil on the SLM
 
 # Access the pupil data from the setup file
-pupil_size = dao_setup.pupil_size
-npix_small_pupil_grid = dao_setup.npix_small_pupil_grid
-small_pupil_mask = dao_setup.small_pupil_mask
-pupil_mask = dao_setup.pupil_mask
 
 # Display Pupil Data on SLM
 data_slm = compute_data_slm()
@@ -72,9 +65,6 @@ slm.set_data(data_slm)
 #%% Create a deformable mirror (DM)
 
 # Number of actuators
-nact = dao_setup.nact
-nact_valid = dao_setup.nact_valid
-dm_modes = dao_setup.dm_modes
 
 deformable_mirror = DeformableMirror(dm_modes)
 nmodes_dm = deformable_mirror.num_actuators
@@ -138,7 +128,7 @@ print(f"Shape of the response matrix: {RM_PyWFS2KL.shape}")
 slm.set_data(data_slm)
 
 # Capture a reference image using the WFS camera.
-time.sleep(dao_setup.wait_time)  # Wait for stabilization of SLM
+time.sleep(wait_time)  # Wait for stabilization of SLM
 reference_image = camera_wfs.get_data()
 normalized_reference_image = normalize_image(reference_image, mask, bias_image)
 pyr_img_shape = reference_image.shape

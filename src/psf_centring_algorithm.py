@@ -17,12 +17,9 @@ sys.path.append(str(OPT_LAB_ROOT))
 sys.path.append(str(PROJECT_ROOT))
 ROOT_DIR = PROJECT_ROOT
 
-import src.dao_setup as dao_setup
+from src.dao_setup import *  # Import all variables from setup
 
 # Access the SLM and cameras
-slm = dao_setup.slm
-camera_wfs = dao_setup.camera_wfs
-camera_fp = dao_setup.camera_fp
 
 def compute_pupil_intensities(img, pupil_coords, radius):
     """Compute average intensity for each pupil location."""
@@ -43,9 +40,9 @@ def cost_function(amplitudes, pupil_coords, radius, iteration):
     global stop_optimization  #Flag to stop when pupil intensities are equal
 
     fixed_amplitude = 0.4  # Keep the third amplitude fixed
-    data_pupil = dao_setup.update_pupil(new_ttf_amplitudes=[*amplitudes, fixed_amplitude])
+    data_pupil = update_pupil(new_ttf_amplitudes=[*amplitudes, fixed_amplitude])
     slm.set_data(((data_pupil * 256) % 256).astype(np.uint8))  # Update SLM data
-    time.sleep(dao_setup.wait_time)  # Wait for the update to take effect
+    time.sleep(wait_time)  # Wait for the update to take effect
 
     img = camera_wfs.get_data()  # Capture an image after updating
     intensities = compute_pupil_intensities(img, pupil_coords, radius)  # Compute intensities

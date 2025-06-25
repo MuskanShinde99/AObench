@@ -56,23 +56,23 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
     """
     
     # Load hardware and configuration parameters
-    deformable_mirror = kwargs.get("deformable_mirror", dao_setup.deformable_mirror)
-    slm = kwargs.get("slm", dao_setup.slm)
-    camera_wfs = kwargs.get("camera_wfs", dao_setup.camera_wfs)
-    camera_fp = kwargs.get("camera_fp", dao_setup.camera_fp)
-    npix_small_pupil_grid = kwargs.get("npix_small_pupil_grid", dao_setup.npix_small_pupil_grid)
-    data_pupil = kwargs.get("data_pupil", dao_setup.data_pupil)
-    data_pupil_outer = kwargs.get("data_pupil_outer", dao_setup.data_pupil_outer)
-    data_pupil_inner = kwargs.get("data_pupil_inner", dao_setup.data_pupil_inner)
-    pupil_mask = kwargs.get("pupil_mask", dao_setup.pupil_mask)
-    small_pupil_mask = kwargs.get("small_pupil_mask", dao_setup.small_pupil_mask)
+    deformable_mirror = kwargs.get("deformable_mirror", deformable_mirror)
+    slm = kwargs.get("slm", slm)
+    camera_wfs = kwargs.get("camera_wfs", camera_wfs)
+    camera_fp = kwargs.get("camera_fp", camera_fp)
+    npix_small_pupil_grid = kwargs.get("npix_small_pupil_grid", npix_small_pupil_grid)
+    data_pupil = kwargs.get("data_pupil", data_pupil)
+    data_pupil_outer = kwargs.get("data_pupil_outer", data_pupil_outer)
+    data_pupil_inner = kwargs.get("data_pupil_inner", data_pupil_inner)
+    pupil_mask = kwargs.get("pupil_mask", pupil_mask)
+    small_pupil_mask = kwargs.get("small_pupil_mask", small_pupil_mask)
     
     # Display Pupil Data on SLM
     data_slm = compute_data_slm()
     slm.set_data(data_slm)
         
     # Capture a reference image using the WFS camera
-    time.sleep(dao_setup.wait_time)  # Wait for stabilization of SLM
+    time.sleep(wait_time)  # Wait for stabilization of SLM
     reference_image = camera_wfs.get_data()
     normalized_reference_image = normalize_image(reference_image, mask, bias_image)
     pyr_img_shape = reference_image.shape
@@ -224,7 +224,7 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
         slm.set_data(data_slm)
 
         # Allow SLM to settle and capture a Pyramid image
-        time.sleep(dao_setup.wait_time)
+        time.sleep(wait_time)
         pyr_img = camera_wfs.get_data()
         
         # Process the Pyramid image

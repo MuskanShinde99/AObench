@@ -29,7 +29,7 @@ ROOT_DIR = PROJECT_ROOT
 from DEVICES_3.Basler_Pylon.test_pylon import *
 
 # Import Specific Modules
-import src.dao_setup as dao_setup  # Import the setup file
+from src.dao_setup import *  # Import all variables from setup
 from src.create_circular_pupil import *
 from src.tilt import *
 from src.utils import *
@@ -45,11 +45,8 @@ folder_transformation_matrices = ROOT_DIR / 'outputs/Transformation_matrices'
 #%% Accessing Devices
 
 # Initialize Spatial Light Modulator (SLM)
-slm = dao_setup.slm
 
 # Initialize Cameras
-camera_wfs = dao_setup.camera_wfs
-camera_fp = dao_setup.camera_fp
 
 #%% Creating and Displaying a Circular Pupil on the SLM
 
