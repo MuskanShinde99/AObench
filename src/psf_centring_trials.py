@@ -25,12 +25,9 @@ sys.path.append(str(OPT_LAB_ROOT))
 sys.path.append(str(PROJECT_ROOT))
 ROOT_DIR = PROJECT_ROOT
 
-import dao_setup
+from src.dao_setup import *  # Import all variables from setup
 
 # Access devices
-slm = dao_setup.slm
-camera_wfs = dao_setup.camera_wfs
-camera_fp = dao_setup.camera_fp
 camera_wfs.Open()
 
 def capture_image():
@@ -84,7 +81,7 @@ def gradient_descent(initial_amplitudes, fixed_index=2, max_iters=200, tol=1e-3)
     amplitudes = np.array(initial_amplitudes)
     
     for i in range(max_iters):
-        data_pupil = dao_setup.update_pupil(new_ttf_amplitudes=amplitudes)
+        data_pupil = update_pupil(new_ttf_amplitudes=amplitudes)
         slm.set_data(((data_pupil * 256) % 256).astype(np.uint8))
         time.sleep(0.3)  # Allow time for the update
 

@@ -45,7 +45,7 @@ from DEVICES_3.Basler_Pylon.test_pylon import *
 import dao
 
 # Import Specific Modules
-import src.dao_setup as dao_setup  # Import the setup file
+from src.dao_setup import *  # Import all variables from setup
 from src.create_circular_pupil import *
 from src.tilt import *
 from src.utils import *
@@ -56,15 +56,12 @@ from src.create_transformation_matrices import *
 #%% Accessing Devices
 
 # Initialize Spatial Light Modulator (SLM)
-slm = dao_setup.slm
 
 # Initialize Cameras
-camera_wfs = dao_setup.camera_wfs
-camera_fp = dao_setup.camera_fp
 
 #%% Creating and Displaying a Circular Pupil on the SLM
 
-data_pupil = ((dao_setup.data_pupil * 256) % 256).astype(np.uint8)
+data_pupil = ((data_pupil * 256) % 256).astype(np.uint8)
 
 plt.figure()
 plt.imshow(data_pupil, cmap='gray')
@@ -76,8 +73,6 @@ plt.show()
 #slm.set_data(((data_pupil * 256) % 256).astype(np.uint8))
 
 # Access the pupil data from the setup file
-dataHeight = dao_setup.dataHeight
-dataWidth = dao_setup.dataWidth
 data_zeros = np.zeros((dataHeight, dataWidth), dtype=np.uint8)
 
 plt.figure()

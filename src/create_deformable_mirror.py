@@ -29,8 +29,6 @@ from src.create_circular_pupil import *
 
 #number of actuators
 nact = 10
-pupil_size = dao_setup.pupil_size
-pupil_grid = dao_setup.pupil_grid
 pixel_size = 8e-3 # pixel size in mm 
 
 #create a DM

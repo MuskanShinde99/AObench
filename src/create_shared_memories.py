@@ -11,20 +11,14 @@ sys.path.append(str(OPT_LAB_ROOT))
 sys.path.append(str(PROJECT_ROOT))
 ROOT_DIR = PROJECT_ROOT
 
-import src.dao_setup as dao_setup  # Import the setup file
+from src.dao_setup import *  # Import all variables from setup
 
 #%%
 
-nact = dao_setup.nact_valid
-nmodes_dm = dao_setup.nact_valid
-nmodes_KL = dao_setup.nact_valid
-nmode_Znk = dao_setup.nact_valid
-pupil_size = dao_setup.pupil_size
-npix_pupil = dao_setup.npix_pupil
-npix_small_pupil_grid = dao_setup.npix_small_pupil_grid
-dataHeight = dao_setup.dataHeight
-dataWidth = dao_setup.dataWidth
-img_size = dao_setup.img_size
+nact = nact_valid
+nmodes_dm = nact_valid
+nmodes_KL = nact_valid
+nmode_Znk = nact_valid
 
 
 # Pupil / Grids

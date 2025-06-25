@@ -26,16 +26,13 @@ sys.path.append(str(PROJECT_ROOT))
 ROOT_DIR = PROJECT_ROOT
 
 # Import specific modules
-import src.dao_setup  # Import the setup file
+from src.dao_setup import *  # Import all variables from setup
 
 #%%
 
 # Access the SLM
-slm = dao_setup.slm
 
 #Access the cameras
-camera_wfs = dao_setup.camera_wfs
-camera_fp = dao_setup.camera_fp
 camera_wfs.Open()
 
 #Get cropping size for making the image square
@@ -47,13 +44,12 @@ camera_wfs.Open()
 #%%
 
 #Create a circular pupil on SLM
-data_pupil = dao_setup.data_pupil
 
 # New TTF amplitudes for Tip, Tilt, and Focus
 # new_ttf_amplitudes = [-0.3, 0.1, 0.4]  # New values for tip, tilt, and focus amplitudes
 
 # Update the pupil with the new values
-# data_pupil = dao_setup.update_pupil(new_ttf_amplitudes=new_ttf_amplitudes)
+# data_pupil = update_pupil(new_ttf_amplitudes=new_ttf_amplitudes)
 print('Pupil created on the SLM')
 
 # Display the pupil

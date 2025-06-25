@@ -29,6 +29,7 @@ ROOT_DIR = PROJECT_ROOT
 
 # Import Specific Modules
 from DEVICES_3.Basler_Pylon.test_pylon import *
+
 #import src.dao_setup as dao_setup  # Import the setup file
 from src.dao_setup import *
 from src.create_circular_pupil import *
@@ -244,7 +245,7 @@ content = re.sub(r"ttf_amplitudes\s*=\s*\[.*?\]", new_line, content)
 with open(dao_setup_path, 'w') as file:
     file.write(content)
 
-print("Updated ttf_amplitudes in dao_setup.py")
+print("Updated ttf_amplitudes in py")
 
 
 #%%
@@ -279,7 +280,6 @@ plt.show()
 
 
 #%% Take a bias image
-
 
 las.set_channel(channel)
 las.enable(0) # Turn off laser

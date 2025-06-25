@@ -42,37 +42,22 @@ from src.utils import *
 from src.dao_create_flux_filtering_mask import *
 from src.psf_centring_algorithm import *
 from src.calibration_functions import *
-import src.dao_setup as dao_setup  # Import the setup file
+from src.dao_setup import *  # Import all variables from setup
 from src.kl_basis_eigenmodes import computeEigenModes, computeEigenModes_notsquarepupil
 from src.create_transformation_matrices import *
 
 #%% Accessing Devices
 
 # Initialize Spatial Light Modulator (SLM)
-slm = dao_setup.slm
 
 # Initialize Cameras
-camera_wfs = dao_setup.camera_wfs
-camera_fp = dao_setup.camera_fp
 
 
 #%% Creating and Displaying a Circular Pupil on the SLM
 
 # Access the pupil data from the setup file
-dataHeight = dao_setup.dataHeight
-dataWidth = dao_setup.dataWidth
 
-data_pupil = dao_setup.data_pupil
-pupil_size = dao_setup.pupil_size
-pupil_grid = dao_setup.pupil_grid
-pupil_mask = dao_setup.pupil_mask
 
-small_pupil_grid_Npix = dao_setup.small_pupil_grid_Npix
-small_pupil_grid = dao_setup.small_pupil_grid
-small_pupil_grid_mask = dao_setup.small_pupil_grid_mask
-small_pupil_mask = dao_setup.small_pupil_mask
-offset_height = dao_setup.offset_height #offset to center the small pupil grid on the full slm screen
-offset_width = dao_setup.offset_width  #offset to center the small pupil grid on the full slm screen
 
 # Display Pupil Data on SLM
 slm.set_data(((data_pupil * 256) % 256).astype(np.uint8))

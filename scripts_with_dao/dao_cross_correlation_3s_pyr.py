@@ -45,33 +45,26 @@ from src.utils import *
 from src.dao_create_flux_filtering_mask import *
 from src.psf_centring_algorithm import *
 from src.calibration_functions import *
-import src.dao_setup as dao_setup  # Import the setup file
+from src.dao_setup import *  # Import all variables from setup
 from src.kl_basis_eigenmodes import computeEigenModes, computeEigenModes_notsquarepupil
 
 #%% Accessing Devices
 
 # Initialize Spatial Light Modulator (SLM)
-slm = dao_setup.slm
 
 # Initialize Cameras
-camera_wfs = dao_setup.camera_wfs
-camera_fp = dao_setup.camera_fp
 
 # Open the Wavefront Sensor (WFS) Camera
 camera_wfs.Open()
 
 # WFS image cropping coordinates from dao_setup
-crop_size = (dao_setup.crop_x_start, dao_setup.crop_x_end, dao_setup.crop_y_start, dao_setup.crop_y_end)
+crop_size = (crop_x_start, crop_x_end, crop_y_start, crop_y_end)
 crop_height = crop_size[3] - crop_size[2]  # y_end - y_start
 crop_width = crop_size[1] - crop_size[0]   # x_end - x_start
 
 #%% Creating and Displaying a Circular Pupil on the SLM
 
 # Access the pupil data from the setup file
-data_pupil = dao_setup.data_pupil
-pupil_size = dao_setup.pupil_size
-pupil_grid = dao_setup.pupil_grid
-pupil_mask = dao_setup.pupil_mask
 print('Pupil successfully created on the SLM.')
 
 # Display Pupil Data on SLM
@@ -84,7 +77,7 @@ nact = 21
 
 # Create a deformable mirror (DM)
 t0 = time.time()
-dm_modes = make_gaussian_influence_functions(dao_setup.pupil_grid, nact, pupil_size / (nact - 1), crosstalk=0.3)
+dm_modes = make_gaussian_influence_functions(pupil_grid, nact, pupil_size / (nact - 1), crosstalk=0.3)
 deformable_mirror = DeformableMirror(dm_modes)
 nmodes_dm = deformable_mirror.num_actuators
 t1 = time.time()
@@ -106,7 +99,6 @@ plt.show()
 dataWidth = 1920
 dataHeight = 1200
 pixel_size = 8e-3  # pixel size in mm 
-pupil_size = dao_setup.pupil_size
 Npix_pupil = int(pupil_size / pixel_size)  # Convert pupil size to pixels
 
 # Set up pupil grid dimensions
