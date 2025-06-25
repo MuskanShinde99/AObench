@@ -13,6 +13,7 @@ from hcipy import *
 import time
 from matplotlib import pyplot as plt
 from src.dao_setup import *  # Import all variables from setup
+import src.dao_setup as dao_setup
 from src.tilt import *
 from src.utils import *
 import matplotlib.colors as mcolors
@@ -41,12 +42,12 @@ def create_flux_filtering_mask(modulation_angles, modulation_amp, verbose=False,
     """
 
     # Use kwargs or default from dao_setup
-    camera = kwargs.get("camera", camera_wfs)
-    slm = kwargs.get("slm", slm)
-    data_pupil = kwargs.get("data_pupil", data_pupil)
-    pupil_size = kwargs.get("pupil_size", pupil_size)
-    pupil_mask = kwargs.get("pupil_mask", pupil_mask)
-    small_pupil_mask = kwargs.get("small_pupil_mask", small_pupil_mask)
+    camera = kwargs.get("camera", dao_setup.camera_wfs)
+    slm = kwargs.get("slm", dao_setup.slm)
+    data_pupil = kwargs.get("data_pupil", dao_setup.data_pupil)
+    pupil_size = kwargs.get("pupil_size", dao_setup.pupil_size)
+    pupil_mask = kwargs.get("pupil_mask", dao_setup.pupil_mask)
+    small_pupil_mask = kwargs.get("small_pupil_mask", dao_setup.small_pupil_mask)
 
     pixel_size_mm = pixel_size
     Npix = pupil_size / pixel_size_mm  # replaced npix_pupil with Npix

@@ -48,15 +48,7 @@ folder_transformation_matrices = ROOT_DIR / 'outputs/Transformation_matrices'
 folder_closed_loop_tests = ROOT_DIR / 'outputs/Closed_loop_tests'
 folder_turbulence = ROOT_DIR / 'outputs/Phase_screens'
 
-#%% Accessing Devices
-
-# Initialize Spatial Light Modulator (SLM)
-
-# Initialize Cameras
-
 #%% Creating and Displaying a Circular Pupil on the SLM
-
-# Access the pupil data from the setup file
 
 # Display Pupil Data on SLM
 data_slm = compute_data_slm()
@@ -83,7 +75,6 @@ deformable_mirror.flatten()
 #%% Load transformation matrices
 
 # Define folder path
-
 nmodes_kl = nact_valid
 KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_{nmodes_kl}_npupil_{npix_small_pupil_grid}.fits'))
 Phs2KL = fits.getdata(os.path.join(folder_transformation_matrices, f'Phs2KL_npupil_{npix_small_pupil_grid}_nkl_{nmodes_kl}.fits'))

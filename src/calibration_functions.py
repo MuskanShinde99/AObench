@@ -5,6 +5,7 @@ from DEVICES_3.Basler_Pylon.test_pylon import *
 import matplotlib.pyplot as plt
 from src.utils import *
 from src.dao_setup import *  # Import all variables from setup
+import src.dao_setup as dao_setup
 
 
 def perform_push_pull_calibration_with_phase_basis(basis, phase_amp, ref_image, mask, 
@@ -33,13 +34,13 @@ def perform_push_pull_calibration_with_phase_basis(basis, phase_amp, ref_image, 
     """
 
     # Load devices and data from kwargs or fallback to dao_setup
-    camera = kwargs.get("camera", camera_wfs)
-    slm = kwargs.get("slm", slm)
-    data_pupil_outer = kwargs.get("data_pupil_outer", data_pupil_outer)
-    data_pupil_inner = kwargs.get("data_pupil_inner", data_pupil_inner)
-    pupil_mask = kwargs.get("pupil_mask", pupil_mask)
-    small_pupil_mask = kwargs.get("small_pupil_mask", small_pupil_mask)
-    deformable_mirror = kwargs.get("deformable_mirror", deformable_mirror)
+    camera = kwargs.get("camera", dao_setup.camera_wfs)
+    slm = kwargs.get("slm", dao_setup.slm)
+    data_pupil_outer = kwargs.get("data_pupil_outer", dao_setup.data_pupil_outer)
+    data_pupil_inner = kwargs.get("data_pupil_inner", dao_setup.data_pupil_inner)
+    pupil_mask = kwargs.get("pupil_mask", dao_setup.pupil_mask)
+    small_pupil_mask = kwargs.get("small_pupil_mask", dao_setup.small_pupil_mask)
+    deformable_mirror = kwargs.get("deformable_mirror", dao_setup.deformable_mirror)
 
     # Set dimensions equal to img_size
     height, width = ref_image.shape

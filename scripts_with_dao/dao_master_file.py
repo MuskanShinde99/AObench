@@ -43,13 +43,22 @@ folder_calib = ROOT_DIR / 'outputs/Calibration_files'
 folder_pyr_mask = ROOT_DIR / 'outputs/3s_pyr_mask'
 folder_transformation_matrices = ROOT_DIR / 'outputs/Transformation_matrices'
 
+# #%% Accessing Devices
 
-#%% Accessing Devices
+# # Initialize Spatial Light Modulator (SLM)
+# slm = dao_setup.slm
 
-# Initialize Spatial Light Modulator (SLM) and Cameras
-# Devices are imported directly from dao_setup
+# # Initialize Cameras
+# camera_wfs = dao_setup.camera_wfs
+# camera_fp = dao_setup.camera_fp
+
 
 #%% Creating and Displaying a Circular Pupil on the SLM
+
+# # Access the pupil data from the setup file
+# pupil_size = dao_setup.pupil_size
+# npix_small_pupil_grid = dao_setup.npix_small_pupil_grid
+# small_pupil_mask = dao_setup.small_pupil_mask
 
 plt.figure()
 plt.imshow(data_pupil, cmap='gray')
@@ -64,6 +73,12 @@ slm.set_data(data_slm)
 print('Pupil successfully created on the SLM.')
 
 #%% Create a deformable mirror (DM)
+
+# # Number of actuators
+# nact = dao_setup.nact
+# nact_valid = dao_setup.nact_valid
+# nact_total = dao_setup.nact_total
+# dm_modes = dao_setup.dm_modes
 
 deformable_mirror = DeformableMirror(dm_modes)
 nmodes_dm = deformable_mirror.num_actuators

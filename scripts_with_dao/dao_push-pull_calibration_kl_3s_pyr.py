@@ -41,17 +41,7 @@ folder_calib = ROOT_DIR / 'outputs/Calibration_files'
 folder_pyr_mask = ROOT_DIR / 'outputs/3s_pyr_mask'
 folder_transformation_matrices = ROOT_DIR / 'outputs/Transformation_matrices'
 
-
-#%% Accessing Devices
-
-# Initialize Spatial Light Modulator (SLM)
-
-# Initialize Cameras
-
-
 #%% Creating and Displaying a Circular Pupil on the SLM
-
-# Access the pupil data from the setup file
 
 # Display Pupil Data on SLM
 data_slm = compute_data_slm()

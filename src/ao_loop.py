@@ -16,6 +16,8 @@ from src.utils import *
 from hcipy import *
 from DEVICES_3.Basler_Pylon.test_pylon import *
 from collections import deque
+from src.dao_setup import *  # Import all variables from setup
+import src.dao_setup as dao_setup
 
 def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, anim_path, aim_name, anim_title,
                            RM_PyWFS2KL, KL2Act, Act2KL, Phs2KL,  mask, bias_image, **kwargs):
@@ -56,16 +58,16 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
     """
     
     # Load hardware and configuration parameters
-    deformable_mirror = kwargs.get("deformable_mirror", deformable_mirror)
-    slm = kwargs.get("slm", slm)
-    camera_wfs = kwargs.get("camera_wfs", camera_wfs)
-    camera_fp = kwargs.get("camera_fp", camera_fp)
-    npix_small_pupil_grid = kwargs.get("npix_small_pupil_grid", npix_small_pupil_grid)
-    data_pupil = kwargs.get("data_pupil", data_pupil)
-    data_pupil_outer = kwargs.get("data_pupil_outer", data_pupil_outer)
-    data_pupil_inner = kwargs.get("data_pupil_inner", data_pupil_inner)
-    pupil_mask = kwargs.get("pupil_mask", pupil_mask)
-    small_pupil_mask = kwargs.get("small_pupil_mask", small_pupil_mask)
+    deformable_mirror = kwargs.get("deformable_mirror", dao_setup.deformable_mirror)
+    slm = kwargs.get("slm", dao_setup.slm)
+    camera_wfs = kwargs.get("camera_wfs", dao_setup.camera_wfs)
+    camera_fp = kwargs.get("camera_fp", dao_setup.camera_fp)
+    npix_small_pupil_grid = kwargs.get("npix_small_pupil_grid", dao_setup.npix_small_pupil_grid)
+    data_pupil = kwargs.get("data_pupil", dao_setup.data_pupil)
+    data_pupil_outer = kwargs.get("data_pupil_outer", dao_setup.data_pupil_outer)
+    data_pupil_inner = kwargs.get("data_pupil_inner", dao_setup.data_pupil_inner)
+    pupil_mask = kwargs.get("pupil_mask", dao_setup.pupil_mask)
+    small_pupil_mask = kwargs.get("small_pupil_mask", dao_setup.small_pupil_mask)
     
     # Display Pupil Data on SLM
     data_slm = compute_data_slm()
