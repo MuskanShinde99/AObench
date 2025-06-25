@@ -46,9 +46,8 @@ folder_transformation_matrices = ROOT_DIR / 'outputs/Transformation_matrices'
 
 #%% Accessing Devices
 
-# Initialize Spatial Light Modulator (SLM)
-
-# Initialize Cameras
+# Initialize Spatial Light Modulator (SLM) and Cameras
+# Devices are imported directly from dao_setup
 
 #%% Creating and Displaying a Circular Pupil on the SLM
 
@@ -80,8 +79,8 @@ plt.colorbar()
 plt.title('Deformable Mirror Surface OPD')
 plt.show()
 
-dm_act_shm.set_data(np.ones((npix_small_pupil_grid, npix_small_pupil_grid)))
-dm_act_shm.get_data()
+dao_setup.dm_act_shm.set_data(np.ones((npix_small_pupil_grid, npix_small_pupil_grid)))
+dao_setup.dm_act_shm.get_data()
  
 
 #%% Capturing a Reference Image
