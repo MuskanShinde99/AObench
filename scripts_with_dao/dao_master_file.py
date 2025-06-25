@@ -29,7 +29,7 @@ ROOT_DIR = PROJECT_ROOT
 
 # Import Specific Modules
 from DEVICES_3.Basler_Pylon.test_pylon import *
-import src.dao_setup as dao_setup  # Import the setup file
+from src.dao_setup import *  # Import all variables from setup
 from src.create_circular_pupil import *
 from src.tilt import *
 from src.utils import *
@@ -44,19 +44,12 @@ folder_transformation_matrices = ROOT_DIR / 'outputs/Transformation_matrices'
 
 #%% Accessing Devices
 
-# Initialize Spatial Light Modulator (SLM)
-slm = dao_setup.slm
-
-# Initialize Cameras
-camera_wfs = dao_setup.camera_wfs
-camera_fp = dao_setup.camera_fp
+# Initialize Spatial Light Modulator (SLM) and Cameras
+# Devices are imported directly from dao_setup
 
 #%% Creating and Displaying a Circular Pupil on the SLM
 
-data_pupil = dao_setup.data_pupil
-npix_pupil = dao_setup.npix_pupil
-npix_small_pupil_grid = dao_setup.npix_small_pupil_grid
-pupil_size = dao_setup.pupil_size
+# Parameters below come from dao_setup via wildcard import
 
 plt.figure()
 plt.imshow(data_pupil, cmap='gray')
@@ -73,11 +66,7 @@ print('Pupil successfully created on the SLM.')
 #%% Create a deformable mirror (DM)
 
 # Number of actuators
-nact = dao_setup.nact
-nact_total = dao_setup.nact_total
-nact_valid = dao_setup.nact_valid
-dm_modes = dao_setup.dm_modes
-dm_modes_full = dao_setup.dm_modes_full
+# Parameters are imported directly from dao_setup
 
 deformable_mirror = DeformableMirror(dm_modes)
 nmodes_dm = deformable_mirror.num_actuators
@@ -93,8 +82,8 @@ plt.colorbar()
 plt.title('Deformable Mirror Surface OPD')
 plt.show()
 
-dm_act_shm.set_data(np.ones((npix_small_pupil_grid, npix_small_pupil_grid)))
-dm_act_shm.get_data()
+dao_setup.dm_act_shm.set_data(np.ones((npix_small_pupil_grid, npix_small_pupil_grid)))
+dao_setup.dm_act_shm.get_data()
  
 
 #%% Capturing a Reference Image
@@ -268,7 +257,7 @@ data_slm = compute_data_slm()
 slm.set_data(data_slm)
 
 # Display the Reference Image
-time.sleep(dao_setup.wait_time)  # Allow the system to stabilize
+time.sleep(wait_time)  # Allow the system to stabilize
 reference_image = camera_wfs.get_data()
 masked_reference_image = reference_image * mask
 normalized_reference_image = masked_reference_image / np.abs(np.sum(masked_reference_image))
@@ -295,11 +284,10 @@ plt.show()
 
 #%% Take a bias image
 
-channel = dao_setup.channel
-las = dao_setup.las
+
 las.set_channel(channel)
 las.enable(0) # Turn off laser
-time.sleep(dao_setup.wait_time)  # Allow some time for laser to turn off
+time.sleep(wait_time)  # Allow some time for laser to turn off
 bias_image = camera_wfs.get_data()
 las.enable(1) # Turn on laser
 
