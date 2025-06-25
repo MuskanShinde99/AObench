@@ -21,23 +21,20 @@ import sys
 
 # Configure root directories using environment variables with reasonable defaults
 OPT_LAB_ROOT = Path(os.environ.get("OPT_LAB_ROOT", "/home/ristretto-dao/optlab-master"))
-PROJECT_ROOT = Path(
-    os.environ.get("PROJECT_ROOT", OPT_LAB_ROOT / "PROJECTS_3/RISTRETTO/Banc AO")
-)
-
+PROJECT_ROOT = Path(os.environ.get("PROJECT_ROOT", OPT_LAB_ROOT / "PROJECTS_3/RISTRETTO/Banc AO"))
 # Ensure required modules are importable without changing the working directory
 sys.path.append(str(OPT_LAB_ROOT))
 sys.path.append(str(PROJECT_ROOT))
-
-from DEVICES_3.Basler_Pylon.test_pylon import *
-from DEVICES_3.Thorlabs.MCLS1 import mcls1
+ROOT_DIR = PROJECT_ROOT
 
 # Import specific modules
+from DEVICES_3.Basler_Pylon.test_pylon import *
+from DEVICES_3.Thorlabs.MCLS1 import mcls1
 from src.create_circular_pupil import *
 from src.tilt import *
 from src.utils import *
 
-ROOT_DIR = PROJECT_ROOT
+
 folder_calib = ROOT_DIR / "outputs/Calibration_files"
 folder_pyr_mask = ROOT_DIR / "outputs/3s_pyr_mask"
 folder_transformation_matrices = ROOT_DIR / "outputs/Transformation_matrices"

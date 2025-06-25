@@ -29,10 +29,10 @@ PROJECT_ROOT = Path(os.environ.get("PROJECT_ROOT", OPT_LAB_ROOT / "PROJECTS_3/RI
 sys.path.append(str(OPT_LAB_ROOT))
 sys.path.append(str(PROJECT_ROOT))
 ROOT_DIR = PROJECT_ROOT
-from DEVICES_3.Basler_Pylon.test_pylon import *
-import dao
 
 # Import Specific Modules
+from DEVICES_3.Basler_Pylon.test_pylon import *
+import dao
 from src.create_circular_pupil import *
 from src.tilt import *
 from src.utils import *

@@ -13,6 +13,8 @@ ROOT_DIR = PROJECT_ROOT
 
 import src.dao_setup as dao_setup  # Import the setup file
 
+#%%
+
 nact = dao_setup.nact_valid
 nmodes_dm = dao_setup.nact_valid
 nmodes_KL = dao_setup.nact_valid

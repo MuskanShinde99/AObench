@@ -20,15 +20,15 @@ import dao
 import sys
 from pathlib import Path
 
-# Configure root paths without changing the working directory
+# Configure root paths 
 OPT_LAB_ROOT = Path(os.environ.get("OPT_LAB_ROOT", "/home/ristretto-dao/optlab-master"))
 PROJECT_ROOT = Path(os.environ.get("PROJECT_ROOT", OPT_LAB_ROOT / "PROJECTS_3/RISTRETTO/Banc AO"))
 sys.path.append(str(OPT_LAB_ROOT))
 sys.path.append(str(PROJECT_ROOT))
 ROOT_DIR = PROJECT_ROOT
-from DEVICES_3.Basler_Pylon.test_pylon import *
 
 # Import Specific Modules
+from DEVICES_3.Basler_Pylon.test_pylon import *
 import src.dao_setup as dao_setup  # Import the setup file
 from src.create_circular_pupil import *
 from src.tilt import *
