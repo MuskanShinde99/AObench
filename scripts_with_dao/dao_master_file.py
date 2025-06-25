@@ -29,7 +29,8 @@ ROOT_DIR = PROJECT_ROOT
 
 # Import Specific Modules
 from DEVICES_3.Basler_Pylon.test_pylon import *
-from src.dao_setup import *  # Import all variables from setup
+#import src.dao_setup as dao_setup  # Import the setup file
+from src.dao_setup import *
 from src.create_circular_pupil import *
 from src.tilt import *
 from src.utils import *
@@ -49,8 +50,6 @@ folder_transformation_matrices = ROOT_DIR / 'outputs/Transformation_matrices'
 
 #%% Creating and Displaying a Circular Pupil on the SLM
 
-# Parameters below come from dao_setup via wildcard import
-
 plt.figure()
 plt.imshow(data_pupil, cmap='gray')
 plt.colorbar()
@@ -64,9 +63,6 @@ slm.set_data(data_slm)
 print('Pupil successfully created on the SLM.')
 
 #%% Create a deformable mirror (DM)
-
-# Number of actuators
-# Parameters are imported directly from dao_setup
 
 deformable_mirror = DeformableMirror(dm_modes)
 nmodes_dm = deformable_mirror.num_actuators
