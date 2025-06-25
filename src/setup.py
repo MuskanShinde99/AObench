@@ -15,9 +15,15 @@ from hcipy import *
 import time
 from astropy.io import fits
 import os
+import sys
+from pathlib import Path
 
-# Set the working directory
-os.chdir('/home/laboptic/Documents/optlab-master/PROJECTS_3/RISTRETTO/Banc AO')
+# Configure root paths without changing the working directory
+OPT_LAB_ROOT = Path(os.environ.get("OPT_LAB_ROOT", "/home/ristretto-dao/optlab-master"))
+PROJECT_ROOT = Path(os.environ.get("PROJECT_ROOT", OPT_LAB_ROOT / "PROJECTS_3/RISTRETTO/Banc AO"))
+sys.path.append(str(OPT_LAB_ROOT))
+sys.path.append(str(PROJECT_ROOT))
+ROOT_DIR = PROJECT_ROOT
 
 # Import specific modules
 from create_circular_pupil import *

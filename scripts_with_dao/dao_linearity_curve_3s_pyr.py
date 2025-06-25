@@ -17,13 +17,19 @@ from hcipy import *
 import time
 from astropy.io import fits
 import os
+import sys
 import scipy
 from DEVICES_3.Basler_Pylon.test_pylon import *
 import dao
 from matplotlib.colors import LogNorm
+from pathlib import Path
 
-# Set the Working Directory
-os.chdir('/home/laboptic/Documents/optlab-master/PROJECTS_3/RISTRETTO/Banc AO')
+# Configure root paths without changing the working directory
+OPT_LAB_ROOT = Path(os.environ.get("OPT_LAB_ROOT", "/home/ristretto-dao/optlab-master"))
+PROJECT_ROOT = Path(os.environ.get("PROJECT_ROOT", OPT_LAB_ROOT / "PROJECTS_3/RISTRETTO/Banc AO"))
+sys.path.append(str(OPT_LAB_ROOT))
+sys.path.append(str(PROJECT_ROOT))
+ROOT_DIR = PROJECT_ROOT
 
 # Import Specific Modules
 from src.create_circular_pupil import *
@@ -96,29 +102,28 @@ plt.title('Deformable Mirror Surface')
 #%% Load Transformation matrices
 
 nmodes_zernike = 200
-nmodes_kl = nact**2 -nact
+nmodes_kl = nact**2 - nact
 
-# Define folder path
-folder = '/home/laboptic/Documents/RISTRETTO_AO_bench/Transformation_matrices'
 
-Act2Phs = fits.getdata(os.path.join(folder, f'Act2Phs_nact_{nact}_npupil_{small_pupil_grid_Npix}.fits'))
-Phs2Act = fits.getdata(os.path.join(folder, f'Phs2Act_npupil_{small_pupil_grid_Npix}_nact_{nact}.fits'))
 
-Znk2Phs = fits.getdata(os.path.join(folder, f'Znk2Phs_nzernike_{nmodes_zernike}_npupil_{small_pupil_grid_Npix}.fits'))
-Phs2Znk = fits.getdata(os.path.join(folder, f'Phs2Znk_npupil_{small_pupil_grid_Npix}_nzernike_{nmodes_zernike}.fits'))
+Act2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'Act2Phs_nact_{nact}_npupil_{small_pupil_grid_Npix}.fits'))
+Phs2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'Phs2Act_npupil_{small_pupil_grid_Npix}_nact_{nact}.fits'))
 
-Znk2Act = fits.getdata(os.path.join(folder, f'Znk2Act_nzernike_{nmodes_zernike}_nact_{nact}.fits'))
-Act2Znk = fits.getdata(os.path.join(folder, f'Act2Znk_nact_{nact}_nzernike_{nmodes_zernike}.fits'))
+Znk2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'Znk2Phs_nzernike_{nmodes_zernike}_npupil_{small_pupil_grid_Npix}.fits'))
+Phs2Znk = fits.getdata(os.path.join(folder_transformation_matrices, f'Phs2Znk_npupil_{small_pupil_grid_Npix}_nzernike_{nmodes_zernike}.fits'))
+
+Znk2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'Znk2Act_nzernike_{nmodes_zernike}_nact_{nact}.fits'))
+Act2Znk = fits.getdata(os.path.join(folder_transformation_matrices, f'Act2Znk_nact_{nact}_nzernike_{nmodes_zernike}.fits'))
 
 # Extend Zernike basis for the SLM
 Znk2Phs_extended = np.zeros((nmodes_zernike, dataHeight, dataWidth), dtype=np.float32)
 Znk2Phs_extended[:, offset_height:offset_height + small_pupil_grid_Npix, offset_width:offset_width + small_pupil_grid_Npix] = Znk2Phs.reshape(nmodes_zernike, small_pupil_grid_Npix, small_pupil_grid_Npix)
 
-KL2Phs = fits.getdata(os.path.join(folder, f'KL2Phs_nkl_{nmodes_kl}_npupil_{small_pupil_grid_Npix}.fits'))
-Phs2KL = fits.getdata(os.path.join(folder, f'Phs2KL_npupil_{small_pupil_grid_Npix}_nkl_{nmodes_kl}.fits'))
+KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_{nmodes_kl}_npupil_{small_pupil_grid_Npix}.fits'))
+Phs2KL = fits.getdata(os.path.join(folder_transformation_matrices, f'Phs2KL_npupil_{small_pupil_grid_Npix}_nkl_{nmodes_kl}.fits'))
 
-KL2Act = fits.getdata(os.path.join(folder, f'KL2Act_nkl_{nmodes_kl}_nact_{nact}.fits'))
-Act2KL = fits.getdata(os.path.join(folder, f'Act2KL_nact_{nact}_nkl_{nmodes_kl}.fits'))
+KL2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Act_nkl_{nmodes_kl}_nact_{nact}.fits'))
+Act2KL = fits.getdata(os.path.join(folder_transformation_matrices, f'Act2KL_nact_{nact}_nkl_{nmodes_kl}.fits'))
 
 # Extend KL basis for the SLM
 KL2Phs_extended = np.zeros((nmodes_kl, dataHeight, dataWidth), dtype=np.float32)
@@ -128,28 +133,27 @@ KL2Phs_extended[:, offset_height:offset_height + small_pupil_grid_Npix, offset_w
 #%% Load Calibration Mask and Response Matrix
 
 # Load the bias image
-folder = '/home/laboptic/Documents/RISTRETTO_AO_bench/Calibration_files'
 bias_filename = f'binned_bias_image.fits'
-bias_image = fits.getdata(os.path.join(folder, bias_filename))
+bias_image = fits.getdata(os.path.join(folder_calib, bias_filename))
 print(f"Bias image shape: {bias_image.shape}")
 
 # Load the calibration mask for processing images.
 mask_filename = f'binned_mask_pup_{pupil_size}mm_3s_pyr.fits'
-mask = fits.getdata(os.path.join(folder, mask_filename))
+mask = fits.getdata(os.path.join(folder_calib, mask_filename))
 print(f"Mask dimensions: {mask.shape}")
 
 # Get valid pixel indices from the cropped mask
 valid_pixels_indices = np.where(mask > 0)
 
-# Load the response matrix 
+# Load the response matrix
 IM_filename = f'binned_response_matrix_Znk2Act_push-pull_pup_{pupil_size}mm_nact_{nact}_amp_0.1_3s_pyr.fits'
-IM_Znk2PyWFS = fits.getdata(os.path.join(folder, IM_filename))  # /0.1
+IM_Znk2PyWFS = fits.getdata(os.path.join(folder_calib, IM_filename))  # /0.1
 RM_PyWFS2Znk = np.linalg.pinv(IM_Znk2PyWFS, rcond=0.10)
 print(f"Shape of the response matrix: {RM_PyWFS2Znk.shape}")
 
 # Load the response matrix 
 IM_filename = f'binned_response_matrix_KL2Act_push-pull_pup_{pupil_size}mm_nact_{nact}_amp_0.1_3s_pyr.fits'
-IM_KL2PyWFS = fits.getdata(os.path.join(folder, IM_filename))  # /0.1
+IM_KL2PyWFS = fits.getdata(os.path.join(folder_calib, IM_filename))  # /0.1
 IM_KL2PyWFS = IM_KL2PyWFS[:nmodes_kl,:]
 RM_PyWFS2KL = np.linalg.pinv(IM_KL2PyWFS, rcond=0.10)
 print(f"Shape of the response matrix: {RM_PyWFS2KL.shape}")
@@ -176,7 +180,7 @@ plt.show()
 
 # Save the reference image to a FITS file
 filename = f'binned_ref_img_pup_{pupil_size}mm_3s_pyr.fits'
-fits.writeto(os.path.join(folder, filename), np.asarray(reference_image), overwrite=True)
+fits.writeto(os.path.join(folder_calib, filename), np.asarray(reference_image), overwrite=True)
 
 #%% Linearity plot KL basis: Phase KL2Act
 

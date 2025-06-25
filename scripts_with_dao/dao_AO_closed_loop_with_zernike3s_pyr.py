@@ -18,13 +18,26 @@ from hcipy import *
 import time
 from astropy.io import fits
 import os
+import sys
 import scipy
 from DEVICES_3.Basler_Pylon.test_pylon import *
 import dao
 import matplotlib.animation as animation
+from pathlib import Path
 
-# Set the Working Directory
-os.chdir('/home/laboptic/Documents/optlab-master/PROJECTS_3/RISTRETTO/Banc AO')
+# Configure root paths without changing the working directory
+OPT_LAB_ROOT = Path(os.environ.get("OPT_LAB_ROOT", "/home/ristretto-dao/optlab-master"))
+PROJECT_ROOT = Path(os.environ.get("PROJECT_ROOT", OPT_LAB_ROOT / "PROJECTS_3/RISTRETTO/Banc AO"))
+sys.path.append(str(OPT_LAB_ROOT))
+sys.path.append(str(PROJECT_ROOT))
+ROOT_DIR = PROJECT_ROOT
+
+# Output folders
+folder_calib = ROOT_DIR / 'outputs/Calibration_files'
+folder_pyr_mask = ROOT_DIR / 'outputs/3s_pyr_mask'
+folder_transformation_matrices = ROOT_DIR / 'outputs/Transformation_matrices'
+folder_closed_loop_tests = ROOT_DIR / 'outputs/Closed_loop_tests'
+folder_turbulence = ROOT_DIR / 'outputs/Phase_screens'
 
 # Import Specific Modules
 from src.create_circular_pupil import *
@@ -100,8 +113,6 @@ plt.show()
 #%% Create transformation matrices
 
 # Define folder path
-folder = '/home/laboptic/Documents/RISTRETTO_AO_bench/Transformation_matrices'
-
 nmodes_zernike = 200
 Act2Phs, Phs2Act = compute_Act2Phs(nact, small_pupil_grid_Npix, pupil_size, small_pupil_grid, verbose=True)
 Znk2Phs, Phs2Znk = compute_Znk2Phs(nmodes_zernike, small_pupil_grid_Npix, pupil_size, small_pupil_grid, verbose=True)
@@ -144,13 +155,12 @@ plt.show()
 
 # Load the bias image
 bias_filename = f'binned_bias_image.fits'
-bias_image = fits.getdata(os.path.join(folder, bias_filename))
+bias_image = fits.getdata(os.path.join(folder_calib, bias_filename))
 print(f"Bias image shape: {bias_image.shape}")
 
 # Load the calibration mask for processing images.
-folder = '/home/laboptic/Documents/RISTRETTO_AO_bench/Calibration_files'
 mask_filename = f'binned_mask_pup_{pupil_size}mm_3s_pyr.fits'
-mask = fits.getdata(os.path.join(folder, mask_filename))
+mask = fits.getdata(os.path.join(folder_calib, mask_filename))
 print(f"Mask dimensions: {mask.shape}")
 
 # Get valid pixel indices from the cropped mask
@@ -158,7 +168,7 @@ valid_pixels_indices = np.where(mask > 0)
 
 # Load the response matrix 
 IM_filename = f'binned_response_matrix_Znk2Act_push-pull_pup_{pupil_size}mm_nact_{nact}_amp_0.1_3s_pyr.fits'
-IM_Znk2PyWFS = fits.getdata(os.path.join(folder, IM_filename))  # /0.1
+IM_Znk2PyWFS = fits.getdata(os.path.join(folder_calib, IM_filename))  # /0.1
 
 #SVD
 # Compute SVD
@@ -210,9 +220,8 @@ plt.title('Reference Image')
 plt.show()
 
 # Save the reference image to a FITS file
-folder = '/home/laboptic/Documents/RISTRETTO_AO_bench/Calibration_files'
 filename = f'binned_ref_img_pup_{pupil_size}mm_3s_pyr.fits'
-fits.writeto(os.path.join(folder, filename), np.asarray(reference_image), overwrite=True)
+fits.writeto(os.path.join(folder_calib, filename), np.asarray(reference_image), overwrite=True)
 
 # Diffraction limited PSF
 camera_fp.Open()
@@ -275,7 +284,7 @@ data_Znk = Znk2Phs_new[mode].reshape(small_pupil_grid_Npix, small_pupil_grid_Npi
 num_iterations = 1
 gain = 1
 
-anim_path='/home/laboptic/Documents/RISTRETTO_AO_bench/Closed_loop_tests/'
+anim_path = folder_closed_loop_tests
 anim_name= f'closed_loop_test_Znk_mode_{mode}_amp_{amp}.gif'
 anim_title= f'Znk mode {mode} amp {amp}'
 
@@ -292,14 +301,14 @@ closed_loop_simulation(num_iterations, gain, data_Znk, anim_path, anim_name, ani
 plt.close('all')
 
 # Load the FITS data
+# Load the phase screen
 wl= 1700
 pup = 1.52
 seeing = 1.0
 loopspeed = 1.0
-folder = '/home/laboptic/Documents/RISTRETTO_AO_bench/Phase_screens/Papyrus'
 #filename = f'phase_screen_cube_phase_seeing_{seeing}arcsec_L_40m_tau0_5ms_lambda_{wl}nm_pup_{pup}m_{loopspeed}kHz.fits'
 filename = f'turbulence_cube_phase_seeing_2arcsec_L_40m_tau0_5ms_lambda_500nm_pup_1.52m_1.0kHz.fits'
-hdul = fits.open(os.path.join(folder, filename))
+hdul = fits.open(os.path.join(folder_turbulence / 'Papyrus', filename))
 hdu = hdul[0]
 fits_data = hdu.data[1000:2000, :, :]
 
@@ -315,7 +324,7 @@ data_phase_screen = data_phase_screen*small_pupil_mask*(500/wl)*((seeing/2)**(5/
 num_iterations = 100
 gain =  1
 
-anim_path='/home/laboptic/Documents/RISTRETTO_AO_bench/Closed_loop_tests/'
+anim_path = folder_closed_loop_tests
 anim_name= f'closed_loop_seeing_{seeing}arcsec_L_40m_tau0_5ms_lambda_{wl}nm_pup_{pup}m_{loopspeed}kHz_gain_{gain}.gif'
 anim_title= f'Seeing: {seeing} arcsec, λ: {wl} nm, Loop speed: {loopspeed} kHz'
 
@@ -337,9 +346,8 @@ wl= 1700
 pup = 1.5
 seeing = 1
 loopspeed = 1.0
-folder = '/home/laboptic/Documents/RISTRETTO_AO_bench/Phase_screens/Papyrus'
 filename = 'turbOpd_seeing500_2.00_wind_5.0_Dtel_1.5.fits'
-hdul = fits.open(os.path.join(folder, filename))
+hdul = fits.open(os.path.join(folder_turbulence / 'Papyrus', filename))
 hdu = hdul[0]
 fits_data = hdu.data[0:1000, :, :]
 num_frames = fits_data.shape[0]
@@ -358,7 +366,7 @@ data_phase_screen = data_phase_screen*small_pupil_mask*(500/wl)*((seeing/2)**(5/
 num_iterations = 1000
 gain =  1# Fixed gain value
 
-anim_path='/home/laboptic/Documents/RISTRETTO_AO_bench/Closed_loop_tests/'
+anim_path = folder_closed_loop_tests
 anim_name= f'closed_loop_sturbOpd_seeing500_{seeing}_wind_5.0_Dtel_1.5_lambda_{wl}nm.gif'
 anim_title= f'Seeing: {seeing} arcsec, λ: {wl} nm, Loop speed: {loopspeed} kHz'
 

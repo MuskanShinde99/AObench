@@ -18,17 +18,19 @@ from hcipy import *
 import time
 from astropy.io import fits
 import os
+import sys
 import scipy
 import matplotlib.animation as animation
+from pathlib import Path
 
-# Set the working directory
-os.chdir('/home/ristretto-dao/optlab-master')
+# Configure root paths without changing the working directory
+OPT_LAB_ROOT = Path(os.environ.get("OPT_LAB_ROOT", "/home/ristretto-dao/optlab-master"))
+PROJECT_ROOT = Path(os.environ.get("PROJECT_ROOT", OPT_LAB_ROOT / "PROJECTS_3/RISTRETTO/Banc AO"))
+sys.path.append(str(OPT_LAB_ROOT))
+sys.path.append(str(PROJECT_ROOT))
+ROOT_DIR = PROJECT_ROOT
 from DEVICES_3.Basler_Pylon.test_pylon import *
 import dao
-
-
-# Set the Working Directory
-os.chdir('/home/ristretto-dao/optlab-master/PROJECTS_3/RISTRETTO/Banc AO')
 
 # Import Specific Modules
 from src.create_circular_pupil import *
@@ -40,12 +42,11 @@ from src.kl_basis_eigenmodes import computeEigenModes, computeEigenModes_notsqua
 from src.create_transformation_matrices import *
 from src.ao_loop import *
 
-ROOT_DIR = '/home/ristretto-dao/optlab-master/PROJECTS_3/RISTRETTO/Banc AO/'
-folder_calib = os.path.join(ROOT_DIR, 'outputs/Calibration_files')
-folder_pyr_mask = os.path.join(ROOT_DIR, 'outputs/3s_pyr_mask')
-folder_transformation_matrices = os.path.join(ROOT_DIR, 'outputs/Transformation_matrices')
-folder_closed_loop_tests = os.path.join(ROOT_DIR, 'outputs/Closed_loop_tests')
-folder_turbulence = os.path.join(ROOT_DIR, 'outputs/Phase_screens')
+folder_calib = ROOT_DIR / 'outputs/Calibration_files'
+folder_pyr_mask = ROOT_DIR / 'outputs/3s_pyr_mask'
+folder_transformation_matrices = ROOT_DIR / 'outputs/Transformation_matrices'
+folder_closed_loop_tests = ROOT_DIR / 'outputs/Closed_loop_tests'
+folder_turbulence = ROOT_DIR / 'outputs/Phase_screens'
 
 #%% Accessing Devices
 
@@ -258,7 +259,7 @@ gain = 1
 leakage = 0
 delay=0
 
-anim_path='/home/ristretto-dao/RISTRETTO_AO_bench/Closed_loop_tests/Papyrus'
+anim_path = folder_closed_loop_tests / 'Papyrus'
 anim_name= f'AO_bench_closed_loop_seeing_{seeing}arcsec_L_40m_tau0_5ms_lambda_{wl}nm_pup_{pup}m_{loopspeed}kHz_gain_{gain}_iterations_{num_iterations}.gif'
 anim_title= f'Seeing: {seeing} arcsec, λ: {wl} nm, Loop speed: {loopspeed} kHz'
 

@@ -10,9 +10,15 @@ from hcipy import *
 from PIL import Image
 import numpy as np
 import os
+import sys
+from pathlib import Path
 
-# Set the Working Directory
-os.chdir('/home/laboptic/Documents/optlab-master/PROJECTS_3/RISTRETTO/Banc AO')
+# Configure root paths without changing the working directory
+OPT_LAB_ROOT = Path(os.environ.get("OPT_LAB_ROOT", "/home/ristretto-dao/optlab-master"))
+PROJECT_ROOT = Path(os.environ.get("PROJECT_ROOT", OPT_LAB_ROOT / "PROJECTS_3/RISTRETTO/Banc AO"))
+sys.path.append(str(OPT_LAB_ROOT))
+sys.path.append(str(PROJECT_ROOT))
+ROOT_DIR = PROJECT_ROOT
 
 # Import Specific Modules
 from src.tilt import *
