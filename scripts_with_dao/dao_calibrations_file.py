@@ -71,6 +71,7 @@ bias_image = np.median(bias_stack, axis=0)
 
 # Turn on laser
 las.enable(1) 
+time.sleep(2)
 
 # Plot
 plt.figure()
@@ -95,7 +96,7 @@ print('Pupil created on the SLM.')
 # Display the Reference Image
 reference_image = camera_wfs.get_data()
 plt.figure()
-plt.imshow(reference_image, cmap='gray')
+plt.imshow(reference_image)
 plt.colorbar()
 plt.title('Reference Image')
 plt.show()
@@ -118,7 +119,7 @@ n_iter=200 # number of iternations for dm random commands
 
 mask = create_flux_filtering_mask(method, flux_cutoff, 
                                modulation_angles, modulation_amp, n_iter,
-                               create_summed_image=True, verbose=True, verbose_plot=True)
+                               create_summed_image=False, verbose=False, verbose_plot=True)
 
 valid_pixels_mask_shm = dao.shm('/tmp/valid_pixels_mask.im.shm', np.zeros((img_size, img_size)).astype(np.uint32)) 
 valid_pixels_mask_shm.set_data(mask)
@@ -135,82 +136,10 @@ print(f'Number of valid pixels = {npix_valid}')
 #KL2S_shm = dao.shm('/tmp/KL2S.im.shm' , np.zeros((nmodes_KL, npix_valid)).astype(np.float32)) 
 #S2KL_shm = dao.shm('/tmp/S2KL.im.shm' , np.zeros((npix_valid, nmodes_KL)).astype(np.float32)) 
 
-#%% Computing Pupil Centers and Radii
-
-mask_filename = f'binned_mask_pup_{pupil_size}mm_3s_pyr.fits'
-mask = fits.getdata(os.path.join(folder_calib, mask_filename))
-mask = mask.astype(np.uint8)  # Ensure the mask is in uint8 format
-
-# Display the Mask
-plt.figure()
-plt.title('Flux Filtering Mask')
-plt.imshow(mask, cmap='viridis')
-plt.colorbar()
-plt.show()
-
-num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(mask)
-
-# Extract pupil centers and calculate radii
-pupil_centers = centroids[1:]
-radii = [np.sqrt(stats[i, cv2.CC_STAT_AREA] / np.pi) for i in range(1, num_labels)]
-
-print("Pupil Centers:", pupil_centers)
-print("Pupil Radii:", radii)
-
-# Pupil Centers: [[90.26202441 33.39985642]
-#  [33.66571019 35.38235294]
-#  [62.34477825 82.29971388]]
-# Pupil Radii: [21.057199990834974, 21.064756854523722, 21.09495723828184]
-
 #%% Centering the PSF on the Pyramid Tip
 
-pupil_coords = pupil_centers
-radius = int(round(np.mean(radii))) 
-
-# Initial Tip-Tilt Amplitudes
-tt_amplitudes = [-0.5, 0.2]  # Initial estimate for tip-tilt amplitude
-focus = [0.4] #fixed focus
-
-# Optimize Tip-Tilt Amplitudes
-optimized_tt_amplitudes = optimize_amplitudes(tt_amplitudes, pupil_coords, radius)
-new_ttf_amplitudes = optimized_tt_amplitudes + focus
-print(f"Optimized Tip-Tilt-Focus Amplitudes: {new_ttf_amplitudes}")
-
-# Capture Final Image After Optimization
-final_img = camera_wfs.get_data() #[crop_size[0]:crop_size[1], crop_size[2]:crop_size[3]]
-
-# Example of plotting the cost function values after optimization
-plt.figure()
-plt.plot(cost_values)
-plt.title("Cost Function Values Over Iterations")
-plt.xlabel("Iteration")
-plt.ylabel("Cost")
-plt.show()
-
-# Display Final Image
-plt.figure()
-plt.imshow(final_img, cmap='gray')
-plt.title('Final Balanced Pupil Intensities')
-plt.colorbar()
-plt.show()
-#%% Updating Setup File with Optimized Amplitudes
-
-dao_setup_path = ROOT_DIR / 'src/dao_setup.py'
-
-# Read the existing file content
-with open(dao_setup_path, 'r') as file:
-    content = file.read()
-
-# Update the file with the new optimized amplitudes
-new_line = f"ttf_amplitudes = {new_ttf_amplitudes}"
-content = re.sub(r"ttf_amplitudes\s*=\s*\[.*?\]", new_line, content)
-
-# Write the updated content back to the setup file
-with open(dao_setup_path, 'w') as file:
-    file.write(content)
-
-print("Updated ttf_amplitudes in py")
-
+center_psf_on_pyramid_tip(mask=mask, initial_tt_amplitudes=[-0.5, 0.2], focus=[0.4], 
+                              update_setup_file=True, verbose=True, verbose_plot=True)
 
 #%% Capture Reference Image
 

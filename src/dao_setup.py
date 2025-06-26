@@ -109,8 +109,9 @@ zernike_basis = make_zernike_basis(4, pupil_size, pupil_grid)
 zernike_basis = [mode / np.ptp(mode) for mode in zernike_basis]
 zernike_basis = np.asarray(zernike_basis)
 
+# [-0.0813878287964559, 0.09992195172893337, 0.4] 
 # Create a Tip, Tilt, and Focus (TTF) matrix with specified amplitudes as the diagonal elements
-ttf_amplitudes = [-0.0813878287964559, 0.09992195172893337, 0.4]  # Tip, Tilt, and Focus amplitudes - Focus 0.4
+ttf_amplitudes = [-0.07241214829533704, 0.09803889186685488, 0.4]  # Tip, Tilt, and Focus amplitudes - Focus 0.4
 ttf_amplitude_matrix = np.diag(ttf_amplitudes)
 ttf_matrix = ttf_amplitude_matrix @ zernike_basis[1:4, :]  # Select modes 1 (tip), 2 (tilt), and 3 (focus)
 

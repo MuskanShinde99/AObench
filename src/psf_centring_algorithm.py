@@ -9,6 +9,8 @@ from skopt import gp_minimize
 from DEVICES_3.Basler_Pylon.test_pylon import *
 import sys
 from pathlib import Path
+import cv2
+import re
 
 # Configure root paths without changing the working directory
 OPT_LAB_ROOT = Path(os.environ.get("OPT_LAB_ROOT", "/home/ristretto-dao/optlab-master"))
@@ -18,6 +20,8 @@ sys.path.append(str(PROJECT_ROOT))
 ROOT_DIR = PROJECT_ROOT
 
 from src.dao_setup import *  # Import all variables from setup
+#import src.dao_setup as dao_setup
+
 
 # Access the SLM and cameras
 
@@ -51,7 +55,7 @@ def cost_function(amplitudes, pupil_coords, radius, iteration):
     print(f"Iteration {iteration}: Pupil Intensities: {intensities}")
 
     # Check if rounded intensities are equal
-    rounded_intensities = np.round(intensities, 2).astype(int)
+    rounded_intensities = np.round(intensities, 0).astype(int)
     if np.all(rounded_intensities == rounded_intensities[0]):
         print("Stopping condition met: Pupil intensities are equal.")
         stop_optimization = True  # Set stopping flag
@@ -88,7 +92,7 @@ def optimize_amplitudes(initial_amplitudes, pupil_coords, radius):
     result = gp_minimize(
         wrapped_cost_function,
         bounds,
-        n_calls=300,
+        n_calls=200,
         random_state=42,
         callback=[stop_callback]  # Add callback for early stopping
     )
@@ -96,6 +100,83 @@ def optimize_amplitudes(initial_amplitudes, pupil_coords, radius):
     return result.x  # Return optimized amplitudes
 
 
+
+
+def center_psf_on_pyramid_tip(mask, initial_tt_amplitudes=[-0.5, 0.2], focus=[0.4], 
+                              update_setup_file=False, verbose=False, verbose_plot=False):
+    """
+    Optimize tip-tilt amplitudes to balance pupil intensities using a given binary mask.
+
+    Parameters:
+    - mask (np.ndarray): Binary mask of pupil regions
+    - initial_tt_amplitudes (list): Initial [tip, tilt] guess
+    - focus (list): Single-element list with focus value (e.g., [0.4])
+    - update_setup_file (bool): If True, update `ttf_amplitudes` in dao_setup.py
+    - verbose (bool): Print processing info
+    - verbose_plot (bool): Show final image and optimization cost plot
+
+    Returns:
+    - new_ttf_amplitudes (list): Optimized [tip, tilt, focus] amplitudes
+    """
+
+    mask = mask.astype(np.uint8)
+
+    # Find connected components in the binary mask
+    num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(mask)
+    pupil_centers = centroids[1:]  # Skip background label
+    radii = [np.sqrt(stats[i, cv2.CC_STAT_AREA] / np.pi) for i in range(1, num_labels)]
+    radius = int(round(np.mean(radii)))
+
+    if verbose:
+        print(f"Found {len(pupil_centers)} pupils")
+        print(f"Average pupil radius: {radius:.2f}")
+
+    # Optimize tip-tilt amplitudes
+    optimized_tt_amplitudes = optimize_amplitudes(initial_tt_amplitudes, pupil_centers, radius)
+    new_ttf_amplitudes = optimized_tt_amplitudes + focus
+
+    if verbose:
+        print(f"Optimized Tip-Tilt-Focus Amplitudes: {new_ttf_amplitudes}")
+
+    # Capture final image
+    final_img = camera_wfs.get_data()
+
+    # Plot cost function values if available
+    if verbose_plot and 'cost_values' in globals():
+        plt.figure()
+        plt.plot(cost_values)
+        plt.title("Cost Function Values Over Iterations")
+        plt.xlabel("Iteration")
+        plt.ylabel("Cost")
+        plt.show()
+
+    # Show final image
+    if verbose_plot:
+        plt.figure()
+        plt.imshow(final_img, cmap='gray')
+        plt.title('Final Balanced Pupil Intensities')
+        plt.colorbar()
+        plt.show()
+
+    # Optionally update dao_setup.py
+    if update_setup_file:
+        dao_setup_path = Path(ROOT_DIR) / 'src/dao_setup.py'
+        with open(dao_setup_path, 'r') as file:
+            content = file.read()
+
+        new_line = f"ttf_amplitudes = {new_ttf_amplitudes}"
+        updated_content = re.sub(r"ttf_amplitudes\s*=\s*\[.*?\]", new_line, content)
+
+        with open(dao_setup_path, 'w') as file:
+            file.write(updated_content)
+
+        if verbose:
+            print("✅ Updated `ttf_amplitudes` in dao_setup.py")
+    else:
+        if verbose:
+            print("⚠️ Skipped updating `ttf_amplitudes` in `dao_setup.py`")
+
+    return new_ttf_amplitudes
 
 
 #%%
