@@ -38,6 +38,7 @@ from src.utils import *
 from src.dao_create_flux_filtering_mask import *
 from src.psf_centring_algorithm import *
 from src.create_transformation_matrices import *
+#from src.create_shared_memories import *
 
 folder_calib = ROOT_DIR / 'outputs/Calibration_files'
 folder_pyr_mask = ROOT_DIR / 'outputs/3s_pyr_mask'
@@ -59,12 +60,6 @@ folder_transformation_matrices = ROOT_DIR / 'outputs/Transformation_matrices'
 # pupil_size = dao_setup.pupil_size
 # npix_small_pupil_grid = dao_setup.npix_small_pupil_grid
 # small_pupil_mask = dao_setup.small_pupil_mask
-
-plt.figure()
-plt.imshow(data_pupil, cmap='gray')
-plt.colorbar()
-plt.title('Data Pupil')
-plt.show()
 
 # Compute and display Pupil Data on SLM
 data_slm = compute_data_slm()
@@ -94,15 +89,15 @@ plt.colorbar()
 plt.title('Deformable Mirror Surface OPD')
 plt.show()
 
-dao_setup.dm_act_shm.set_data(np.ones((npix_small_pupil_grid, npix_small_pupil_grid)))
-dao_setup.dm_act_shm.get_data()
+#dao_setup.dm_act_shm.set_data(np.ones((npix_small_pupil_grid, npix_small_pupil_grid)))
+#dao_setup.dm_act_shm.get_data()
  
 
-#%% Capturing a Reference Image
+#%% Capturing an image to check
 
 # Display the Reference Image
 reference_image = camera_wfs.get_data()
-reference_image_shm.set_data(reference_image)
+#reference_image_shm.set_data(reference_image)
 
 plt.figure()
 plt.imshow(reference_image, cmap='gray')
@@ -112,7 +107,7 @@ plt.show()
 
 # Display the Focal pane image
 fp_image = camera_fp.get_data()
-reference_psf_shm.set_data(fp_image)
+#reference_psf_shm.set_data(fp_image)
 
 plt.figure()
 plt.imshow(fp_image) 
@@ -147,22 +142,6 @@ flux_limit_upper = summed_image.max() * flux_cutoff
 mask[summed_image >= flux_limit_upper] = True
 print('Flux filtering mask successfully created.')
 
-# Get valid pixel from the mask
-valid_pixels_indices = np.where(mask > 0)
-
-npix_valid = valid_pixels_indices[0].shape
-print(f'Number of valid pixels = {npix_valid}')
-
-valid_pixels_mask_shm = dao.shm('/tmp/valid_pixels_mask.im.shm', np.zeros((img_size, img_size)).astype(np.uint32)) 
-valid_pixels_mask_shm.set_data(mask)
-valid_pixels_indices_shm = dao.shm('/tmp/valid_pixels_mask.im.shm', np.zeros((npix_valid, 2)).astype(np.uint32))
-
-slopes_shm = dao.shm('/tmp/slopes.im.shm', np.zeros((npix_valid, 1)).astype(np.uint32)) 
-
-KL2PWFS_cube_shm = dao.shm('/tmp/KL2PWFS_cube.im.shm' , np.zeros((nmodes_KL, img_size**2)).astype(np.float32)) 
-KL2S_shm = dao.shm('/tmp/KL2S.im.shm' , np.zeros((nmodes_KL, npix_valid)).astype(np.float32)) 
-S2KL_shm = dao.shm('/tmp/S2KL.im.shm' , np.zeros((npix_valid, nmodes_KL)).astype(np.float32)) 
-
 # Display the Mask
 plt.figure()
 plt.title('Flux Filtering Mask (DM modulation)')
@@ -185,6 +164,23 @@ plt.show()
 # Save the Masked Image and Mask
 fits.writeto(os.path.join(folder_calib, f'binned_masked_pyr_images_pup_{pupil_size}mm_3s_pyr.fits'), np.asarray(masked_summed_image), overwrite=True)
 fits.writeto(os.path.join(folder_calib, f'binned_mask_pup_{pupil_size}mm_3s_pyr.fits'), np.asarray(mask.astype(np.uint8)), overwrite=True)
+
+# Get valid pixel from the mask
+valid_pixels_indices = np.where(mask > 0)
+
+npix_valid = valid_pixels_indices[0].shape
+print(f'Number of valid pixels = {npix_valid}')
+
+valid_pixels_mask_shm = dao.shm('/tmp/valid_pixels_mask.im.shm', np.zeros((img_size, img_size)).astype(np.uint32)) 
+valid_pixels_mask_shm.set_data(mask)
+#valid_pixels_indices_shm = dao.shm('/tmp/valid_pixels_mask.im.shm', np.zeros((npix_valid, 2)).astype(np.uint32))
+
+#slopes_shm = dao.shm('/tmp/slopes.im.shm', np.zeros((npix_valid, 1)).astype(np.uint32)) 
+
+KL2PWFS_cube_shm = dao.shm('/tmp/KL2PWFS_cube.im.shm' , np.zeros((nmodes_KL, img_size**2)).astype(np.float32)) 
+#KL2S_shm = dao.shm('/tmp/KL2S.im.shm' , np.zeros((nmodes_KL, npix_valid)).astype(np.float32)) 
+#S2KL_shm = dao.shm('/tmp/S2KL.im.shm' , np.zeros((npix_valid, nmodes_KL)).astype(np.float32)) 
+
 
  #%% Computing Pupil Centers and Radii
 
@@ -246,7 +242,7 @@ plt.colorbar()
 plt.show()
 #%% Updating Setup File with Optimized Amplitudes
 
-dao_setup_path = 'src/dao_setup.py'
+dao_setup_path = ROOT_DIR / 'src/dao_setup.py'
 
 # Read the existing file content
 with open(dao_setup_path, 'r') as file:
@@ -298,8 +294,19 @@ plt.show()
 
 las.set_channel(channel)
 las.enable(0) # Turn off laser
-time.sleep(wait_time)  # Allow some time for laser to turn off
-bias_image = camera_wfs.get_data()
+time.sleep(3)  # Allow some time for laser to turn off
+
+# Capture and average 1000 bias frames
+num_frames = 1000
+bias_stack = []
+
+for _ in range(num_frames):
+    frame = camera_wfs.get_data()
+    bias_stack.append(frame)
+
+# Compute average bias image
+bias_image = np.median(bias_stack, axis=0)
+
 las.enable(1) # Turn on laser
 
 # Save the Bias Image
