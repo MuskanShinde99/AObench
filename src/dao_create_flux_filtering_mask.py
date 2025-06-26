@@ -20,7 +20,7 @@ import matplotlib.colors as mcolors
 
 
 
-def create_flux_filtering_mask(modulation_angles, modulation_amp, verbose=False, verbose_plot=False, **kwargs):
+def create_summed_image_for_mask(modulation_angles, modulation_amp, verbose=False, verbose_plot=False, **kwargs):
     """
     Create a mask based on the modulation angles and flux cutoff.
 
@@ -96,7 +96,7 @@ def create_flux_filtering_mask(modulation_angles, modulation_amp, verbose=False,
     return summed_image
 
 
-def create_flux_filtering_mask_trial(n_iter, verbose=False, verbose_plot=False, **kwargs):
+def create_summed_image_for_mask_dm_random(n_iter, verbose=False, verbose_plot=False, **kwargs):
     """
     Run push-pull image acquisition using random DM actuator patterns.
 
@@ -114,20 +114,20 @@ def create_flux_filtering_mask_trial(n_iter, verbose=False, verbose_plot=False, 
     - summed_image: result of push-pull image subtraction summed over all modes
     """
 
-    slm = kwargs.get("slm", slm)
-    camera = kwargs.get("camera", camera_wfs)
-    deformable_mirror = kwargs.get("deformable_mirror", deformable_mirror)
-    npix_small_pupil_grid = kwargs.get("npix_small_pupil_grid", npix_small_pupil_grid)
-
+    slm = kwargs.get("slm", dao_setup.slm)
+    camera = kwargs.get("camera", dao_setup.camera_wfs)
+    deformable_mirror = kwargs.get("deformable_mirror", dao_setup.deformable_mirror)
+    deformable_mirror = DeformableMirror(dm_modes_full)
+    npix_small_pupil_grid = kwargs.get("npix_small_pupil_grid", dao_setup.npix_small_pupil_grid)
 
     nact_total = int(deformable_mirror.num_actuators)
     data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
 
-    push_pull_pyr_img_arr = []
+    img_arr = []
 
     if verbose_plot:
         fig, ax = plt.subplots()
-        img_display = ax.imshow(np.zeros((dataHeight, dataWidth)), cmap='gray', vmin=0, vmax=255)
+        img_display = ax.imshow(np.zeros((dataHeight, dataWidth)))
         cbar = plt.colorbar(img_display, ax=ax)
         ax.set_title("Captured Image")
         plt.ion()
@@ -138,29 +138,19 @@ def create_flux_filtering_mask_trial(n_iter, verbose=False, verbose_plot=False, 
             print(f"Iteration {i + 1}")
 
         act_random = np.random.choice([0, 1], size=nact_total)
-
-        # Push
         deformable_mirror.actuators = act_random
         data_dm[:, :] = deformable_mirror.opd.shaped
+        
         data_slm = compute_data_slm(data_dm=data_dm)
         slm.set_data(data_slm)
         time.sleep(wait_time)
-        push_img = camera.get_data()
-
-        # Pull
-        deformable_mirror.actuators = -act_random
-        data_dm[:, :] = deformable_mirror.opd.shaped
-        data_slm = compute_data_slm(data_dm=data_dm)
-        slm.set_data(data_slm)
-        time.sleep(wait_time)
-        pull_img = camera.get_data()
-
-        push_pull_img = push_img - pull_img
-        push_pull_pyr_img_arr.append(push_pull_img)
+        
+        img = camera.get_data()
+        img_arr.append(img)
 
         if verbose_plot:
-            img_display.set_data(push_pull_img)
-            img_display.set_clim(vmin=push_pull_img.min(), vmax=push_pull_img.max())
+            img_display.set_data(img)
+            img_display.set_clim(vmin=img.min(), vmax=img.max())
             fig.canvas.draw()
             fig.canvas.flush_events()
             plt.pause(0.01)
@@ -168,6 +158,106 @@ def create_flux_filtering_mask_trial(n_iter, verbose=False, verbose_plot=False, 
     if verbose_plot:
         plt.ioff()
 
-    summed_image = np.sum(np.asarray(push_pull_pyr_img_arr), axis=0)
+    summed_image = np.sum(np.asarray(img_arr), axis=0)
 
     return summed_image
+
+def create_flux_filtering_mask(method, flux_cutoff, 
+                               modulation_angles=np.arange(0, 360, 10), modulation_amp=15, n_iter=200,
+                               create_summed_image=True, verbose=False, verbose_plot=False, **kwargs):
+    """
+    Create a flux filtering mask.
+
+    Parameters:
+    - method (str): Type of summed image acquisition. Options:
+        * 'tip_tilt_modulation' → uses `create_summed_image_for_mask`
+        * 'dm_random' → uses `create_summed_image_for_mask_dm_random`
+    - flux_cutoff (float): Relative intensity threshold to generate binary mask (e.g., 0.61)
+    - modulation_angles (array): Tip-tilt modulation angles in degrees (only used in 'tip_tilt_modulation')
+    - modulation_amp (float): Tip-tilt modulation amplitude (only used in 'tip_tilt_modulation')
+    - n_iter (int): Number of iterations (only used in 'dm_random')
+    - create_summed_image (bool): If True, compute new summed image; otherwise load from disk
+    - verbose (bool): Print progress info
+    - verbose_plot (bool): Show real-time image display
+    - **kwargs: Additional parameters passed to the internal image generation functions
+
+    Returns:
+    - mask (np.ndarray): Binary mask highlighting high-flux regions
+    """
+
+    folder_pyr_mask = kwargs.get("folder_pyr_mask", dao_setup.folder_pyr_mask)
+    folder_calib = kwargs.get("folder_calib", dao_setup.folder_calib)
+    pupil_size = kwargs.get("pupil_size", dao_setup.pupil_size)
+
+    summed_img_path = os.path.join(folder_calib, f'binned_summed_pyr_images_pup_{pupil_size}mm_3s_pyr.fits')
+
+    if create_summed_image:
+        if verbose:
+            print(f'Creating summed image using method: {method}')
+
+        if method == 'tip_tilt_modulation':
+            summed_image = create_summed_image_for_mask(
+                modulation_angles, modulation_amp,
+                verbose=verbose, verbose_plot=verbose_plot, **kwargs
+            )
+        elif method == 'dm_random':
+            summed_image = create_summed_image_for_mask_dm_random(
+                n_iter=n_iter,
+                verbose=verbose, verbose_plot=verbose_plot, **kwargs
+            )
+        else:
+            raise ValueError("Invalid method. Use 'tip_tilt_modulation' or 'dm_random'.")
+
+        fits.writeto(summed_img_path, summed_image.astype(np.float32), overwrite=True)
+        if verbose:
+            print(f'Summed image saved to: {summed_img_path}')
+    else:
+        if verbose:
+            print(f'Loading summed image from: {summed_img_path}')
+        summed_image = fits.getdata(summed_img_path)
+
+    if verbose_plot:
+        plt.figure()
+        plt.title('Summed Image')
+        plt.imshow(summed_image, cmap='viridis')
+        plt.colorbar()
+        # plt.savefig(os.path.join(folder_pyr_mask, f'summed_image_dm_modulation.png'))
+        plt.show()
+
+    flux_limit_upper = summed_image.max() * flux_cutoff
+    mask = summed_image >= flux_limit_upper
+
+    if verbose:
+        print(f'Flux filtering mask created using cutoff {flux_cutoff:.2f}')
+
+    if verbose_plot:
+        plt.figure()
+        plt.title('Flux Filtering Mask')
+        plt.imshow(mask, cmap='viridis')
+        plt.colorbar()
+        # plt.savefig(os.path.join(folder_pyr_mask, f'mask_dm_modulation.png'))
+        plt.show()
+
+    masked_summed_image = mask * summed_image
+
+    if verbose_plot:
+        plt.figure()
+        plt.title('Masked Summed Image')
+        plt.imshow(masked_summed_image, cmap='viridis')
+        plt.colorbar()
+        # plt.savefig(os.path.join(folder_pyr_mask, f'masked_summed_image_dm_modulation.png'))
+        plt.show()
+
+    if verbose:
+        print('Saving masked image and mask')
+
+    fits.writeto(
+        os.path.join(folder_calib, f'binned_masked_pyr_images_pup_{pupil_size}mm_3s_pyr.fits'),
+        masked_summed_image.astype(np.float32), overwrite=True
+    )
+    fits.writeto(
+        os.path.join(folder_calib, f'binned_mask_pup_{pupil_size}mm_3s_pyr.fits'),
+        mask.astype(np.uint8), overwrite=True
+    )
+
+    return mask

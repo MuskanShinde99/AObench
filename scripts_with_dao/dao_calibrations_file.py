@@ -40,10 +40,6 @@ from src.psf_centring_algorithm import *
 from src.create_transformation_matrices import *
 #from src.create_shared_memories import *
 
-folder_calib = ROOT_DIR / 'outputs/Calibration_files'
-folder_pyr_mask = ROOT_DIR / 'outputs/3s_pyr_mask'
-folder_transformation_matrices = ROOT_DIR / 'outputs/Transformation_matrices'
-
 # #%% Accessing Devices
 
 # # Initialize Spatial Light Modulator (SLM)
@@ -53,52 +49,51 @@ folder_transformation_matrices = ROOT_DIR / 'outputs/Transformation_matrices'
 # camera_wfs = dao_setup.camera_wfs
 # camera_fp = dao_setup.camera_fp
 
+# # Intialize DM
+# deformable_mirror = dao_setup.defomable_mirror
+
+#%% Take a bias image
+
+# Turn off laser
+las.enable(0) 
+time.sleep(2)  # Allow some time for laser to turn off
+
+# Capture and average 1000 bias frames
+num_frames = 1000
+bias_stack = []
+
+for _ in range(num_frames):
+    frame = camera_wfs.get_data()
+    bias_stack.append(frame)
+
+# Compute average bias image
+bias_image = np.median(bias_stack, axis=0)
+
+# Turn on laser
+las.enable(1) 
+
+# Plot
+plt.figure()
+plt.imshow(bias_image, cmap='gray')
+plt.title('Bias image')
+plt.colorbar()
+plt.show()
+
+# Save the Bias Image
+fits.writeto(os.path.join(folder_calib, f'binned_bias_image.fits'), np.asarray(bias_image), overwrite=True)
 
 #%% Creating and Displaying a Circular Pupil on the SLM
-
-# # Access the pupil data from the setup file
-# pupil_size = dao_setup.pupil_size
-# npix_small_pupil_grid = dao_setup.npix_small_pupil_grid
-# small_pupil_mask = dao_setup.small_pupil_mask
 
 # Compute and display Pupil Data on SLM
 data_slm = compute_data_slm()
 slm.set_data(data_slm)
 
-print('Pupil successfully created on the SLM.')
-
-#%% Create a deformable mirror (DM)
-
-# # Number of actuators
-# nact = dao_setup.nact
-# nact_valid = dao_setup.nact_valid
-# nact_total = dao_setup.nact_total
-# dm_modes = dao_setup.dm_modes
-
-deformable_mirror = DeformableMirror(dm_modes)
-nmodes_dm = deformable_mirror.num_actuators
-print('DM created')
-print("Number of DM modes =", nmodes_dm)
-
-# Flatten the DM surface and set actuator values
-deformable_mirror.flatten()
-deformable_mirror.actuators.fill(1)
-plt.figure()
-plt.imshow(deformable_mirror.opd.shaped)
-plt.colorbar()
-plt.title('Deformable Mirror Surface OPD')
-plt.show()
-
-#dao_setup.dm_act_shm.set_data(np.ones((npix_small_pupil_grid, npix_small_pupil_grid)))
-#dao_setup.dm_act_shm.get_data()
- 
+print('Pupil created on the SLM.')
 
 #%% Capturing an image to check
 
 # Display the Reference Image
 reference_image = camera_wfs.get_data()
-#reference_image_shm.set_data(reference_image)
-
 plt.figure()
 plt.imshow(reference_image, cmap='gray')
 plt.colorbar()
@@ -107,82 +102,40 @@ plt.show()
 
 # Display the Focal pane image
 fp_image = camera_fp.get_data()
-#reference_psf_shm.set_data(fp_image)
-
 plt.figure()
-plt.imshow(fp_image) 
+plt.imshow(np.log10(fp_image))
 plt.colorbar()
 plt.title('PSF')
 plt.show()
 
 #%% Creating a Flux Filtering Mask
 
+method='tip_tilt_modulation'
+flux_cutoff = 0.35
 modulation_angles = np.arange(0, 360, 10)  # angles of modulation
 modulation_amp = 15 # in lamda/D
+n_iter=200 # number of iternations for dm random commands
 
-print('Starting flux modulation...')
-summed_image = create_flux_filtering_mask(modulation_angles, modulation_amp, verbose=False, verbose_plot=True)
-print('Flux modulation completed.')
-
-summed_image = np.asarray(summed_image)  
-   
-# Display the  Summed Image
-plt.figure()
-plt.title('Summed Image (DM modulation)')
-plt.imshow(summed_image, cmap='viridis')
-plt.colorbar()
-plt.savefig(os.path.join(folder_pyr_mask, f'summed_image_dm_modulation.png'))
-plt.show()
-
-#%%
-# Create a filtering mask
-flux_cutoff = 0.61 # Intensity cutoff threshold - 30%
-mask = np.zeros(summed_image.shape, dtype=bool)
-flux_limit_upper = summed_image.max() * flux_cutoff
-mask[summed_image >= flux_limit_upper] = True
-print('Flux filtering mask successfully created.')
-
-# Display the Mask
-plt.figure()
-plt.title('Flux Filtering Mask (DM modulation)')
-plt.imshow(mask, cmap='viridis')
-plt.colorbar()
-plt.savefig(os.path.join(folder_pyr_mask, f'mask_dm_modulation.png'))
-plt.show()
-
-# Apply Mask and Crop Results
-masked_summed_image = mask*summed_image #[crop_size[0]:crop_size[1], crop_size[2]:crop_size[3]]
-
-# Display the Masked Summed Image
-plt.figure()
-plt.title('Masked Summed Image (DM modulation)')
-plt.imshow(masked_summed_image, cmap='viridis')
-plt.colorbar()
-plt.savefig(os.path.join(folder_pyr_mask, f'masked_summed_image_dm_modulation.png'))
-plt.show()
-
-# Save the Masked Image and Mask
-fits.writeto(os.path.join(folder_calib, f'binned_masked_pyr_images_pup_{pupil_size}mm_3s_pyr.fits'), np.asarray(masked_summed_image), overwrite=True)
-fits.writeto(os.path.join(folder_calib, f'binned_mask_pup_{pupil_size}mm_3s_pyr.fits'), np.asarray(mask.astype(np.uint8)), overwrite=True)
-
-# Get valid pixel from the mask
-valid_pixels_indices = np.where(mask > 0)
-
-npix_valid = valid_pixels_indices[0].shape
-print(f'Number of valid pixels = {npix_valid}')
+mask = create_flux_filtering_mask(method, flux_cutoff, 
+                               modulation_angles, modulation_amp, n_iter,
+                               create_summed_image=True, verbose=True, verbose_plot=True)
 
 valid_pixels_mask_shm = dao.shm('/tmp/valid_pixels_mask.im.shm', np.zeros((img_size, img_size)).astype(np.uint32)) 
 valid_pixels_mask_shm.set_data(mask)
-#valid_pixels_indices_shm = dao.shm('/tmp/valid_pixels_mask.im.shm', np.zeros((npix_valid, 2)).astype(np.uint32))
+
+#%% Create shared memories that depends on number of valid pixels
+
+# Get valid pixels from the mask
+valid_pixels_indices = np.where(mask > 0)
+npix_valid = valid_pixels_indices[0].shape
+print(f'Number of valid pixels = {npix_valid}')
 
 #slopes_shm = dao.shm('/tmp/slopes.im.shm', np.zeros((npix_valid, 1)).astype(np.uint32)) 
-
-KL2PWFS_cube_shm = dao.shm('/tmp/KL2PWFS_cube.im.shm' , np.zeros((nmodes_KL, img_size**2)).astype(np.float32)) 
+#KL2PWFS_cube_shm = dao.shm('/tmp/KL2PWFS_cube.im.shm' , np.zeros((nmodes_KL, img_size**2)).astype(np.float32)) 
 #KL2S_shm = dao.shm('/tmp/KL2S.im.shm' , np.zeros((nmodes_KL, npix_valid)).astype(np.float32)) 
 #S2KL_shm = dao.shm('/tmp/S2KL.im.shm' , np.zeros((npix_valid, nmodes_KL)).astype(np.float32)) 
 
-
- #%% Computing Pupil Centers and Radii
+#%% Computing Pupil Centers and Radii
 
 mask_filename = f'binned_mask_pup_{pupil_size}mm_3s_pyr.fits'
 mask = fits.getdata(os.path.join(folder_calib, mask_filename))
@@ -259,66 +212,41 @@ with open(dao_setup_path, 'w') as file:
 print("Updated ttf_amplitudes in py")
 
 
-#%%
+#%% Capture Reference Image
+
 # Compute and display Pupil Data on SLM
 data_slm = compute_data_slm()
 slm.set_data(data_slm)
-
-# Display the Reference Image
 time.sleep(wait_time)  # Allow the system to stabilize
+
+# Capure the Reference Image
 reference_image = camera_wfs.get_data()
-masked_reference_image = reference_image * mask
-normalized_reference_image = masked_reference_image / np.abs(np.sum(masked_reference_image))
+#reference_image_shm.set_data(reference_image)
+
+# Normailzed refrence image
+normalized_reference_image = normalize_image(pyr_img, mask, bias_img=np.zeros_like(pyr_img))
 plt.figure()
 plt.imshow(normalized_reference_image)
 plt.colorbar()
-plt.title('Processed Reference Image')
+plt.title('Normalized Reference Image')
 plt.show()
 
-# Display the Focal pane image
+# Display the Focal plane image
 fp_image = camera_fp.get_data()
+#reference_psf_shm.set_data(fp_image)
+
+#Display the PSF
 plt.figure()
 plt.imshow(fp_image) 
 plt.colorbar()
 plt.title('PSF')
 plt.show()
 
-# Display the radial profile of the focal pane image
+# Display the radial profile of the PSF
 plt.figure()
 plt.plot(fp_image[:, 253:273])
 plt.title('PSF radial profile')
 plt.show()
-
-
-#%% Take a bias image
-
-las.set_channel(channel)
-las.enable(0) # Turn off laser
-time.sleep(3)  # Allow some time for laser to turn off
-
-# Capture and average 1000 bias frames
-num_frames = 1000
-bias_stack = []
-
-for _ in range(num_frames):
-    frame = camera_wfs.get_data()
-    bias_stack.append(frame)
-
-# Compute average bias image
-bias_image = np.median(bias_stack, axis=0)
-
-las.enable(1) # Turn on laser
-
-# Save the Bias Image
-fits.writeto(os.path.join(folder_calib, f'binned_bias_image.fits'), np.asarray(bias_image), overwrite=True)
-
-# Plot
-plt.figure()
-plt.imshow(bias_image, cmap='gray')
-plt.title('Bias image')
-plt.colorbar()
-plt.show()
-
 
 #%% Create transformation matrices
 

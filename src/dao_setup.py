@@ -40,12 +40,13 @@ folder_pyr_mask = ROOT_DIR / "outputs/3s_pyr_mask"
 folder_transformation_matrices = ROOT_DIR / "outputs/Transformation_matrices"
 folder_closed_loop_tests = ROOT_DIR / "outputs/Closed_loop_tests"
 folder_turbulence = ROOT_DIR / "outputs/Phase_screens"
+
 #%% Start the laser
 
 channel = 1
 las = mcls1("/dev/ttyUSB0")
 las.set_channel(channel)
-las.enable(1) # Turn on laser
+#las.enable(1) # 1 to turn on laser, 0 to turn off
 las.set_current(49) #55mA is a good value for pyramid images
 print('Laser is ON')
   
@@ -222,6 +223,19 @@ for x, y in valid_actuator_indices:
 dm_modes = ModeBasis(dm_modes.T, small_pupil_grid)
 
 deformable_mirror = DeformableMirror(dm_modes)
+
+nmodes_dm = deformable_mirror.num_actuators
+
+# print("Number of DM modes =", nmodes_dm)
+
+# # Flatten the DM surface and set actuator values
+# deformable_mirror.flatten()
+# deformable_mirror.actuators.fill(1)
+# plt.figure()
+# plt.imshow(deformable_mirror.opd.shaped)
+# plt.colorbar()
+# plt.title('Deformable Mirror Surface OPD')
+# plt.show()
 
 #%% Create shared memory
 
