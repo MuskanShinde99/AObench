@@ -119,10 +119,12 @@ n_iter=200 # number of iternations for dm random commands
 
 mask = create_flux_filtering_mask(method, flux_cutoff, 
                                modulation_angles, modulation_amp, n_iter,
-                               create_summed_image=False, verbose=False, verbose_plot=True)
+                               create_summed_image=True, verbose=False, verbose_plot=True)
 
 valid_pixels_mask_shm = dao.shm('/tmp/valid_pixels_mask.im.shm', np.zeros((img_size, img_size)).astype(np.uint32)) 
 valid_pixels_mask_shm.set_data(mask)
+
+#reset the DM to flat
 
 #%% Create shared memories that depends on number of valid pixels
 
@@ -131,64 +133,33 @@ valid_pixels_indices = np.where(mask > 0)
 npix_valid = valid_pixels_indices[0].shape
 print(f'Number of valid pixels = {npix_valid}')
 
-#slopes_shm = dao.shm('/tmp/slopes.im.shm', np.zeros((npix_valid, 1)).astype(np.uint32)) 
-#KL2PWFS_cube_shm = dao.shm('/tmp/KL2PWFS_cube.im.shm' , np.zeros((nmodes_KL, img_size**2)).astype(np.float32)) 
-#KL2S_shm = dao.shm('/tmp/KL2S.im.shm' , np.zeros((nmodes_KL, npix_valid)).astype(np.float32)) 
-#S2KL_shm = dao.shm('/tmp/S2KL.im.shm' , np.zeros((npix_valid, nmodes_KL)).astype(np.float32)) 
+# slopes_shm = dao.shm('/tmp/slopes.im.shm', np.zeros((npix_valid, 1)).astype(np.uint32)) 
+# KL2PWFS_cube_shm = dao.shm('/tmp/KL2PWFS_cube.im.shm' , np.zeros((nmodes_KL, img_size**2)).astype(np.float32)) 
+# KL2S_shm = dao.shm('/tmp/KL2S.im.shm' , np.zeros((nmodes_KL, npix_valid)).astype(np.float32)) 
+# S2KL_shm = dao.shm('/tmp/S2KL.im.shm' , np.zeros((npix_valid, nmodes_KL)).astype(np.float32)) 
 
 #%% Centering the PSF on the Pyramid Tip
 
-center_psf_on_pyramid_tip(mask=mask, initial_tt_amplitudes=[-0.5, 0.2], focus=[0.4], 
+center_psf_on_pyramid_tip(mask=mask, initial_tt_amplitudes=[0, 0], focus=[0.4], 
                               update_setup_file=True, verbose=True, verbose_plot=True)
 
-#%% Capture Reference Image
+#average more images
+# recover the last value I stopped the optimization at
+# maybe display the tip tilt values instead of the pupil instensities
 
-# Compute and display Pupil Data on SLM
-data_slm = compute_data_slm()
-slm.set_data(data_slm)
-time.sleep(wait_time)  # Allow the system to stabilize
+#%% Scanning modes to find zero of the pyramid
 
-# Capure the Reference Image
-reference_image = camera_wfs.get_data()
-#reference_image_shm.set_data(reference_image)
-
-# Normailzed refrence image
-normalized_reference_image = normalize_image(pyr_img, mask, bias_img=np.zeros_like(pyr_img))
-plt.figure()
-plt.imshow(normalized_reference_image)
-plt.colorbar()
-plt.title('Normalized Reference Image')
-plt.show()
-
-# Display the Focal plane image
-fp_image = camera_fp.get_data()
-#reference_psf_shm.set_data(fp_image)
-
-#Display the PSF
-plt.figure()
-plt.imshow(fp_image) 
-plt.colorbar()
-plt.title('PSF')
-plt.show()
-
-# Display the radial profile of the PSF
-plt.figure()
-plt.plot(fp_image[:, 253:273])
-plt.title('PSF radial profile')
-plt.show()
 
 #%% Create transformation matrices
 
-Act2Phs, Phs2Act = compute_Act2Phs(nact, npix_small_pupil_grid, dm_modes, folder_transformation_matrices, verbose=True)
+Act2Phs, Phs2Act = compute_Act2Phs(nact, npix_small_pupil_grid, dm_modes_full, folder_transformation_matrices, verbose=True)
 
 # Create KL modes
 nmodes_kl = nact_valid
 Act2KL, KL2Act = compute_KL2Act(nact, npix_small_pupil_grid, nmodes_kl, dm_modes, small_pupil_mask, folder_transformation_matrices, verbose=True)
 KL2Phs, Phs2KL = compute_KL2Phs(nact, npix_small_pupil_grid, nmodes_kl, Act2Phs, Phs2Act, KL2Act, Act2KL, folder_transformation_matrices, verbose=True)
-# KL2Phs, Phs2KL = compute_KL2Phs(nact, npix_small_pupil_grid, nact_valid , dm_modes, small_pupil_mask, Act2Phs, folder_transformation_matrices, verbose=True)
-# Act2KL, KL2Act = compute_KL2Act(nact, nact_valid, Act2Phs, Phs2Act, KL2Phs, Phs2KL, folder_transformation_matrices, verbose=True)
 
-# Plot KL projections on actuators
+# Plot KL projected| on actuators
 fig, axes = plt.subplots(2, 5, figsize=(15, 6))
 # Flatten the axes array for easier indexing
 axes_flat = axes.flatten()
@@ -202,63 +173,52 @@ for i, mode in enumerate(range(10)):
 plt.tight_layout()
 plt.show()
 
-# Plot KL modes
-fig, axes = plt.subplots(2, 5, figsize=(15, 6))
-# Flatten the axes array for easier indexing
-axes_flat = axes.flatten()
+# Act2Phs_shm.set_data(Act2Phs)
+# Phs2Act_shm.set_data(Phs2Act)
 
-for i, mode in enumerate(range(10)):
-    im = axes_flat[i].imshow(KL2Phs[mode].reshape(npix_small_pupil_grid, npix_small_pupil_grid)* small_pupil_mask, cmap='viridis')
-    axes_flat[i].set_title(f'KL2Phs {mode}')
-    axes_flat[i].axis('off')
-    fig.colorbar(im, ax=axes_flat[i], fraction=0.03, pad=0.04)
+# KL2Act_shm.set_data(KL2Act)
+# Act2KL_shm.set_data(Act2KL)
+# KL2Phs_shm.set_data(KL2Phs)
+# Phs2KL_shm.set_data(Phs2KL)
 
-plt.tight_layout()
+#%% Capture Reference Image
+
+# Compute and display Pupil Data on SLM
+data_slm = compute_data_slm()
+slm.set_data(data_slm)
+time.sleep(wait_time)  # Allow the system to stabilize
+
+# Capure the Reference Image
+reference_image = camera_wfs.get_data()
+# average over several frames
+#reference_image_shm.set_data(reference_image)
+fits.writeto(folder_calib / 'reference_image_raw.fits', reference_image, overwrite=True)
+
+# Normailzed refrence image
+normalized_reference_image = normalize_image(reference_image, mask, bias_img=np.zeros_like(reference_image))
+fits.writeto(folder_calib / 'reference_image_normalized.fits', normalized_reference_image, overwrite=True)
+
+#Plot
+plt.figure()
+plt.imshow(normalized_reference_image)
+plt.colorbar()
+plt.title('Normalized Reference Image')
 plt.show()
 
-# Create Zernike modes
-nmodes_zernike = 200
-Znk2Phs, Phs2Znk = compute_Znk2Phs(nmodes_zernike, npix_small_pupil_grid, pupil_size, small_pupil_grid, folder_transformation_matrices, verbose=True)
-Act2Znk, Znk2Act = compute_Znk2Act(nact, nmodes_zernike, Act2Phs, Phs2Act, Znk2Phs, Phs2Znk, folder_transformation_matrices, verbose=True)
+# Display the Focal plane image
+fp_image = camera_fp.get_data()
+#reference_psf_shm.set_data(fp_image)
+fits.writeto(folder_calib / 'reference_psf.fits', fp_image, overwrite=True)
 
-# Plot KL modes
-fig, axes = plt.subplots(2, 5, figsize=(15, 6))
-# Flatten the axes array for easier indexing
-axes_flat = axes.flatten()
-
-for i, mode in enumerate(range(10)):
-    im = axes_flat[i].imshow(Znk2Phs[mode].reshape(npix_small_pupil_grid, npix_small_pupil_grid), cmap='viridis')
-    axes_flat[i].set_title(f'Znk2Phs {mode}')
-    axes_flat[i].axis('off')
-    fig.colorbar(im, ax=axes_flat[i], fraction=0.03, pad=0.04)
-
-plt.tight_layout()
+#Display the PSF
+plt.figure()
+plt.imshow(fp_image) 
+plt.colorbar()
+plt.title('PSF')
 plt.show()
 
-# Plot KL projections on actuators
-fig, axes = plt.subplots(2, 5, figsize=(15, 6))
-# Flatten the axes array for easier indexing
-axes_flat = axes.flatten()
-
-for i, mode in enumerate(range(10)):
-    im = axes_flat[i].imshow(Znk2Act[mode].reshape(nact, nact), cmap='viridis')
-    axes_flat[i].set_title(f' Znk2Act {mode}')
-    axes_flat[i].axis('off')
-    fig.colorbar(im, ax=axes_flat[i], fraction=0.03, pad=0.04)
-
-plt.tight_layout()
+# Display the radial profile of the PSF
+plt.figure()
+plt.plot(fp_image[:, 253:273])
+plt.title('PSF radial profile')
 plt.show()
-
-Act2Phs_shm.set_data(Act2Phs)
-Phs2Act_shm.set_data(Phs2Act)
-
-KL2Act_shm.set_data(KL2Act)
-Act2KL_shm.set_data(Act2KL)
-KL2Phs_shm.set_data(KL2Phs)
-Phs2KL_shm.set_data(Phs2KL)
-
-Znk2Act_shm.set_data(Znk2Act)
-Act2Znk_shm.set_data(Act2Znk)
-Znk2Phs_shm.set_data(Znk2Phs)
-Phs2Znk_shm.set_data(Phs2Znk)
-

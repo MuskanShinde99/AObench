@@ -69,10 +69,23 @@ def cost_function(amplitudes, pupil_coords, radius, iteration):
 # Global list to store cost function values for debugging
 cost_values = []
 
-def optimize_amplitudes(initial_amplitudes, pupil_coords, radius):
-    """Optimize amplitudes using Scikit-Optimize's gp_minimize. 
-    Bayesian optimization using Gaussian Processes."""
-    bounds = [(-1.0, 1.0), (-1.0, 1.0)]  # Set bounds for the first two amplitudes
+def optimize_amplitudes(initial_amplitudes, pupil_coords, radius,
+                        bounds=[(-1.0, 1.0), (-1.0, 1.0)],
+                        n_calls=200):
+    """
+    Optimize amplitudes using Scikit-Optimize's gp_minimize. 
+    Bayesian optimization using Gaussian Processes.
+
+    Parameters:
+    - initial_amplitudes (list): Initial guess for tip and tilt amplitudes
+    - pupil_coords (list): List of (x, y) pupil center coordinates
+    - radius (float): Approximate radius of pupil mask
+    - bounds (list): Search bounds for tip and tilt amplitudes
+    - n_calls (int): Maximum number of optimization iterations
+
+    Returns:
+    - result.x (list): Optimized [tip, tilt] amplitudes
+    """
 
     # Wrapper around the cost function to track the cost at each iteration
     def wrapped_cost_function(amps):
@@ -85,15 +98,17 @@ def optimize_amplitudes(initial_amplitudes, pupil_coords, radius):
     # Initialize iteration counter
     wrapped_cost_function.iteration = 0
 
+    # Callback to allow early stopping if condition is met
     def stop_callback(res):
         """Callback to stop optimization early if condition is met."""
         return stop_optimization  # Check global flag
 
+    # Perform Gaussian Process optimization
     result = gp_minimize(
         wrapped_cost_function,
-        bounds,
-        n_calls=200,
-        random_state=42,
+        bounds,           # Search bounds
+        n_calls=n_calls,  # Number of evaluations
+        random_state=42,  # Reproducibility
         callback=[stop_callback]  # Add callback for early stopping
     )
 
@@ -101,9 +116,14 @@ def optimize_amplitudes(initial_amplitudes, pupil_coords, radius):
 
 
 
-
-def center_psf_on_pyramid_tip(mask, initial_tt_amplitudes=[-0.5, 0.2], focus=[0.4], 
-                              update_setup_file=False, verbose=False, verbose_plot=False):
+def center_psf_on_pyramid_tip(mask,
+                              initial_tt_amplitudes=[-0.5, 0.2],
+                              focus=[0.4],
+                              bounds=[(-1.0, 1.0), (-1.0, 1.0)],
+                              n_calls=200,
+                              update_setup_file=False,
+                              verbose=False,
+                              verbose_plot=False):
     """
     Optimize tip-tilt amplitudes to balance pupil intensities using a given binary mask.
 
@@ -111,6 +131,8 @@ def center_psf_on_pyramid_tip(mask, initial_tt_amplitudes=[-0.5, 0.2], focus=[0.
     - mask (np.ndarray): Binary mask of pupil regions
     - initial_tt_amplitudes (list): Initial [tip, tilt] guess
     - focus (list): Single-element list with focus value (e.g., [0.4])
+    - bounds (list of tuple): Bounds for the [tip, tilt] amplitudes
+    - n_calls (int): Number of iterations for the optimizer
     - update_setup_file (bool): If True, update `ttf_amplitudes` in dao_setup.py
     - verbose (bool): Print processing info
     - verbose_plot (bool): Show final image and optimization cost plot
@@ -119,29 +141,38 @@ def center_psf_on_pyramid_tip(mask, initial_tt_amplitudes=[-0.5, 0.2], focus=[0.
     - new_ttf_amplitudes (list): Optimized [tip, tilt, focus] amplitudes
     """
 
+    # Ensure mask is binary and of correct dtype
     mask = mask.astype(np.uint8)
 
     # Find connected components in the binary mask
     num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(mask)
     pupil_centers = centroids[1:]  # Skip background label
     radii = [np.sqrt(stats[i, cv2.CC_STAT_AREA] / np.pi) for i in range(1, num_labels)]
-    radius = int(round(np.mean(radii)))
+    radius = int(round(np.mean(radii)))  # Average radius
 
     if verbose:
         print(f"Found {len(pupil_centers)} pupils")
         print(f"Average pupil radius: {radius:.2f}")
 
-    # Optimize tip-tilt amplitudes
-    optimized_tt_amplitudes = optimize_amplitudes(initial_tt_amplitudes, pupil_centers, radius)
+    # Optimize tip-tilt amplitudes using Bayesian optimization
+    optimized_tt_amplitudes = optimize_amplitudes(
+        initial_tt_amplitudes,
+        pupil_centers,
+        radius,
+        bounds=bounds,
+        n_calls=n_calls
+    )
+
+    # Append the fixed focus amplitude to complete the vector
     new_ttf_amplitudes = optimized_tt_amplitudes + focus
 
     if verbose:
         print(f"Optimized Tip-Tilt-Focus Amplitudes: {new_ttf_amplitudes}")
 
-    # Capture final image
+    # Capture final image after optimization
     final_img = camera_wfs.get_data()
 
-    # Plot cost function values if available
+    # Example of plotting the cost function values after optimization
     if verbose_plot and 'cost_values' in globals():
         plt.figure()
         plt.plot(cost_values)
@@ -150,7 +181,7 @@ def center_psf_on_pyramid_tip(mask, initial_tt_amplitudes=[-0.5, 0.2], focus=[0.
         plt.ylabel("Cost")
         plt.show()
 
-    # Show final image
+    # Display Final Image
     if verbose_plot:
         plt.figure()
         plt.imshow(final_img, cmap='gray')
@@ -158,15 +189,19 @@ def center_psf_on_pyramid_tip(mask, initial_tt_amplitudes=[-0.5, 0.2], focus=[0.
         plt.colorbar()
         plt.show()
 
-    # Optionally update dao_setup.py
+    # Update the dao_setup.py file with the new optimized amplitudes
     if update_setup_file:
         dao_setup_path = Path(ROOT_DIR) / 'src/dao_setup.py'
+
+        # Read the existing file content
         with open(dao_setup_path, 'r') as file:
             content = file.read()
 
+        # Update the file with the new optimized amplitudes
         new_line = f"ttf_amplitudes = {new_ttf_amplitudes}"
         updated_content = re.sub(r"ttf_amplitudes\s*=\s*\[.*?\]", new_line, content)
 
+        # Write the updated content back to the setup file
         with open(dao_setup_path, 'w') as file:
             file.write(updated_content)
 
@@ -177,6 +212,7 @@ def center_psf_on_pyramid_tip(mask, initial_tt_amplitudes=[-0.5, 0.2], focus=[0.
             print("⚠️ Skipped updating `ttf_amplitudes` in `dao_setup.py`")
 
     return new_ttf_amplitudes
+
 
 
 #%%

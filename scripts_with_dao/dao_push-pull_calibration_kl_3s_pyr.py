@@ -47,32 +47,21 @@ folder_transformation_matrices = ROOT_DIR / 'outputs/Transformation_matrices'
 data_slm = compute_data_slm()
 slm.set_data(data_slm)
 time.sleep(wait_time)
-print('Pupil successfully created on the SLM.')
+print('Pupil created on the SLM.')
 
 #%% Create a deformable mirror (DM)
 
-# Number of actuators
-
-deformable_mirror = DeformableMirror(dm_modes)
+deformable_mirror = DeformableMirror(dm_modes_full)
 nmodes_dm = deformable_mirror.num_actuators
 print('DM created')
 print("Number of DM modes =", nmodes_dm)
 
 # Flatten the DM surface and set actuator values
 deformable_mirror.flatten()
-# deformable_mirror.actuators.fill(1)
-# plt.figure()
-# plt.imshow(deformable_mirror.opd.shaped)
-# plt.colorbar()
-# plt.title('Deformable Mirror Surface OPD')
-# plt.show()
 
 #%% Load transformation matrices
 
 nmodes_kl = nact_valid
-KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_{nmodes_kl}_npupil_{npix_small_pupil_grid}.fits'))
-Phs2KL = fits.getdata(os.path.join(folder_transformation_matrices, f'Phs2KL_npupil_{npix_small_pupil_grid}_nkl_{nmodes_kl}.fits'))
-
 KL2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Act_nkl_{nmodes_kl}_nact_{nact}.fits'))
 Act2KL = fits.getdata(os.path.join(folder_transformation_matrices, f'Act2KL_nact_{nact}_nkl_{nmodes_kl}.fits'))
 
@@ -134,7 +123,6 @@ phase_amp = 0.1
 pull_images, push_images, push_pull_images = perform_push_pull_calibration_with_phase_basis(
     KL2Act, phase_amp, reference_image, mask, verbose=True)
 
-#%%
 # Save pull images to FITS files
 print('Saving pull images')
 filename = f'binned_processed_response_cube_KL2Act_only_pull_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
