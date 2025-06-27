@@ -48,21 +48,27 @@ def cost_function(amplitudes, pupil_coords, radius, iteration):
     slm.set_data(((data_pupil * 256) % 256).astype(np.uint8))  # Update SLM data
     time.sleep(wait_time)  # Wait for the update to take effect
 
-    img = camera_wfs.get_data()  # Capture an image after updating
+    # Capture and average 5 images
+    num_images = 5
+    images = [camera_wfs.get_data() for i in range(num_images)]
+    img = np.mean(images, axis=0)
+    
+    #Compute pupil intensities
     intensities = compute_pupil_intensities(img, pupil_coords, radius)  # Compute intensities
     
-    # Print iteration number and intensities
-    print(f"Iteration {iteration}: Pupil Intensities: {intensities}")
-
-    # Check if rounded intensities are equal
-    rounded_intensities = np.round(intensities, 0).astype(int)
-    if np.all(rounded_intensities == rounded_intensities[0]):
-        print("Stopping condition met: Pupil intensities are equal.")
-        stop_optimization = True  # Set stopping flag
-
     # Calculate the variance of the intensities as the cost
     mean_intensity = np.mean(intensities)
     variance = np.mean((intensities - mean_intensity) ** 2)
+    
+    # Print iteration number and variance
+    print(f"Iteration: {iteration} | Variance: {round(variance)}")
+
+    
+    # Check stopping condition: if variance is less than 2
+    if variance < 1:
+        print(f"Stopping condition met: Variance is below threshold.")
+        stop_optimization = True  # Set stopping flag
+        
     return variance + 1e-3  # Add a small noise floor
 
 
@@ -178,7 +184,7 @@ def center_psf_on_pyramid_tip(mask,
         plt.plot(cost_values)
         plt.title("Cost Function Values Over Iterations")
         plt.xlabel("Iteration")
-        plt.ylabel("Cost")
+        plt.ylabel("Variance")
         plt.show()
 
     # Display Final Image

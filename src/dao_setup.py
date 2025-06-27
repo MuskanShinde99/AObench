@@ -6,40 +6,48 @@ Created on Mon Feb 17 13:56:42 2025
 @author: laboptic
 """
 
-# Import libraries
+# Import Libraries
+from hcipy import *
+from matplotlib.colors import LogNorm
+import gc
+from tqdm import tqdm
+from pypylon import pylon
 from matplotlib import pyplot as plt
 from PIL import Image
 import numpy as np
-from hcipy import *
 import time
 from astropy.io import fits
 import os
-import dao
-from skimage.transform import resize
-from pathlib import Path
 import sys
+import scipy
+import matplotlib.animation as animation
+from pathlib import Path
+from skimage.transform import resize
 
-# Configure root directories using environment variables with reasonable defaults
+# Configure root paths without changing the working directory
 OPT_LAB_ROOT = Path(os.environ.get("OPT_LAB_ROOT", "/home/ristretto-dao/optlab-master"))
 PROJECT_ROOT = Path(os.environ.get("PROJECT_ROOT", OPT_LAB_ROOT / "PROJECTS_3/RISTRETTO/Banc AO"))
-# Ensure required modules are importable without changing the working directory
 sys.path.append(str(OPT_LAB_ROOT))
 sys.path.append(str(PROJECT_ROOT))
 ROOT_DIR = PROJECT_ROOT
 
-# Import specific modules
-from DEVICES_3.Basler_Pylon.test_pylon import *
+# Import Specific Modules
 from DEVICES_3.Thorlabs.MCLS1 import mcls1
+import dao
 from src.create_circular_pupil import *
 from src.tilt import *
 from src.utils import *
+from src.calibration_functions import *
+from src.dao_setup import *  # Import all variables from setup
+from src.kl_basis_eigenmodes import computeEigenModes, computeEigenModes_notsquarepupil
+from src.create_transformation_matrices import *
+from src.ao_loop import *
 
-
-folder_calib = ROOT_DIR / "outputs/Calibration_files"
-folder_pyr_mask = ROOT_DIR / "outputs/3s_pyr_mask"
-folder_transformation_matrices = ROOT_DIR / "outputs/Transformation_matrices"
-folder_closed_loop_tests = ROOT_DIR / "outputs/Closed_loop_tests"
-folder_turbulence = ROOT_DIR / "outputs/Phase_screens"
+folder_calib = ROOT_DIR / 'outputs/Calibration_files'
+folder_pyr_mask = ROOT_DIR / 'outputs/3s_pyr_mask'
+folder_transformation_matrices = ROOT_DIR / 'outputs/Transformation_matrices'
+folder_closed_loop_tests = ROOT_DIR / 'outputs/Closed_loop_tests'
+folder_turbulence = ROOT_DIR / 'outputs/Phase_screens'
 
 #%% Start the laser
 
@@ -111,7 +119,7 @@ zernike_basis = np.asarray(zernike_basis)
 
 # [-0.0813878287964559, 0.09992195172893337, 0.4] 
 # Create a Tip, Tilt, and Focus (TTF) matrix with specified amplitudes as the diagonal elements
-ttf_amplitudes = [-0.10507228410337033, 0.08583960714284133, 0.4]  # Tip, Tilt, and Focus amplitudes - Focus 0.4
+ttf_amplitudes = [-0.11889772875068383, 0.12062334000959662, 0.4]  # Tip, Tilt, and Focus amplitudes - Focus 0.4
 ttf_amplitude_matrix = np.diag(ttf_amplitudes)
 ttf_matrix = ttf_amplitude_matrix @ zernike_basis[1:4, :]  # Select modes 1 (tip), 2 (tilt), and 3 (focus)
 

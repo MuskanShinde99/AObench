@@ -7,6 +7,9 @@ Created on Mon Feb 24 18:40:46 2025
 """
 
 # Import Libraries
+from matplotlib.colors import LogNorm
+import gc
+from tqdm import tqdm
 from pypylon import pylon
 from matplotlib import pyplot as plt
 from PIL import Image
@@ -17,6 +20,7 @@ from astropy.io import fits
 import os
 import sys
 import scipy
+import matplotlib.animation as animation
 from pathlib import Path
 
 # Configure root paths without changing the working directory
@@ -36,10 +40,13 @@ from src.calibration_functions import *
 from src.dao_setup import *  # Import all variables from setup
 from src.kl_basis_eigenmodes import computeEigenModes, computeEigenModes_notsquarepupil
 from src.create_transformation_matrices import *
+from src.ao_loop import *
 
 folder_calib = ROOT_DIR / 'outputs/Calibration_files'
 folder_pyr_mask = ROOT_DIR / 'outputs/3s_pyr_mask'
 folder_transformation_matrices = ROOT_DIR / 'outputs/Transformation_matrices'
+folder_closed_loop_tests = ROOT_DIR / 'outputs/Closed_loop_tests'
+folder_turbulence = ROOT_DIR / 'outputs/Phase_screens'
 
 #%% Creating and Displaying a Circular Pupil on the SLM
 
@@ -48,16 +55,6 @@ data_slm = compute_data_slm()
 slm.set_data(data_slm)
 time.sleep(wait_time)
 print('Pupil created on the SLM.')
-
-#%% Create a deformable mirror (DM)
-
-deformable_mirror = DeformableMirror(dm_modes_full)
-nmodes_dm = deformable_mirror.num_actuators
-print('DM created')
-print("Number of DM modes =", nmodes_dm)
-
-# Flatten the DM surface and set actuator values
-deformable_mirror.flatten()
 
 #%% Load transformation matrices
 

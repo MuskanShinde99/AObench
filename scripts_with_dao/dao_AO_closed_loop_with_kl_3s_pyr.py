@@ -54,16 +54,6 @@ folder_turbulence = ROOT_DIR / 'outputs/Phase_screens'
 data_slm = compute_data_slm()
 slm.set_data(data_slm)
 
-#%% Create a deformable mirror (DM)
-
-deformable_mirror = DeformableMirror(dm_modes_full)
-nmodes_dm = deformable_mirror.num_actuators
-print('DM created')
-print("Number of DM modes =", nmodes_dm)
-
-# Flatten the DM surface and set actuator values
-deformable_mirror.flatten()
-
 #%% Load transformation matrices
 
 # Define folder path
