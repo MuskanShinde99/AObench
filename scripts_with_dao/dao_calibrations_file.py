@@ -41,7 +41,7 @@ from src.dao_create_flux_filtering_mask import *
 from src.psf_centring_algorithm import *
 from src.kl_basis_eigenmodes import computeEigenModes, computeEigenModes_notsquarepupil
 from src.create_transformation_matrices import *
-from src.ao_loop import *
+from src.create_shared_memories import *
 
 folder_calib = ROOT_DIR / 'outputs/Calibration_files'
 folder_pyr_mask = ROOT_DIR / 'outputs/3s_pyr_mask'
@@ -77,7 +77,7 @@ for _ in range(num_frames):
 
 # Compute average bias image
 bias_image = np.median(bias_stack, axis=0)
-
+bias_image_shm.set_data(bias_image)
 # Turn on laser
 las.enable(1) 
 time.sleep(5)
@@ -121,7 +121,7 @@ plt.show()
 #%% Creating a Flux Filtering Mask
 
 method='tip_tilt_modulation'
-flux_cutoff = 0.35
+flux_cutoff = 0.6
 modulation_angles = np.arange(0, 360, 10)  # angles of modulation
 modulation_amp = 15 # in lamda/D
 n_iter=200 # number of iternations for dm random commands
@@ -130,7 +130,6 @@ mask = create_flux_filtering_mask(method, flux_cutoff,
                                modulation_angles, modulation_amp, n_iter,
                                create_summed_image=False, verbose=False, verbose_plot=True)
 
-valid_pixels_mask_shm = dao.shm('/tmp/valid_pixels_mask.im.shm', np.zeros((img_size, img_size)).astype(np.uint32)) 
 valid_pixels_mask_shm.set_data(mask)
 
 #reset the DM to flat
@@ -139,13 +138,13 @@ valid_pixels_mask_shm.set_data(mask)
 
 # Get valid pixels from the mask
 valid_pixels_indices = np.where(mask > 0)
-npix_valid = valid_pixels_indices[0].shape
+npix_valid = valid_pixels_indices[0].shape[0]
 print(f'Number of valid pixels = {npix_valid}')
 
-# slopes_shm = dao.shm('/tmp/slopes.im.shm', np.zeros((npix_valid, 1)).astype(np.uint32)) 
-# KL2PWFS_cube_shm = dao.shm('/tmp/KL2PWFS_cube.im.shm' , np.zeros((nmodes_KL, img_size**2)).astype(np.float32)) 
-# KL2S_shm = dao.shm('/tmp/KL2S.im.shm' , np.zeros((nmodes_KL, npix_valid)).astype(np.float32)) 
-# S2KL_shm = dao.shm('/tmp/S2KL.im.shm' , np.zeros((npix_valid, nmodes_KL)).astype(np.float32)) 
+KL2PWFS_cube_shm = dao.shm('/tmp/KL2PWFS_cube.im.shm' , np.zeros((nmodes_KL, img_size_wfs_cam**2)).astype(np.float32)) 
+slopes_shm = dao.shm('/tmp/slopes.im.shm', np.zeros((npix_valid, 1)).astype(np.uint32)) 
+KL2S_shm = dao.shm('/tmp/KL2S.im.shm' , np.zeros((nmodes_KL, npix_valid)).astype(np.float32)) 
+S2KL_shm = dao.shm('/tmp/S2KL.im.shm' , np.zeros((npix_valid, nmodes_KL)).astype(np.float32)) 
 
 #%% Centering the PSF on the Pyramid Tip
 
@@ -185,9 +184,9 @@ plt.show()
 # Act2Phs_shm.set_data(Act2Phs)
 # Phs2Act_shm.set_data(Phs2Act)
 
-# KL2Act_shm.set_data(KL2Act)
+KL2Act_shm.set_data(KL2Act)
 # Act2KL_shm.set_data(Act2KL)
-# KL2Phs_shm.set_data(KL2Phs)
+KL2Phs_shm.set_data(KL2Phs)
 # Phs2KL_shm.set_data(Phs2KL)
 
 #%% Capture Reference Image
@@ -200,7 +199,7 @@ time.sleep(wait_time)  # Allow the system to stabilize
 # Capure the Reference Image
 reference_image = camera_wfs.get_data()
 # average over several frames
-#reference_image_shm.set_data(reference_image)
+reference_image_shm.set_data(reference_image)
 fits.writeto(folder_calib / 'reference_image_raw.fits', reference_image, overwrite=True)
 
 # Normailzed refrence image
@@ -216,7 +215,7 @@ plt.show()
 
 # Display the Focal plane image
 fp_image = camera_fp.get_data()
-#reference_psf_shm.set_data(fp_image)
+reference_psf_shm.set_data(fp_image)
 fits.writeto(folder_calib / 'reference_psf.fits', fp_image, overwrite=True)
 
 #Display the PSF
@@ -241,74 +240,57 @@ pull_images, push_images, push_pull_images = perform_push_pull_calibration_with_
 
 # Save pull images to FITS files
 print('Saving pull images')
-filename = f'binned_processed_response_cube_KL2Act_only_pull_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
+filename = f'binned_processed_response_cube_KL2PWFS_only_pull_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
 fits.writeto(os.path.join(folder_calib, filename), np.asarray(pull_images), overwrite=True)
 
 # Save push images to FITS files
 print('Saving push images')
-filename = f'binned_processed_response_cube_KL2Act_only_push_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
+filename = f'binned_processed_response_cube_KL2PWFS_only_push_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
 fits.writeto(os.path.join(folder_calib, filename), np.asarray(push_images), overwrite=True)
 
 # Save push-pull images to FITS files
 print('Saving push-pull images')
-filename = f'binned_processed_response_cube_KL2Act_push-pull_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
+filename = f'binned_processed_response_cube_KL2PWFS_push-pull_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
 fits.writeto(os.path.join(folder_calib, filename), np.asarray(push_pull_images), overwrite=True)
 
 
-#%% Process Pull Images and Generate Response Matrix
+#%% Compute interaction matrix
 
-calib = 'KL2Act_only_pull'
+from datetime import datetime
+# Timestamp
+timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-# Create the pull response matrix
-response_matrix = np.array([image[valid_pixels_indices] for image in pull_images])
-response_matrix = np.array([image.ravel() for image in response_matrix])
-plt.imshow(response_matrix, cmap='gray')
-plt.title('Pull Response Matrix')
+# Create full and filtered matrices ---
+response_matrix_full = compute_response_matrix(push_pull_images)
+response_matrix_filtered = compute_response_matrix(push_pull_images, mask=mask)
+
+KL2PWFS_cube_shm.set_data(response_matrix_full)
+
+# Print shapes ---
+print("Full response matrix shape:    ", response_matrix_full.shape)
+print("Filtered response matrix shape:", response_matrix_filtered.shape)
+
+# Plot filtered matrix 
+plt.figure()
+plt.imshow(response_matrix_filtered, cmap='gray', aspect='auto')
+plt.title('Filtered Push-Pull Response Matrix')
+plt.xlabel('Slopes')
+plt.ylabel('Modes')
+plt.colorbar()
 plt.show()
 
-# Print the shape of the Pull Response matrix 
-print("Pull Response matrix shape:", response_matrix.shape)
+# Save matrices (standard and timestamped)
 
-# Save the response matrix as a FITS file
-response_matrix_filename = f'binned_response_matrix_{calib}_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
-response_matrix_file_path = os.path.join(folder_calib, response_matrix_filename)
-fits.writeto(response_matrix_file_path, response_matrix, overwrite=True)
+# Filtered
+filtered_base = f'binned_response_matrix_KL2S_filtered_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
+filtered_timestamped = f'binned_response_matrix_KL2S_filtered_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr_{timestamp}.fits'
+fits.writeto(os.path.join(folder_calib, filtered_base), response_matrix_filtered, overwrite=True)
+fits.writeto(os.path.join(folder_calib, filtered_timestamped), response_matrix_filtered, overwrite=True)
+print(f"Filtered matrix saved to:\n  {filtered_base}\n  {filtered_timestamped}")
 
-#%% Process Push Images and Generate Response Matrix
-
-calib = 'KL2Act_only_push'
-
-# Create the push response matrix
-response_matrix = np.array([image[valid_pixels_indices] for image in push_images])
-response_matrix = np.array([image.ravel() for image in response_matrix])
-plt.imshow(response_matrix, cmap='gray')
-plt.title('Push Response Matrix')
-plt.show()
-
-# Print the shape of the Push Response matrix 
-print("Push Response matrix shape:", response_matrix.shape)
-
-# Save the response matrix as a FITS file
-response_matrix_filename = f'binned_response_matrix_{calib}_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
-response_matrix_file_path = os.path.join(folder_calib, response_matrix_filename)
-fits.writeto(response_matrix_file_path, response_matrix, overwrite=True)
-
-#%% Generate Response Push-Pull Matrix
-
-# Name of calib file
-calib = 'KL2Act_push-pull'
-
-# Create the response matrix 
-response_matrix = np.array([image[valid_pixels_indices] for image in push_pull_images])
-response_matrix = np.array([image.ravel() for image in response_matrix])
-plt.imshow(response_matrix, cmap='gray')
-plt.title('Push-Pull Response Matrix')
-plt.show()
-
-# Print the shape of the Push-Pull Response matrix 
-print("Push-Pull Response matrix shape:", response_matrix.shape)
-
-# Save the response matrix as a FITS file
-response_matrix_filename = f'binned_response_matrix_{calib}_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
-response_matrix_file_path = os.path.join(folder_calib, response_matrix_filename)
-fits.writeto(response_matrix_file_path, response_matrix, overwrite=True)
+# Full
+full_base = f'binned_response_matrix_KL2S_full_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
+full_timestamped = f'binned_response_matrix_KL2S_full_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr_{timestamp}.fits'
+fits.writeto(os.path.join(folder_calib, full_base), response_matrix_full, overwrite=True)
+fits.writeto(os.path.join(folder_calib, full_timestamped), response_matrix_full, overwrite=True)
+print(f"Full matrix saved to:\n  {full_base}\n  {full_timestamped}")

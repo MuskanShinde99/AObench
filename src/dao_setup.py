@@ -35,13 +35,14 @@ ROOT_DIR = PROJECT_ROOT
 from DEVICES_3.Thorlabs.MCLS1 import mcls1
 import dao
 from src.create_circular_pupil import *
+from src.dao_create_flux_filtering_mask import *
 from src.tilt import *
 from src.utils import *
 from src.calibration_functions import *
 from src.dao_setup import *  # Import all variables from setup
 from src.kl_basis_eigenmodes import computeEigenModes, computeEigenModes_notsquarepupil
 from src.create_transformation_matrices import *
-from src.ao_loop import *
+
 
 folder_calib = ROOT_DIR / 'outputs/Calibration_files'
 folder_pyr_mask = ROOT_DIR / 'outputs/3s_pyr_mask'
@@ -56,7 +57,7 @@ las = mcls1("/dev/ttyUSB0")
 las.set_channel(channel)
 #las.enable(1) # 1 to turn on laser, 0 to turn off
 las.set_current(49) #55mA is a good value for pyramid images
-print('Laser is ON')
+print('Laser is Accessible')
   
 #%% Configuration Camera
 
@@ -71,7 +72,11 @@ fps_fp = dao.shm('/tmp/cam2Fps.im.shm')
 fps_fp.set_data(fps_fp.get_data()*0+20)
 
 img = camera_wfs.get_data()
-img_size = img.shape[0]
+img_size_wfs_cam = img.shape[0]
+
+img_fp = camera_fp.get_data()
+img_size_fp_cam = img_fp.shape[0]
+
 # # To get camera image
 # camera_wfs.get_data()
 # camera_fp.get_data()
@@ -119,7 +124,7 @@ zernike_basis = np.asarray(zernike_basis)
 
 # [-0.0813878287964559, 0.09992195172893337, 0.4] 
 # Create a Tip, Tilt, and Focus (TTF) matrix with specified amplitudes as the diagonal elements
-ttf_amplitudes = [-0.11889772875068383, 0.12062334000959662, 0.4]  # Tip, Tilt, and Focus amplitudes - Focus 0.4
+ttf_amplitudes = [-0.05289625567018985, 0.18069697087753633, 0.4]  # Tip, Tilt, and Focus amplitudes - Focus 0.4
 ttf_amplitude_matrix = np.diag(ttf_amplitudes)
 ttf_matrix = ttf_amplitude_matrix @ zernike_basis[1:4, :]  # Select modes 1 (tip), 2 (tilt), and 3 (focus)
 
@@ -248,37 +253,7 @@ nmodes_dm = deformable_mirror.num_actuators
 
 #%% Create shared memory
 
-act = nact_valid
 nmodes_dm = nact_valid
 nmodes_KL = nact_valid
 nmode_Znk = nact_valid
 
-# # Pupil / Grids
-# small_pupil_mask_shm = dao.shm('/tmp/small_pupil_mask.im.shm', np.zeros((npix_small_pupil_grid, npix_small_pupil_grid)).astype(np.float32)) 
-# pupil_mask_shm = dao.shm('/tmp/pupil_mask.im.shm', np.zeros((dataHeight, dataWidth)).astype(np.float32)) 
-
-# # WFS
-# slopes_img_shm = dao.shm('/tmp/slopes_img.im.shm', np.zeros((img_size, img_size)).astype(np.uint32)) 
-
-# # Deformable Mirror
-# dm_act_shm = dao.shm('/tmp/dm_act.im.shm', np.zeros((npix_small_pupil_grid, npix_small_pupil_grid)).astype(np.float32)) 
-
-# # Calibration / Reference
-# bias_image_shm = dao.shm('/tmp/bias_image.im.shm', np.zeros((img_size, img_size)).astype(np.uint32)) 
-# reference_psf_shm = dao.shm('/tmp/reference_psf.im.shm', np.zeros((img_size, img_size)).astype(np.uint32)) 
-# reference_image_shm = dao.shm('/tmp/reference_image.im.shm' , np.zeros((img_size, img_size)).astype(np.uint32)) 
-# reference_image_slopes_shm = dao.shm('/tmp/reference_image_slopes.im.shm' , np.zeros((img_size, img_size)).astype(np.float32)) 
-
-# # Transformation Matrices
-# Act2Phs_shm = dao.shm('/tmp/Act2Phs.im.shm', np.zeros((nact**2, npix_small_pupil_grid**2)).astype(np.float32)) 
-# Phs2Act_shm = dao.shm('/tmp/Phs2Act.im.shm', np.zeros((npix_small_pupil_grid**2, nact**2)).astype(np.float32)) 
-
-# KL2Act_shm = dao.shm('/tmp/KL2Act.im.shm', np.zeros((nmodes_KL,nact**2)).astype(np.float32)) 
-# Act2KL_shm = dao.shm('/tmp/Act2KL.im.shm', np.zeros((nact**2, nmodes_KL)).astype(np.float32)) 
-# KL2Phs_shm = dao.shm('/tmp/KL2Phs.im.shm', np.zeros((nmodes_KL, npix_small_pupil_grid**2)).astype(np.float32)) 
-# Phs2KL_shm = dao.shm('/tmp/Phs2KL.im.shm', np.zeros((npix_small_pupil_grid**2, nmodes_KL)).astype(np.float32)) 
-
-# Znk2Act_shm = dao.shm('/tmp/Znk2Act.im.shm', np.zeros((nmode_Znk,nact**2)).astype(np.float32)) 
-# Act2Znk_shm = dao.shm('/tmp/Act2Znk.im.shm', np.zeros((nact**2, nmode_Znk)).astype(np.float32)) 
-# Znk2Phs_shm = dao.shm('/tmp/Znk2Phs.im.shm', np.zeros((nmode_Znk, npix_small_pupil_grid**2)).astype(np.float32)) 
-# Phs2Znk_shm = dao.shm('/tmp/Phs2Znk.im.shm', np.zeros((npix_small_pupil_grid**2, nmode_Znk)).astype(np.float32)) 

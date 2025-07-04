@@ -64,7 +64,7 @@ Phs2KL = fits.getdata(os.path.join(folder_transformation_matrices, f'Phs2KL_npup
 KL2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Act_nkl_{nmodes_kl}_nact_{nact}.fits'))
 Act2KL = fits.getdata(os.path.join(folder_transformation_matrices, f'Act2KL_nact_{nact}_nkl_{nmodes_kl}.fits'))
 
-#%% Load Bias Image, Calibration Mask and Response Matrix
+#%% Load Bias Image, Calibration Mask and Interaction Matrix
 
 # Load the bias image
 bias_filename = f'binned_bias_image.fits'
@@ -80,20 +80,20 @@ print(f"Mask dimensions: {mask.shape}")
 valid_pixels_indices = np.where(mask > 0)
 
 # Load the response matrix 
-IM_filename = f'binned_response_matrix_KL2Act_push-pull_pup_{pupil_size}mm_nact_{nact}_amp_0.1_3s_pyr.fits'
-IM_KL2PyWFS = fits.getdata(os.path.join(folder_calib, IM_filename))  # /0.1
+IM_filename = f'binned_response_matrix_KL2S_filtered_pup_{pupil_size}mm_nact_{nact}_amp_0.1_3s_pyr.fits'
+IM_KL2S = fits.getdata(os.path.join(folder_calib, IM_filename))  # /0.1
 
 #SVD
 # Compute SVD
-U, S, Vt = np.linalg.svd(IM_KL2PyWFS)
+U, S, Vt = np.linalg.svd(IM_KL2S)
 S_matrix = np.diag(S)
 # plt.figure()
 # plt.imshow(S_matrix)
 # plt.colorbar()
 # plt.show()
 
-RM_PyWFS2KL = np.linalg.pinv(IM_KL2PyWFS, rcond=0.10)
-print(f"Shape of the response matrix: {RM_PyWFS2KL.shape}")
+RM_S2KL = np.linalg.pinv(IM_KL2S, rcond=0.10)
+print(f"Shape of the response matrix: {RM_S2KL.shape}")
 
 #%% Load Reference Image and PSF
 
@@ -156,11 +156,11 @@ KL2Phs_new = KL2Phs[:nmodes_kl, :]
 Phs2KL_new = scipy.linalg.pinv(KL2Phs_new)
 KL2Act_new = KL2Act[:nmodes_kl, :]
 Act2KL_new = scipy.linalg.pinv(KL2Act_new)
-IM_KL2PyWFS_new = IM_KL2PyWFS[:nmodes_kl, :]
-RM_PyWFS2KL_new = np.linalg.pinv(IM_KL2PyWFS_new, rcond=0.10)
+IM_KL2S_new = IM_KL2S[:nmodes_kl, :]
+RM_S2KL_new = np.linalg.pinv(IM_KL2S_new, rcond=0.10)
 
 
-# %% AO loop with turbulence
+# %% Loading turbulence
 plt.close('all')
 
 deformable_mirror.flatten() 
@@ -188,12 +188,14 @@ data_phase_screen = fits_data
 # scale the phase screen to given seeing and wavelength
 data_phase_screen = data_phase_screen*small_pupil_mask*(wl_ref/wl)*((seeing/seeing_ref)**(5/6)) #in radians
 data_phase_screen = data_phase_screen / (2*np.pi) # in Waves
+
+#%% AO loop with turbulence
     
 # Main loop parameters
 num_iterations = 100
-gain = 0.4
+gain = 1
 leakage = 0
-delay= 2
+delay= 0
 
 anim_path = folder_closed_loop_tests / 'Papyrus'
 anim_name= f'AO_bench_closed_loop_seeing_{seeing}arcsec_L_40m_tau0_5ms_lambda_{wl}nm_pup_{pup}m_{loopspeed}kHz_gain_{gain}_iterations_{num_iterations}.gif'
@@ -201,7 +203,7 @@ anim_title= f'Seeing: {seeing} arcsec, λ: {wl} nm, Loop speed: {loopspeed} kHz'
 
 
 strehl_ratios, residual_phases = closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, anim_path, anim_name, anim_title,
-                           RM_PyWFS2KL_new, KL2Act_new, Act2KL_new, Phs2KL_new, mask, bias_image)
+                           RM_S2KL_new, KL2Act_new, Act2KL_new, Phs2KL_new, mask, bias_image)
 
 # save strehl ratio and phase residual arrays
 strehl_ratios_path = os.path.join(anim_path, f"strehl_ratios_{anim_name.replace('.gif', '.npy')}")
@@ -246,5 +248,5 @@ anim_name= f'closed_loop_test_KL_mode_{mode}_amp_{amp}.gif'
 anim_title= f'KL mode {mode} amp {amp}'
 
 closed_loop_test(num_iterations, gain, leakage, delay, data_kl, anim_path, anim_name, anim_title,
-                           RM_PyWFS2KL_new, KL2Act_new, Act2KL_new, Phs2KL_new, mask, bias_image)
+                           RM_S2KL_new, KL2Act_new, Act2KL_new, Phs2KL_new, mask, bias_image)
 
