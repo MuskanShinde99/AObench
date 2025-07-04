@@ -197,11 +197,18 @@ gain = 1
 leakage = 0
 delay= 0
 
+#setting shared memories
+num_iterations_shm.set_data(num_iterations)
+gain_shm.set_data(gain)
+leakage_shm.set_data(leakage)
+delay_shm.set_data(delay)
+
+# defining path for saving plots
 anim_path = folder_closed_loop_tests / 'Papyrus'
 anim_name= f'AO_bench_closed_loop_seeing_{seeing}arcsec_L_40m_tau0_5ms_lambda_{wl}nm_pup_{pup}m_{loopspeed}kHz_gain_{gain}_iterations_{num_iterations}.gif'
 anim_title= f'Seeing: {seeing} arcsec, λ: {wl} nm, Loop speed: {loopspeed} kHz'
 
-
+#AO loop
 strehl_ratios, residual_phases = closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, anim_path, anim_name, anim_title,
                            RM_S2KL_new, KL2Act_new, Act2KL_new, Phs2KL_new, mask, bias_image)
 
