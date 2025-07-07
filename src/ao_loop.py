@@ -175,7 +175,7 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
     for i in tqdm(range(num_iterations)):
         # Update deformable mirror surface
         data_dm[:, :] = deformable_mirror.opd.shaped
-        dm_phase_shm.set_data(data_dm) # setting shared memory
+        dm_phase_shm.set_data(data_dm.astype(np.float32)) # setting shared memory
         im_dm.set_data(data_dm)
         im_dm.set_clim(np.min(data_dm), np.max(data_dm))
         cbar_dm.update_normal(im_dm)

@@ -124,7 +124,7 @@ zernike_basis = np.asarray(zernike_basis)
 
 # [-0.0813878287964559, 0.09992195172893337, 0.4] 
 # Create a Tip, Tilt, and Focus (TTF) matrix with specified amplitudes as the diagonal elements
-ttf_amplitudes = [-0.05289625567018985, 0.18069697087753633, 0.4]  # Tip, Tilt, and Focus amplitudes - Focus 0.4
+ttf_amplitudes = [-1.6509624363993944, 0.1245226831954116, 0.4] # Tip, Tilt, and Focus amplitudes - Focus 0.4
 ttf_amplitude_matrix = np.diag(ttf_amplitudes)
 ttf_matrix = ttf_amplitude_matrix @ zernike_basis[1:4, :]  # Select modes 1 (tip), 2 (tilt), and 3 (focus)
 
