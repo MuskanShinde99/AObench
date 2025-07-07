@@ -188,20 +188,21 @@ data_phase_screen = fits_data
 # scale the phase screen to given seeing and wavelength
 data_phase_screen = data_phase_screen*small_pupil_mask*(wl_ref/wl)*((seeing/seeing_ref)**(5/6)) #in radians
 data_phase_screen = data_phase_screen / (2*np.pi) # in Waves
+data_phase_screen = data_phase_screen.astype(np.float32)
 
 #%% AO loop with turbulence
     
 # Main loop parameters
-num_iterations = 100
+num_iterations = 20
 gain = 1
 leakage = 0
 delay= 0
 
 #setting shared memories
-num_iterations_shm.set_data(num_iterations)
-gain_shm.set_data(gain)
-leakage_shm.set_data(leakage)
-delay_shm.set_data(delay)
+#num_iterations_shm.set_data(num_iterations)
+#gain_shm.set_data(gain)
+#leakage_shm.set_data(leakage)
+#delay_shm.set_data(delay)
 
 # defining path for saving plots
 anim_path = folder_closed_loop_tests / 'Papyrus'
@@ -210,7 +211,7 @@ anim_title= f'Seeing: {seeing} arcsec, λ: {wl} nm, Loop speed: {loopspeed} kHz'
 
 #AO loop
 strehl_ratios, residual_phases = closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, anim_path, anim_name, anim_title,
-                           RM_S2KL_new, KL2Act_new, Act2KL_new, Phs2KL_new, mask, bias_image)
+                           RM_S2KL_new, KL2Act_new, Act2KL_new, Phs2KL_new, mask, bias_image, verbose_plot=True)
 
 # save strehl ratio and phase residual arrays
 strehl_ratios_path = os.path.join(anim_path, f"strehl_ratios_{anim_name.replace('.gif', '.npy')}")
