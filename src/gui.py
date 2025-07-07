@@ -6,11 +6,11 @@ from PyQt6.QtCharts import QChart, QChartView, QLineSeries,QLogValueAxis, QValue
 from PyQt6.QtCore import Qt, QRectF , QTimer, QPointF,QThread, pyqtSignal
 from PyQt6.QtGui import QMouseEvent, QWheelEvent
 from pyqtgraph import ImageView
+import pyqtgraph as pg
 import threading
 import dao
-
+import matplotlib.pyplot as plt
 import time
-
 import toml
 from astropy.io import fits
 import subprocess
@@ -23,6 +23,11 @@ daoLogLevel.value=0
 
 # ps -fA | grep python
 # /usr/lib/qt5/bin/designer
+
+def matplotlib_cmap_to_lut(cmap_name='viridis', n_colors=256):
+    cmap = plt.colormaps.get_cmap(cmap_name)  # Modern API (Matplotlib 3.7+)
+    lut = (cmap(np.linspace(0, 1, n_colors))[:, :3] * 255).astype(np.uint8)
+    return lut
 
 class ProcessThread(QThread):
     output_received = pyqtSignal(str)  # Signal for stdout/stderr output
@@ -280,6 +285,7 @@ class MainWindow(QMainWindow):
 
         uic.loadUi("gui.ui", self)
         self.init_images()
+        self.init_vector_plots()
         self.init_shm()
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_images)
@@ -298,12 +304,43 @@ class MainWindow(QMainWindow):
         self.computed_modes_shm           = dao.shm('/tmp/computed_modes.im.shm')
         self.dm_kl_modes_shm              = dao.shm('/tmp/dm_kl_modes.im.shm')
 
+    def init_vector_plots(self):
+        self.modes_amp_view = CustomChartView(self.modes_amp_widget,"mode","amplitude", plot_type = "stem")
+        layout = QVBoxLayout(self.modes_amp_widget)
+        layout.addWidget(self.modes_amp_view)
+        self.modes_amp_view.set_legend(["res"])
+        self.reset_modes_amp_view_button.clicked.connect(self.modes_amp_view.resetZoom)
+
+        self.modes_amp_view = CustomChartView(self.modes_amp_widget,"mode","amplitude", plot_type = "stem")
+        layout = QVBoxLayout(self.modes_amp_widget)
+        layout.addWidget(self.modes_amp_view)
+        self.modes_amp_view.set_legend(["res"])
+        self.reset_modes_amp_view_button.clicked.connect(self.modes_amp_view.resetZoom)
+
+        self.modes_amp_view = CustomChartView(self.modes_amp_widget,"mode","amplitude", plot_type = "stem")
+        layout = QVBoxLayout(self.modes_amp_widget)
+        layout.addWidget(self.modes_amp_view)
+        self.modes_amp_view.set_legend(["res"])
+        self.reset_modes_amp_view_button.clicked.connect(self.modes_amp_view.resetZoom)
+
+        self.modes_amp_view = CustomChartView(self.modes_amp_widget,"mode","amplitude", plot_type = "stem")
+        layout = QVBoxLayout(self.modes_amp_widget)
+        layout.addWidget(self.modes_amp_view)
+        self.modes_amp_view.set_legend(["res"])
+        self.reset_modes_amp_view_button.clicked.connect(self.modes_amp_view.resetZoom)
+
+        self.modes_amp_view = CustomChartView(self.modes_amp_widget,"mode","amplitude", plot_type = "stem")
+        layout = QVBoxLayout(self.modes_amp_widget)
+        layout.addWidget(self.modes_amp_view)
+        self.modes_amp_view.set_legend(["res"])
+        self.reset_modes_amp_view_button.clicked.connect(self.modes_amp_view.resetZoom)
+
     def init_images(self):
         self.pyramid_view = self.findChild(ImageView, "pyramid_widget")
-        self.pyramid_view.ui.histogram.hide()
-        self.pyramid_view.ui.roiBtn.hide()
-        self.pyramid_view.ui.menuBtn.hide()
-
+        lut = matplotlib_cmap_to_lut('plasma')  # Change to 'inferno', 'jet', etc.
+        hist = self.pyramid_view.getHistogramWidget()
+        hist.gradient.setColorMap(pg.ColorMap(pos=np.linspace(0, 1, 256), color=lut))
+ 
         self.slopes_image_view = self.findChild(ImageView, "slopes_image_widget")
         self.slopes_image_view.ui.histogram.hide()
         self.slopes_image_view.ui.roiBtn.hide()
@@ -331,12 +368,18 @@ class MainWindow(QMainWindow):
 
     def update_images(self):
         data1 = np.random.rand(100, 100)
-        self.pyramid_view.setImage(data1, autoLevels=False)
-        self.slopes_image_view.setImage(self.slopes_image_shm.get_data(check=False, semNb=self.sem_nb), autoLevels=False)
-        self.phase_screenview.setImage(self.phase_screen_shm.get_data(check=False, semNb=self.sem_nb), autoLevels=False)
-        self.dm_phase_view.setImage(self.dm_phase_shm.get_data(check=False, semNb=self.sem_nb), autoLevels=False)
-        self.phase_residuals_view.setImage(self.phase_residuals_shm.get_data(check=False, semNb=self.sem_nb), autoLevels=False)
-        self.normalized_psf_view.setImage(self.normalized_psf_shm.get_data(check=False, semNb=self.sem_nb), autoLevels=False)
+        self.pyramid_view.setImage(data1, autoLevels=False,autoRange=False)
+
+
+        # self.slopes_image_view.setImage(self.slopes_image_shm.get_data(check=False, semNb=self.sem_nb), autoLevels=False)
+        # self.phase_screenview.setImage(self.phase_screen_shm.get_data(check=False, semNb=self.sem_nb), autoLevels=False)
+        # self.dm_phase_view.setImage(self.dm_phase_shm.get_data(check=False, semNb=self.sem_nb), autoLevels=False)
+        # self.phase_residuals_view.setImage(self.phase_residuals_shm.get_data(check=False, semNb=self.sem_nb), autoLevels=False)
+        # self.normalized_psf_view.setImage(self.normalized_psf_shm.get_data(check=False, semNb=self.sem_nb), autoLevels=False)
+        data2 = np.random.rand(100)-0.5
+        if(self.square_res_checkbox.checkState()==Qt.CheckState.Checked):
+            data2 = np.sqrt(np.square(data2))
+        self.modes_amp_view.draw([(np.arange(data2.shape[0]), data2)])
 
     def closeEvent(self, event):
         print("All processes and timers stopped")
