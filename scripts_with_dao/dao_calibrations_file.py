@@ -121,14 +121,14 @@ plt.show()
 #%% Creating a Flux Filtering Mask
 
 method='tip_tilt_modulation'
-flux_cutoff = 0.6
+flux_cutoff = 0.5
 modulation_angles = np.arange(0, 360, 10)  # angles of modulation
 modulation_amp = 15 # in lamda/D
 n_iter=200 # number of iternations for dm random commands
 
 mask = create_flux_filtering_mask(method, flux_cutoff, 
                                modulation_angles, modulation_amp, n_iter,
-                               create_summed_image=False, verbose=False, verbose_plot=True)
+                               create_summed_image=True, verbose=False, verbose_plot=True)
 
 valid_pixels_mask_shm.set_data(mask)
 
@@ -148,7 +148,7 @@ S2KL_shm = dao.shm('/tmp/S2KL.im.shm' , np.zeros((npix_valid, nmodes_KL)).astype
 
 #%% Centering the PSF on the Pyramid Tip
 
-center_psf_on_pyramid_tip(mask=mask, initial_tt_amplitudes=[0, 0], focus=[0.4], 
+center_psf_on_pyramid_tip(mask=mask, initial_tt_amplitudes=[0, 0], focus=[0.4], bounds = [(-2.0, 2.0), (-2.0, 2.0)],
                               update_setup_file=True, verbose=True, verbose_plot=True)
 
 # average more images

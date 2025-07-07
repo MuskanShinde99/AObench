@@ -188,6 +188,7 @@ data_phase_screen = fits_data
 # scale the phase screen to given seeing and wavelength
 data_phase_screen = data_phase_screen*small_pupil_mask*(wl_ref/wl)*((seeing/seeing_ref)**(5/6)) #in radians
 data_phase_screen = data_phase_screen / (2*np.pi) # in Waves
+data_phase_screen = data_phase_screen.astype(np.float32)
 
 #%% AO loop with turbulence
     
@@ -198,10 +199,10 @@ leakage = 0
 delay= 0
 
 #setting shared memories
-num_iterations_shm.set_data(num_iterations)
-gain_shm.set_data(gain)
-leakage_shm.set_data(leakage)
-delay_shm.set_data(delay)
+#num_iterations_shm.set_data(num_iterations)
+#gain_shm.set_data(gain)
+#leakage_shm.set_data(leakage)
+#delay_shm.set_data(delay)
 
 # defining path for saving plots
 anim_path = folder_closed_loop_tests / 'Papyrus'
