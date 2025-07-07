@@ -3,7 +3,9 @@ __pycache__/
 *.pyc
 
 # Ignore outputs
-outputs/
+outputs/*
+!outputs/GUI_tests/
+!outputs/GUI_tests/**
 *.pfs
 
 # Ignore temporary or backup files
@@ -14,6 +16,7 @@ outputs/
 .DS_Store
 Thumbs.db
 
+
 # Ignore virtual environments (if any)
 .venv/
 env/
@@ -22,6 +25,4 @@ env/
 old_files/
 files_with_4s_pyramid/
 files_with_ueye_camera/
-outputs/
 slm-cam_tests/
-

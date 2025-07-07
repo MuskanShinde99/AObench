@@ -64,11 +64,11 @@ leakage_shm                  = dao.shm('/tmp/leakage.im.shm',                 np
 num_iterations_shm           = dao.shm('/tmp/num_iterations.im.shm',          np.zeros((1, 1), dtype=np.uint32))
 
 # AO loop plots
-slopes_image_shm             = dao.shm('/tmp/slopes_image.im.shm',            np.zeros((img_size_wfs_cam, img_size_wfs_cam), dtype=np.uint16))
+slopes_image_shm             = dao.shm('/tmp/slopes_image.im.shm',            np.zeros((img_size_wfs_cam, img_size_wfs_cam), dtype=np.float64))
 phase_screen_shm             = dao.shm('/tmp/phase_screen.im.shm',            np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32))
 dm_phase_shm                 = dao.shm('/tmp/dm_phase.im.shm',                np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32))
 phase_residuals_shm          = dao.shm('/tmp/phase_residuals.im.shm',         np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32))
-normalized_psf_shm           = dao.shm('/tmp/normalized_psf.im.shm',          np.zeros((img_size_fp_cam, img_size_fp_cam), dtype=np.uint16))
+normalized_psf_shm           = dao.shm('/tmp/normalized_psf.im.shm',          np.zeros((img_size_fp_cam, img_size_fp_cam), dtype=np.float64))
 commands_shm                 = dao.shm('/tmp/commands.im.shm',                np.zeros((nmodes_dm, 1), dtype=np.float32))
 residual_modes_shm           = dao.shm('/tmp/residual_modes.im.shm',          np.zeros((nmodes_KL, 1), dtype=np.float32))
 computed_modes_shm           = dao.shm('/tmp/computed_modes.im.shm',          np.zeros((nmodes_KL, 1), dtype=np.float32))

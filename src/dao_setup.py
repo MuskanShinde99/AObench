@@ -49,6 +49,7 @@ folder_pyr_mask = ROOT_DIR / 'outputs/3s_pyr_mask'
 folder_transformation_matrices = ROOT_DIR / 'outputs/Transformation_matrices'
 folder_closed_loop_tests = ROOT_DIR / 'outputs/Closed_loop_tests'
 folder_turbulence = ROOT_DIR / 'outputs/Phase_screens'
+folder_gui = ROOT_DIR / 'outputs/GUI_tests'
 
 #%% Start the laser
 
