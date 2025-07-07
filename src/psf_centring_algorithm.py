@@ -61,11 +61,11 @@ def cost_function(amplitudes, pupil_coords, radius, iteration):
     variance = np.mean((intensities - mean_intensity) ** 2)
     
     # Print iteration number and variance
-    print(f"Iteration: {iteration} | Variance: {round(variance)}")
+    print(f"Iteration: {iteration} | Variance: {round(variance)} | Tipi-tilt amptitude: {amplitudes}")
 
     
     # Check stopping condition: if variance is less than 2
-    if variance < 1:
+    if variance < 5:
         print(f"Stopping condition met: Variance is below threshold.")
         stop_optimization = True  # Set stopping flag
         

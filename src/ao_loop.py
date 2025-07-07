@@ -18,9 +18,11 @@ from DEVICES_3.Basler_Pylon.test_pylon import *
 from collections import deque
 from src.dao_setup import *  # Import all variables from setup
 import src.dao_setup as dao_setup
+from src.create_shared_memories import *
+
 
 def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, anim_path, aim_name, anim_title,
-                           RM_PyWFS2KL, KL2Act, Act2KL, Phs2KL,  mask, bias_image, **kwargs):
+                           RM_S2KL, KL2Act, Act2KL, Phs2KL,  mask, bias_image, **kwargs):
     """
     Performs a closed-loop adaptive optics simulation.
     
@@ -41,7 +43,7 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
     --- Image Processing and Calibration ---
     - mask: Mask for filtering unwanted parts of the image (e.g., noise)
     - bias_image: Bias image used for normalization
-    - RM_PyWFS2KL: Matrix mapping PyWFS measurements to KL modes
+    - RM_S2KL: Matrix mapping PyWFS measurements to KL modes
     - KL2Act: Matrix mapping KL modes to actuator positions
     - Act2KL: Matrix mapping actuator positions back to KL modes
     - Phs2KL: Matrix mapping phase measurements to KL modes (not used in current code, but intended for future use)
@@ -56,6 +58,7 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
     - aim_name: Name for the saved animation file
     - anim_title: Title of the animation
     """
+    from src.dao_setup import wait_time  # lazy import to avoid circular dependency
     
     # Load hardware and configuration parameters
     deformable_mirror = kwargs.get("deformable_mirror", dao_setup.deformable_mirror)
@@ -113,7 +116,6 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
     strehl_ratios = np.zeros(num_iterations)
     residual_phase_stds = np.zeros(num_iterations)
     
-    
     # Set up interactive plotting
     plt.ion()
     fig, axs = plt.subplots(4, 2, figsize=(15, 10))
@@ -122,12 +124,12 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
     im_dm = axs[0, 0].imshow(np.zeros_like(data_dm), cmap='viridis')
     axs[0, 0].set_title('DM Phase')
     cbar_dm = plt.colorbar(im_dm, ax=axs[0, 0])
-    cbar_dm.set_label('[2π rad]')
+    cbar_dm.set_label('[λ]')
     
     im_phase = axs[0, 1].imshow(np.zeros_like(data_dm), cmap='viridis')
     axs[0, 1].set_title('Phase Screen')
     cbar_phase = plt.colorbar(im_phase, ax=axs[0, 1])
-    cbar_phase.set_label('[2π rad]')
+    cbar_phase.set_label('[λ]')
     
     im_pyr = axs[1, 0].imshow(np.zeros(pyr_img_shape), cmap='gray')
     axs[1, 0].set_title('Processed Pyramid Image')
@@ -143,23 +145,23 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
     axs[3, 0].set_xlabel('Actuator Index')
     axs[3, 0].set_ylabel('Amplitude')
 
-    computed_modes = np.zeros(RM_PyWFS2KL.shape[1])  # Assuming correct size for KL modes
+    computed_modes = np.zeros(RM_S2KL.shape[1])  # Assuming correct size for KL modes
     line_computed_modes, = axs[3, 1].plot(computed_modes, label='Computed Modes')
     line_residual_modes, = axs[3, 1].plot(computed_modes, label='Residual Modes')
     axs[3, 1].set_title('Computed KL Modes')
     axs[3, 1].set_xlabel('KL Mode Index')
-    axs[3, 1].set_ylabel('Amplitude [2π rad ptp]')
+    axs[3, 1].set_ylabel('Amplitude [λ ptp]')
     axs[3, 1].legend()
 
-    line_dm, = axs[2, 0].plot(np.zeros(RM_PyWFS2KL.shape[1]))
+    line_dm, = axs[2, 0].plot(np.zeros(RM_S2KL.shape[1]))
     axs[2, 0].set_title('Computed Actuator Positions Projected on KL Modes')
     axs[2, 0].set_xlabel('KL Mode')
-    axs[2, 0].set_ylabel('Amplitude [2π rad ptp]')
+    axs[2, 0].set_ylabel('Amplitude [λ ptp]')
 
     im_residuals = axs[2, 1].imshow(np.zeros_like(data_dm), cmap='viridis')
     axs[2, 1].set_title('Phase Residuals')
     cbar_residuals = plt.colorbar(im_residuals, ax=axs[2, 1])
-    cbar_residuals.set_label('[2π rad]')
+    cbar_residuals.set_label('[λ]')
     
     print('Dimensions of the phase screen:', data_phase_screen.ndim)
 
@@ -173,67 +175,59 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
     for i in tqdm(range(num_iterations)):
         # Update deformable mirror surface
         data_dm[:, :] = deformable_mirror.opd.shaped
+        dm_phase_shm.set_data(data_dm) # setting shared memory
         im_dm.set_data(data_dm)
         im_dm.set_clim(np.min(data_dm), np.max(data_dm))
         cbar_dm.update_normal(im_dm)
         
         # Handle 2D or 3D `data_phase_screen`
+        
+        # Determine current phase screen slice
         if data_phase_screen.ndim == 3:
-            
-            # Update phase screen
-            # If 3D, use the i-th slice (frame)
-            im_phase.set_data(data_phase_screen[i, :, :])
-            im_phase.set_clim(np.min(data_phase_screen[i, :, :]), np.max(data_phase_screen[i, :, :]))
-            cbar_phase.update_normal(im_phase)
-            
-            # Residual phase
-            phase_residuals = (data_phase_screen[i, :, :] + data_dm)*small_pupil_mask
-            residual_modes = phase_residuals.flatten() @ Phs2KL
-            im_residuals.set_data(phase_residuals)
-            im_residuals.set_clim(np.min(phase_residuals), np.max(phase_residuals))
-            cbar_residuals.update_normal(im_residuals)
-            residual_phase_std = np.std(phase_residuals[small_pupil_mask==1])
-            residual_phase_stds[i] = residual_phase_std
-            axs[2, 1].set_title(f'Total residuals std: {residual_phase_std:.4f} x 2π rad') # the phase residuals are in  waves. To display in rad, multiply by 2*np.pi
-            
-            # Compute SLM data
-            data_slm = compute_data_slm(data_dm=data_dm, data_phase_screen=data_phase_screen[i, :, :])
-
+            phase_slice = data_phase_screen[i, :, :]
         elif data_phase_screen.ndim == 2:
-            
-            # Update phase screen
-            # If 2D, use the entire data_phase_screen as is
-            im_phase.set_data(data_phase_screen)
-            im_phase.set_clim(np.min(data_phase_screen), np.max(data_phase_screen))
-            cbar_phase.update_normal(im_phase)
-            
-            # Residual phase
-            phase_residuals = (data_phase_screen + data_dm)*small_pupil_mask
-            residual_modes = phase_residuals.flatten() @ Phs2KL
-            im_residuals.set_data(phase_residuals)
-            im_residuals.set_clim(np.min(phase_residuals), np.max(phase_residuals))
-            cbar_residuals.update_normal(im_residuals)
-            axs[2, 1].set_title(f'Total residuals std: {np.std(phase_residuals[phase_residuals != 0]):.4f} x 2π rad') # the phase residuals are in  waves. To display in rad, multiply by 2*np.pi
-            
-            # Compute SLM data
-            data_slm = compute_data_slm(data_dm=data_dm, data_phase_screen=data_phase_screen)
-
-            
+            phase_slice = data_phase_screen
         else:
             raise ValueError("data_phase_screen must be either 2D or 3D")
-            
+        
+        # Update shared memory and image
+        phase_screen_shm.set_data(phase_slice) # setting shared memory
+        im_phase.set_data(phase_slice)
+        im_phase.set_clim(np.min(phase_slice), np.max(phase_slice))
+        cbar_phase.update_normal(im_phase)
+        
+        # Compute phase residuals 
+        phase_residuals = (phase_slice + data_dm) * small_pupil_mask
+        phase_residuals_shm.set_data(phase_residuals) # setting shared memory
+        im_residuals.set_data(phase_residuals)
+        im_residuals.set_clim(np.min(phase_residuals), np.max(phase_residuals))
+        cbar_residuals.update_normal(im_residuals)
+        # Compute and display std
+        residual_phase_std = np.std(phase_residuals[small_pupil_mask == 1])
+        if data_phase_screen.ndim == 3:
+            residual_phase_stds[i] = residual_phase_std
+        axs[2, 1].set_title(f'Total residuals std: {residual_phase_std:.4f} x λ')
+                
+        # Compute residual modes
+        residual_modes = phase_residuals.flatten() @ Phs2KL
+        residual_modes_shm.set_data(residual_modes) # setting shared memory
+
+        # Compute SLM command
+        data_slm = compute_data_slm(data_dm=data_dm, data_phase_screen=phase_slice)
+        
         # Send data to SLM
         slm.set_data(data_slm)
+        time.sleep(wait_time) # Allow SLM to settle 
 
-        # Allow SLM to settle and capture a Pyramid image
-        time.sleep(wait_time)
+        # Capture a Pyramid image
         pyr_img = camera_wfs.get_data()
         
         # Process the Pyramid image
         normalized_pyr_img = normalize_image(pyr_img, mask, bias_image)
         slopes_image = compute_pyr_slopes(normalized_pyr_img, normalized_reference_image)
         slopes = slopes_image[valid_pixels_indices].flatten() #* 2 #trial factor
-
+        
+        slopes_image_shm.set_data(slopes_image) # setting shared memory
         im_pyr.set_data(slopes_image)
         im_pyr.set_clim(np.min(slopes_image), np.max(slopes_image))
         #im_pyr.set_clim(0.002, -0.001)
@@ -242,25 +236,27 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
         # Capture and process the PSF
         fp_img = camera_fp.get_data()
         fp_img = np.maximum(fp_img, 1e-10)
+        
+        normalized_psf_shm.set_data((fp_img/np.max(fp_img))) # setting shared memory
         im_psf.set_data((fp_img/np.max(fp_img)))
         im_psf.set_norm(LogNorm(vmin=1e-6, vmax=1e1))
         cbar_psf.update_normal(im_psf)
 
-        # # Compute Strehl ratio
-        # observed_psf = fp_img / fp_img.sum()
-        # integrated_obs_psf = observed_psf[psf_mask].sum()
-        # strehl_ratio = integrated_obs_psf / integrated_diff_psf
-        # axs[1, 1].set_title(f'PSF Strehl {strehl_ratio:.4f}')
-        
         # Compute Strehl ratio
         observed_psf = fp_img / fp_img.sum()
+        # integrated_obs_psf = observed_psf[psf_mask].sum()
+        # strehl_ratio = integrated_obs_psf / integrated_diff_psf
         strehl_ratio = np.max(observed_psf) / np.max(diffraction_limited_psf)
         strehl_ratios[i] = strehl_ratio
         axs[1, 1].set_title(f'PSF Strehl {strehl_ratio:.4f}')
 
+        # Compute KL modes present
+        computed_modes = slopes @ RM_S2KL
+        computed_modes_shm.set_data(computed_modes) # setting shared memory
+
         # Compute actuator commands
-        computed_modes = slopes @ RM_PyWFS2KL
         act_pos = computed_modes @ KL2Act
+        commands_shm.set_data(act_pos) # setting shared memory
         
         # Append current actuator command
         act_pos_queue.append(act_pos)
@@ -272,7 +268,9 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
         deformable_mirror.actuators = (1 - leakage) * deformable_mirror.actuators - gain * delayed_act_pos
         #deformable_mirror.actuators = (1-leakage) * deformable_mirror.actuators - gain * act_pos
         
-        act_pos_tot = deformable_mirror.actuators @ Act2KL
+        # KL modes corresponding the total actuator postion or the DM shape
+        modes_act_pos_tot = deformable_mirror.actuators @ Act2KL
+        dm_kl_modes_shm.set_data(modes_act_pos_tot) # setting shared memory
 
         # Update actuator and mode plots
         line_act.set_ydata(act_pos)
@@ -281,8 +279,8 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
         line_computed_modes.set_ydata(computed_modes)
         axs[3, 1].set_ylim(np.min(residual_modes), np.max(residual_modes))
         #axs[3, 1].set_title(f'Total residuals: {np.sqrt(np.sum(residual_modes**2)):.4f}')
-        line_dm.set_ydata(act_pos_tot)
-        axs[2, 0].set_ylim(np.min(act_pos_tot), np.max(act_pos_tot))
+        line_dm.set_ydata(modes_act_pos_tot)
+        axs[2, 0].set_ylim(np.min(modes_act_pos_tot), np.max(modes_act_pos_tot))
         
         fig.subplots_adjust(top=0.9)  # Moves everything slightly down
         fig.suptitle(f'AO Bench -- {anim_title} - Iteration {i+1}')
