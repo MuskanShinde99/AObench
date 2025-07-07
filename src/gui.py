@@ -280,6 +280,7 @@ class MainWindow(QMainWindow):
 
         uic.loadUi("gui.ui", self)
         self.init_images()
+        self.init_shm()
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_images)
         self.timer.start(500)
