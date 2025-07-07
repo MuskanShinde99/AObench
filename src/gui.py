@@ -279,31 +279,63 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         uic.loadUi("gui.ui", self)
+        self.init_images()
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.update_images)
+        self.timer.start(500)
+        self.sem_nb = 9
+    def init_shm(self):
+        with open('shm_path.toml', 'r') as f:
+            shm_path = toml.load(f)
+        self.slopes_image_shm             = dao.shm('/tmp/slopes_image.im.shm')
+        self.phase_screen_shm             = dao.shm('/tmp/phase_screen.im.shm')
+        self.dm_phase_shm                 = dao.shm('/tmp/dm_phase.im.shm')
+        self.phase_residuals_shm          = dao.shm('/tmp/phase_residuals.im.shm')
+        self.normalized_psf_shm           = dao.shm('/tmp/normalized_psf.im.shm')
+        self.commands_shm                 = dao.shm('/tmp/commands.im.shm')
+        self.residual_modes_shm           = dao.shm('/tmp/residual_modes.im.shm')
+        self.computed_modes_shm           = dao.shm('/tmp/computed_modes.im.shm')
+        self.dm_kl_modes_shm              = dao.shm('/tmp/dm_kl_modes.im.shm')
+
+    def init_images(self):
         self.pyramid_view = self.findChild(ImageView, "pyramid_widget")
         self.pyramid_view.ui.histogram.hide()
         self.pyramid_view.ui.roiBtn.hide()
         self.pyramid_view.ui.menuBtn.hide()
 
-        view_box = self.pyramid_view.getView()
-        plot_item = view_box.parentItem()
+        self.slopes_image_view = self.findChild(ImageView, "slopes_image_widget")
+        self.slopes_image_view.ui.histogram.hide()
+        self.slopes_image_view.ui.roiBtn.hide()
+        self.slopes_image_view.ui.menuBtn.hide()
 
-        if plot_item:
-            plot_item.hideAxis('left')
-            plot_item.hideAxis('bottom')
+        self.phase_screenview = self.findChild(ImageView, "phase_screen_widget")
+        self.phase_screenview.ui.histogram.hide()
+        self.phase_screenview.ui.roiBtn.hide()
+        self.phase_screenview.ui.menuBtn.hide()
 
-        # Optional: remove margins
-        self.pyramid_view.getView().setContentsMargins(0, 0, 0, 0)
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.update_images)
-        self.timer.start(500)
+        self.dm_phase_view = self.findChild(ImageView, "dm_phase_widget")
+        self.dm_phase_view.ui.histogram.hide()
+        self.dm_phase_view.ui.roiBtn.hide()
+        self.dm_phase_view.ui.menuBtn.hide()
 
-    def init_shm(self):
-        a=1
+        self.phase_residuals_view = self.findChild(ImageView, "phase_residuals_widget")
+        self.phase_residuals_view.ui.histogram.hide()
+        self.phase_residuals_view.ui.roiBtn.hide()
+        self.phase_residuals_view.ui.menuBtn.hide()
+
+        self.normalized_psf_view = self.findChild(ImageView, "normalized_psf_widget")
+        self.normalized_psf_view.ui.histogram.hide()
+        self.normalized_psf_view.ui.roiBtn.hide()
+        self.normalized_psf_view.ui.menuBtn.hide()
 
     def update_images(self):
         data1 = np.random.rand(100, 100)
         self.pyramid_view.setImage(data1, autoLevels=False)
-
+        self.slopes_image_view.setImage(self.slopes_image_shm.get_data(check=False, semNb=self.sem_nb), autoLevels=False)
+        self.phase_screenview.setImage(self.phase_screen_shm.get_data(check=False, semNb=self.sem_nb), autoLevels=False)
+        self.dm_phase_view.setImage(self.dm_phase_shm.get_data(check=False, semNb=self.sem_nb), autoLevels=False)
+        self.phase_residuals_view.setImage(self.phase_residuals_shm.get_data(check=False, semNb=self.sem_nb), autoLevels=False)
+        self.normalized_psf_view.setImage(self.normalized_psf_shm.get_data(check=False, semNb=self.sem_nb), autoLevels=False)
 
     def closeEvent(self, event):
         print("All processes and timers stopped")

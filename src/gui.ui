@@ -14,7 +14,7 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QTabWidget" name="process">
+   <widget class="QTabWidget" name="Vector">
     <property name="geometry">
      <rect>
       <x>20</x>
@@ -24,8 +24,108 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>1</number>
     </property>
+    <widget class="QWidget" name="Images">
+     <attribute name="title">
+      <string>Images</string>
+     </attribute>
+     <widget class="ImageView" name="slopes_image_widget" native="true">
+      <property name="geometry">
+       <rect>
+        <x>70</x>
+        <y>60</y>
+        <width>441</width>
+        <height>361</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="ImageView" name="phase_screen_widget" native="true">
+      <property name="geometry">
+       <rect>
+        <x>590</x>
+        <y>50</y>
+        <width>441</width>
+        <height>361</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="ImageView" name="normalized_psf_widget" native="true">
+      <property name="geometry">
+       <rect>
+        <x>1100</x>
+        <y>40</y>
+        <width>441</width>
+        <height>361</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="ImageView" name="dm_phase_widget" native="true">
+      <property name="geometry">
+       <rect>
+        <x>70</x>
+        <y>460</y>
+        <width>441</width>
+        <height>361</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="ImageView" name="phase_residuals_widget" native="true">
+      <property name="geometry">
+       <rect>
+        <x>580</x>
+        <y>470</y>
+        <width>441</width>
+        <height>361</height>
+       </rect>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="Vector">
+     <attribute name="title">
+      <string>Vector</string>
+     </attribute>
+     <widget class="QWidget" name="commands_widget" native="true">
+      <property name="geometry">
+       <rect>
+        <x>60</x>
+        <y>50</y>
+        <width>601</width>
+        <height>331</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QWidget" name="residual_modes_widget" native="true">
+      <property name="geometry">
+       <rect>
+        <x>740</x>
+        <y>40</y>
+        <width>601</width>
+        <height>331</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QWidget" name="computed_modes_widget" native="true">
+      <property name="geometry">
+       <rect>
+        <x>80</x>
+        <y>450</y>
+        <width>601</width>
+        <height>331</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QWidget" name="dm_kl_modes_widget" native="true">
+      <property name="geometry">
+       <rect>
+        <x>740</x>
+        <y>450</y>
+        <width>601</width>
+        <height>331</height>
+       </rect>
+      </property>
+     </widget>
+    </widget>
     <widget class="QWidget" name="main">
      <attribute name="title">
       <string>Main</string>
@@ -460,7 +560,7 @@
      <x>0</x>
      <y>0</y>
      <width>1654</width>
-     <height>24</height>
+     <height>27</height>
     </rect>
    </property>
   </widget>
