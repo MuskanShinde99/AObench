@@ -24,7 +24,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>1</number>
     </property>
     <widget class="QWidget" name="Images">
      <attribute name="title">
@@ -230,51 +230,41 @@
      <attribute name="title">
       <string>Vector</string>
      </attribute>
-     <widget class="QWidget" name="commands_widget" native="true">
+     <widget class="QWidget" name="computed_act_pos_widget" native="true">
       <property name="geometry">
        <rect>
         <x>60</x>
-        <y>50</y>
+        <y>40</y>
         <width>601</width>
-        <height>331</height>
+        <height>371</height>
        </rect>
       </property>
      </widget>
-     <widget class="QWidget" name="residual_modes_widget" native="true">
+     <widget class="QWidget" name="computed_KL_modes_widget" native="true">
       <property name="geometry">
        <rect>
         <x>740</x>
         <y>40</y>
         <width>601</width>
-        <height>331</height>
+        <height>371</height>
        </rect>
       </property>
      </widget>
-     <widget class="QWidget" name="computed_modes_widget" native="true">
+     <widget class="QWidget" name="commands_widget" native="true">
       <property name="geometry">
        <rect>
         <x>60</x>
-        <y>500</y>
-        <width>601</width>
-        <height>331</height>
-       </rect>
-      </property>
-     </widget>
-     <widget class="QWidget" name="dm_kl_modes_widget" native="true">
-      <property name="geometry">
-       <rect>
-        <x>750</x>
         <y>510</y>
         <width>601</width>
-        <height>331</height>
+        <height>361</height>
        </rect>
       </property>
      </widget>
-     <widget class="QCheckBox" name="square_res_checkbox_2">
+     <widget class="QCheckBox" name="square_computed_act_pos_checkbox">
       <property name="geometry">
        <rect>
         <x>370</x>
-        <y>410</y>
+        <y>430</y>
         <width>121</width>
         <height>24</height>
        </rect>
@@ -283,11 +273,11 @@
        <string>square</string>
       </property>
      </widget>
-     <widget class="QPushButton" name="reset_modes_amp_view_button_2">
+     <widget class="QPushButton" name="reset_computed_act_pos_view_button">
       <property name="geometry">
        <rect>
-        <x>250</x>
-        <y>410</y>
+        <x>240</x>
+        <y>430</y>
         <width>89</width>
         <height>25</height>
        </rect>
@@ -296,11 +286,11 @@
        <string>Reset View</string>
       </property>
      </widget>
-     <widget class="QCheckBox" name="square_res_checkbox_3">
+     <widget class="QCheckBox" name="square_computed_KL_modes_checkbox">
       <property name="geometry">
        <rect>
-        <x>1080</x>
-        <y>400</y>
+        <x>1070</x>
+        <y>440</y>
         <width>121</width>
         <height>24</height>
        </rect>
@@ -309,11 +299,11 @@
        <string>square</string>
       </property>
      </widget>
-     <widget class="QPushButton" name="reset_modes_amp_view_button_3">
+     <widget class="QPushButton" name="reset_computed_KL_modes_view_button">
       <property name="geometry">
        <rect>
-        <x>960</x>
-        <y>400</y>
+        <x>950</x>
+        <y>440</y>
         <width>89</width>
         <height>25</height>
        </rect>
@@ -322,37 +312,11 @@
        <string>Reset View</string>
       </property>
      </widget>
-     <widget class="QCheckBox" name="square_res_checkbox_4">
-      <property name="geometry">
-       <rect>
-        <x>1040</x>
-        <y>860</y>
-        <width>121</width>
-        <height>24</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>square</string>
-      </property>
-     </widget>
-     <widget class="QPushButton" name="reset_modes_amp_view_button_4">
-      <property name="geometry">
-       <rect>
-        <x>920</x>
-        <y>860</y>
-        <width>89</width>
-        <height>25</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Reset View</string>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="square_res_checkbox_5">
+     <widget class="QCheckBox" name="square_commands_checkbox">
       <property name="geometry">
        <rect>
         <x>350</x>
-        <y>850</y>
+        <y>880</y>
         <width>121</width>
         <height>24</height>
        </rect>
@@ -361,11 +325,11 @@
        <string>square</string>
       </property>
      </widget>
-     <widget class="QPushButton" name="reset_modes_amp_view_button_5">
+     <widget class="QPushButton" name="reset_commands_view_button">
       <property name="geometry">
        <rect>
         <x>230</x>
-        <y>850</y>
+        <y>880</y>
         <width>89</width>
         <height>25</height>
        </rect>
@@ -377,14 +341,14 @@
      <widget class="QLabel" name="label_10">
       <property name="geometry">
        <rect>
-        <x>240</x>
+        <x>160</x>
         <y>20</y>
-        <width>151</width>
+        <width>361</width>
         <height>20</height>
        </rect>
       </property>
       <property name="text">
-       <string>phase residuals</string>
+       <string>Computed Actuator Positions Projected on KL Modes</string>
       </property>
      </widget>
      <widget class="QLabel" name="label_11">
@@ -397,20 +361,20 @@
        </rect>
       </property>
       <property name="text">
-       <string>phase residuals</string>
+       <string>Computed KL modes</string>
       </property>
      </widget>
      <widget class="QLabel" name="label_12">
       <property name="geometry">
        <rect>
-        <x>970</x>
-        <y>480</y>
-        <width>151</width>
+        <x>340</x>
+        <y>460</y>
+        <width>91</width>
         <height>20</height>
        </rect>
       </property>
       <property name="text">
-       <string>phase residuals</string>
+       <string>Commands</string>
       </property>
      </widget>
     </widget>
@@ -848,7 +812,7 @@
      <x>0</x>
      <y>0</y>
      <width>1654</width>
-     <height>27</height>
+     <height>24</height>
     </rect>
    </property>
   </widget>

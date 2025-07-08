@@ -289,51 +289,41 @@ class MainWindow(QMainWindow):
         self.init_shm()
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_images)
-        self.timer.start(500)
+        self.timer.start(100)
         self.sem_nb = 9
     def init_shm(self):
         with open('shm_path.toml', 'r') as f:
             shm_path = toml.load(f)
-        self.slopes_image_shm             = dao.shm('/tmp/slopes_image.im.shm')
-        self.phase_screen_shm             = dao.shm('/tmp/phase_screen.im.shm')
-        self.dm_phase_shm                 = dao.shm('/tmp/dm_phase.im.shm')
-        self.phase_residuals_shm          = dao.shm('/tmp/phase_residuals.im.shm')
-        self.normalized_psf_shm           = dao.shm('/tmp/normalized_psf.im.shm')
-        self.commands_shm                 = dao.shm('/tmp/commands.im.shm')
-        self.residual_modes_shm           = dao.shm('/tmp/residual_modes.im.shm')
-        self.computed_modes_shm           = dao.shm('/tmp/computed_modes.im.shm')
-        self.dm_kl_modes_shm              = dao.shm('/tmp/dm_kl_modes.im.shm')
+        self.slopes_image_shm             = dao.shm(shm_path['slopes_image_shm'])
+        self.phase_screen_shm             = dao.shm(shm_path['phase_screen_shm'])
+        self.dm_phase_shm                 = dao.shm(shm_path['dm_phase_shm'])
+        self.phase_residuals_shm          = dao.shm(shm_path['phase_residuals_shm'])
+        self.normalized_psf_shm           = dao.shm(shm_path['normalized_psf_shm'])
+        self.commands_shm                 = dao.shm(shm_path['commands_shm'])
+        self.residual_modes_shm           = dao.shm(shm_path['residual_modes_shm'])
+        self.computed_modes_shm           = dao.shm(shm_path['computed_modes_shm'])
+        self.dm_kl_modes_shm              = dao.shm(shm_path['dm_kl_modes_shm'])
 
     def init_vector_plots(self):
-        self.modes_amp_view = CustomChartView(self.modes_amp_widget,"mode","amplitude", plot_type = "stem")
-        layout = QVBoxLayout(self.modes_amp_widget)
-        layout.addWidget(self.modes_amp_view)
-        self.modes_amp_view.set_legend(["res"])
-        self.reset_modes_amp_view_button.clicked.connect(self.modes_amp_view.resetZoom)
+        self.computed_KL_modes_view = CustomChartView(self.computed_KL_modes_widget,"mode","amplitude", n_lines = 2)
+        layout = QVBoxLayout(self.computed_KL_modes_widget)
+        layout.addWidget(self.computed_KL_modes_view)
+        self.computed_KL_modes_view.set_legend(["residual modes","computed modes"])
+        self.reset_computed_KL_modes_view_button.clicked.connect(self.computed_KL_modes_view.resetZoom)
 
-        self.modes_amp_view = CustomChartView(self.modes_amp_widget,"mode","amplitude", plot_type = "stem")
-        layout = QVBoxLayout(self.modes_amp_widget)
-        layout.addWidget(self.modes_amp_view)
-        self.modes_amp_view.set_legend(["res"])
-        self.reset_modes_amp_view_button.clicked.connect(self.modes_amp_view.resetZoom)
+        self.computed_act_pos_view = CustomChartView(self.computed_act_pos_widget,"mode","amplitude [2 pi rad ptp]")
+        layout = QVBoxLayout(self.computed_act_pos_widget)
+        layout.addWidget(self.computed_act_pos_view)
+        self.computed_act_pos_view.set_legend(["act pos projeted"])
+        self.reset_computed_act_pos_view_button.clicked.connect(self.computed_act_pos_view.resetZoom)
 
-        self.modes_amp_view = CustomChartView(self.modes_amp_widget,"mode","amplitude", plot_type = "stem")
-        layout = QVBoxLayout(self.modes_amp_widget)
-        layout.addWidget(self.modes_amp_view)
-        self.modes_amp_view.set_legend(["res"])
-        self.reset_modes_amp_view_button.clicked.connect(self.modes_amp_view.resetZoom)
+        self.commands_view = CustomChartView(self.commands_widget,"mode","amplitude [2 pi rad ptp]")
+        layout = QVBoxLayout(self.commands_widget)
+        layout.addWidget(self.commands_view)
+        self.commands_view.set_legend(["commands"])
+        self.reset_commands_view_button.clicked.connect(self.commands_view.resetZoom)
 
-        self.modes_amp_view = CustomChartView(self.modes_amp_widget,"mode","amplitude", plot_type = "stem")
-        layout = QVBoxLayout(self.modes_amp_widget)
-        layout.addWidget(self.modes_amp_view)
-        self.modes_amp_view.set_legend(["res"])
-        self.reset_modes_amp_view_button.clicked.connect(self.modes_amp_view.resetZoom)
 
-        self.modes_amp_view = CustomChartView(self.modes_amp_widget,"mode","amplitude", plot_type = "stem")
-        layout = QVBoxLayout(self.modes_amp_widget)
-        layout.addWidget(self.modes_amp_view)
-        self.modes_amp_view.set_legend(["res"])
-        self.reset_modes_amp_view_button.clicked.connect(self.modes_amp_view.resetZoom)
 
     def init_images(self):
         lut = matplotlib_cmap_to_lut('viridis')  # Change to 'inferno', 'jet', etc.
@@ -369,24 +359,53 @@ class MainWindow(QMainWindow):
         self.pyramid_view.setImage(data1, autoLevels=False,autoRange=False)
 
 
-        self.slopes_image_view.setImage(self.slopes_image_shm.get_data(check=False, semNb=self.sem_nb), autoLevels=(self.autoscale_slopes_image_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
-        self.phase_screen_view.setImage(self.phase_screen_shm.get_data(check=False, semNb=self.sem_nb), autoLevels=(self.autoscale_phase_screen_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
-        self.dm_phase_view.setImage(self.dm_phase_shm.get_data(check=False, semNb=self.sem_nb), autoLevels=(self.autoscale_dm_phase_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
-        self.phase_residuals_view.setImage(self.phase_residuals_shm.get_data(check=False,semNb=self.sem_nb),autoLevels=(self.autoscale_phase_residuals_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
-        self.normalized_psf_view.setImage(self.normalized_psf_shm.get_data(check=False,semNb=self.sem_nb), autoLevels=(self.autoscale_normalized_psf_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
+        # self.slopes_image_view.setImage(self.slopes_image_shm.get_data(check=False, semNb=self.sem_nb), autoLevels=(self.autoscale_slopes_image_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
+        # self.phase_screen_view.setImage(self.phase_screen_shm.get_data(check=False, semNb=self.sem_nb), autoLevels=(self.autoscale_phase_screen_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
+        # self.dm_phase_view.setImage(self.dm_phase_shm.get_data(check=False, semNb=self.sem_nb), autoLevels=(self.autoscale_dm_phase_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
+        # self.phase_residuals_view.setImage(self.phase_residuals_shm.get_data(check=False,semNb=self.sem_nb),autoLevels=(self.autoscale_phase_residuals_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
+        # self.normalized_psf_view.setImage(self.normalized_psf_shm.get_data(check=False,semNb=self.sem_nb), autoLevels=(self.autoscale_normalized_psf_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
 
 
 
-        # self.slopes_image_view.setImage(fits.getdata("../outputs/GUI_tests/slopes_image.fits"), autoLevels=(self.autoscale_slopes_image_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
-        # self.phase_screen_view.setImage(fits.getdata("../outputs/GUI_tests/phase_screen.fits"), autoLevels=(self.autoscale_phase_screen_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
-        # self.dm_phase_view.setImage(fits.getdata("../outputs/GUI_tests/dm_phase.fits"), autoLevels=(self.autoscale_dm_phase_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
-        # self.phase_residuals_view.setImage(fits.getdata("../outputs/GUI_tests/phase_residuals.fits"),autoLevels=(self.autoscale_phase_residuals_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
-        # self.normalized_psf_view.setImage(fits.getdata("../outputs/GUI_tests/normalized_psf.fits"), autoLevels=(self.autoscale_normalized_psf_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
+        self.slopes_image_view.setImage(fits.getdata("../outputs/GUI_tests/slopes_image.fits"), autoLevels=(self.autoscale_slopes_image_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
+        self.phase_screen_view.setImage(fits.getdata("../outputs/GUI_tests/phase_screen.fits"), autoLevels=(self.autoscale_phase_screen_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
+        self.dm_phase_view.setImage(fits.getdata("../outputs/GUI_tests/dm_phase.fits"), autoLevels=(self.autoscale_dm_phase_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
+        self.phase_residuals_view.setImage(fits.getdata("../outputs/GUI_tests/phase_residuals.fits"),autoLevels=(self.autoscale_phase_residuals_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
+        self.normalized_psf_view.setImage(fits.getdata("../outputs/GUI_tests/normalized_psf.fits"), autoLevels=(self.autoscale_normalized_psf_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
 
-        data2 = np.random.rand(100)-0.5
-        if(self.square_res_checkbox.checkState()==Qt.CheckState.Checked):
-            data2 = np.sqrt(np.square(data2))
-        self.modes_amp_view.draw([(np.arange(data2.shape[0]), data2)])
+        # data2 = np.random.rand(100)-0.5
+        # if(self.square_computed_KL_modes_checkbox.checkState()==Qt.CheckState.Checked):
+        #     data3 = np.sqrt(np.square(data2))
+        # else: data3 = data2
+        # self.computed_KL_modes_view.draw([(np.arange(data3.shape[0]), data3),(np.arange(data3.shape[0]), data3+1)])
+
+        # if(self.square_computed_act_pos_checkbox.checkState()==Qt.CheckState.Checked):
+        #     data4 = np.sqrt(np.square(data2))
+        # else: data4 = data2
+        # self.computed_act_pos_view.draw([(np.arange(data4.shape[0]), data4)])
+
+        # if(self.square_commands_checkbox.checkState()==Qt.CheckState.Checked):
+        #     data5 = np.sqrt(np.square(data2))
+        # else: data5 = data2
+        # self.commands_view.draw([(np.arange(data5.shape[0]), data5)])
+
+        residual_modes = self.residual_modes_shm.get_data(check=False, semNb=self.sem_nb)
+        computed_modes = self.computed_modes_shm.get_data(check=False, semNb=self.sem_nb)
+        if(self.square_computed_KL_modes_checkbox.checkState()==Qt.CheckState.Checked):
+            residual_modes = np.sqrt(np.square(residual_modes))
+            computed_modes = np.sqrt(np.square(computed_modes))
+        self.computed_KL_modes_view.draw([(np.arange(residual_modes.shape[0]), residual_modes),(np.arange(computed_modes.shape[0]), computed_modes)])
+
+        
+        dm_kl_modes = self.dm_kl_modes_shm.get_data(check=False, semNb=self.sem_nb)
+        if(self.square_computed_act_pos_checkbox.checkState()==Qt.CheckState.Checked):
+            dm_kl_modes = np.sqrt(np.square(dm_kl_modes))
+        self.computed_act_pos_view.draw([(np.arange(dm_kl_modes.shape[0]), dm_kl_modes)])
+
+        commands = self.commands_shm.get_data(check=False, semNb=self.sem_nb)
+        if(self.square_commands_checkbox.checkState()==Qt.CheckState.Checked):
+            commands = np.sqrt(np.square(commands))
+        self.commands_view.draw([(np.arange(commands.shape[0]), commands)])
 
     def closeEvent(self, event):
         print("All processes and timers stopped")
