@@ -211,7 +211,9 @@ anim_title= f'Seeing: {seeing} arcsec, λ: {wl} nm, Loop speed: {loopspeed} kHz'
 
 #AO loop
 strehl_ratios, residual_phases = closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, anim_path, anim_name, anim_title,
-                           RM_S2KL_new, KL2Act_new, Act2KL_new, Phs2KL_new, mask, bias_image, verbose=True, verbose_plot=False)
+                           RM_S2KL_new, KL2Act_new, Act2KL_new, Phs2KL_new, mask, bias_image, 
+                           reference_image=reference_image, diffraction_limited_psf=diffraction_limited_psf,
+                           verbose=True, verbose_plot=True)
 
 # save strehl ratio and phase residual arrays
 strehl_ratios_path = os.path.join(anim_path, f"strehl_ratios_{anim_name.replace('.gif', '.npy')}")
@@ -246,8 +248,8 @@ amp = 1
 data_kl = KL2Phs_new[mode].reshape(npix_small_pupil_grid, npix_small_pupil_grid) * amp * small_pupil_mask
 
 # Main loop parameters
-num_iterations = 10
-gain = 0.4
+num_iterations = 1
+gain = 1
 leakage = 0
 delay=0
 
@@ -256,5 +258,7 @@ anim_name= f'closed_loop_test_KL_mode_{mode}_amp_{amp}.gif'
 anim_title= f'KL mode {mode} amp {amp}'
 
 closed_loop_test(num_iterations, gain, leakage, delay, data_kl, anim_path, anim_name, anim_title,
-                           RM_S2KL_new, KL2Act_new, Act2KL_new, Phs2KL_new, mask, bias_image)
+                           RM_S2KL_new, KL2Act_new, Act2KL_new, Phs2KL_new, mask, bias_image, 
+                           reference_image=reference_image, diffraction_limited_psf=diffraction_limited_psf,
+                           verbose=True, verbose_plot=True)
 

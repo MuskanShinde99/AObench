@@ -22,7 +22,8 @@ from src.create_shared_memories import *
 
 
 def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, anim_path, aim_name, anim_title,
-                           RM_S2KL, KL2Act, Act2KL, Phs2KL,  mask, bias_image, verbose=False, verbose_plot=False, **kwargs):
+                           RM_S2KL, KL2Act, Act2KL, Phs2KL,  mask, bias_image, reference_image, diffraction_limited_psf, 
+                           verbose=False, verbose_plot=False, **kwargs):
     """
     Performs a closed-loop adaptive optics simulation.
     
@@ -78,17 +79,16 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
     # Display Pupil Data on SLM
     data_slm = compute_data_slm()
     slm.set_data(data_slm)
-        
-    # Capture a reference image using the WFS camera
     time.sleep(wait_time)  # Wait for stabilization of SLM
-    reference_image = camera_wfs.get_data()
+        
+    # Reference image 
     normalized_reference_image = normalize_image(reference_image, mask, bias_image)
     pyr_img_shape = reference_image.shape
     if verbose:
         print('Reference image shape:', pyr_img_shape)
     
     # Diffraction limited PSF
-    diffraction_limited_psf = camera_fp.get_data().astype(np.float32)
+    diffraction_limited_psf = diffraction_limited_psf.astype(np.float32)
     diffraction_limited_psf /= diffraction_limited_psf.sum()
     fp_img_shape = diffraction_limited_psf.shape
     if verbose:
@@ -182,6 +182,7 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
         
         # Update deformable mirror surface
         data_dm[:, :] = deformable_mirror.opd.shaped
+        data_dm = data_dm * small_pupil_mask
         dm_phase_shm.set_data(data_dm.astype(np.float32))  # setting shared memory
         fits.writeto(os.path.join(folder_gui, f'dm_phase.fits'), data_dm.astype(np.float32), overwrite=True)
         
@@ -195,12 +196,12 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
         
         # Update shared memory and image
         phase_screen_shm.set_data(phase_slice) # setting shared memory
-        fits.writeto(os.path.join(folder_gui, f'phase_screen.fits'), phase_slice, overwrite=True)
+        #fits.writeto(os.path.join(folder_gui, f'phase_screen.fits'), phase_slice, overwrite=True)
         
         # Compute phase residuals 
         phase_residuals = (phase_slice + data_dm) * small_pupil_mask
         phase_residuals_shm.set_data(phase_residuals) # setting shared memory
-        fits.writeto(os.path.join(folder_gui, f'phase_residuals.fits'), phase_residuals, overwrite=True)
+        #fits.writeto(os.path.join(folder_gui, f'phase_residuals.fits'), phase_residuals, overwrite=True)
 
         residual_phase_std = np.std(phase_residuals[small_pupil_mask == 1])
         if data_phase_screen.ndim == 3:
@@ -221,25 +222,24 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
         slopes_image = compute_pyr_slopes(normalized_pyr_img, normalized_reference_image)
         slopes = slopes_image[valid_pixels_indices].flatten()
         slopes_image_shm.set_data(slopes_image)
-        fits.writeto(os.path.join(folder_gui, f'slopes_image.fits'), slopes_image, overwrite=True)
+        #fits.writeto(os.path.join(folder_gui, f'slopes_image.fits'), slopes_image, overwrite=True)
 
         # Capture PSF
         fp_img = camera_fp.get_data()
         fp_img = np.maximum(fp_img, 1e-10)
         normalized_psf_shm.set_data((fp_img / np.max(fp_img))) # setting shared memory
-        fits.writeto(os.path.join(folder_gui, f'normalized_psf.fits'), (fp_img / np.max(fp_img)), overwrite=True)
-
+        #fits.writeto(os.path.join(folder_gui, f'normalized_psf.fits'), (fp_img / np.max(fp_img)), overwrite=True)
         
         # Compute Strehl ratio
         observed_psf = fp_img / fp_img.sum()
-        # integrated_obs_psf = observed_psf[psf_mask].sum()
-        # strehl_ratio = integrated_obs_psf / integrated_diff_psf
-        observed_psf = fp_img / fp_img.sum()
-        strehl_ratio = np.max(observed_psf) / np.max(diffraction_limited_psf)
+        integrated_obs_psf = observed_psf[psf_mask].sum()
+        strehl_ratio = integrated_obs_psf / integrated_diff_psf
+        # strehl_ratio = np.max(observed_psf) / np.max(diffraction_limited_psf)
         strehl_ratios[i] = strehl_ratio
 
         # Compute KL modes present
-        computed_modes = slopes @ RM_S2KL
+        computed_modes = slopes @ RM_S2KL 
+        # multiply by two because this mode is computed for DM surface and we want DM phase
         computed_modes_shm.set_data(computed_modes) # setting shared memory
         
         # Compute actuator commands
@@ -276,7 +276,7 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
             im_residuals.set_data(phase_residuals)
             im_residuals.set_clim(np.min(phase_residuals), np.max(phase_residuals))
             cbar_residuals.update_normal(im_residuals)
-            axs[2, 1].set_title(f'Total residuals std: {residual_phase_std:.4f} x λ')
+            axs[2, 1].set_title(f'Total residuals std: {residual_phase_std:.4f} x λ') # the phase residuals are in  waves
 
             # Update processed WFS image (slopes map from PWFS)
             im_pyr.set_data(slopes_image)

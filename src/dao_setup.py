@@ -125,7 +125,7 @@ zernike_basis = np.asarray(zernike_basis)
 
 # [-0.0813878287964559, 0.09992195172893337, 0.4] 
 # Create a Tip, Tilt, and Focus (TTF) matrix with specified amplitudes as the diagonal elements
-ttf_amplitudes = [-1.6653545363054125, 0.10778847128574798, 0.4] # Tip, Tilt, and Focus amplitudes - Focus 0.4
+ttf_amplitudes = [-1.6777304187076303, 0.129215993520571, 0.4] # Tip, Tilt, and Focus amplitudes - Focus 0.4
 ttf_amplitude_matrix = np.diag(ttf_amplitudes)
 ttf_matrix = ttf_amplitude_matrix @ zernike_basis[1:4, :]  # Select modes 1 (tip), 2 (tilt), and 3 (focus)
 
@@ -243,18 +243,18 @@ nmodes_dm = deformable_mirror.num_actuators
 
 # print("Number of DM modes =", nmodes_dm)
 
-# # Flatten the DM surface and set actuator values
-# deformable_mirror.flatten()
-# deformable_mirror.actuators.fill(1)
-# plt.figure()
-# plt.imshow(deformable_mirror.opd.shaped)
-# plt.colorbar()
-# plt.title('Deformable Mirror Surface OPD')
-# plt.show()
+# Flatten the DM surface and set actuator values
+deformable_mirror.flatten()
+deformable_mirror.actuators.fill(1)
+plt.figure()
+plt.imshow(deformable_mirror.opd.shaped)
+plt.colorbar()
+plt.title('Deformable Mirror Surface OPD')
+plt.show()
 
 #%% Create shared memory
 
 nmodes_dm = nact_valid
 nmodes_KL = nact_valid
-nmode_Znk = nact_valid
+nmodes_Znk = nact_valid
 

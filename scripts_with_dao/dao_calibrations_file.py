@@ -147,7 +147,7 @@ S2KL_shm = dao.shm('/tmp/S2KL.im.shm' , np.zeros((npix_valid, nmodes_KL)).astype
 #%% Centering the PSF on the Pyramid Tip
 
 center_psf_on_pyramid_tip(mask=mask, initial_tt_amplitudes=[0, 0], focus=[0.4], 
-                          bounds = [(-2.0, 2.0), (-2.0, 2.0)], variance_threshold=50, 
+                          bounds = [(-2.0, 2.0), (-2.0, 2.0)], variance_threshold=10, 
                           update_setup_file=True, verbose=True, verbose_plot=True)
 
 #%% Scanning modes to find zero of the pyramid
@@ -159,7 +159,7 @@ Act2Phs, Phs2Act = compute_Act2Phs(nact, npix_small_pupil_grid, dm_modes_full, f
 
 # Create KL modes
 nmodes_kl = nact_valid
-Act2KL, KL2Act = compute_KL2Act(nact, npix_small_pupil_grid, nmodes_kl, dm_modes, small_pupil_mask, folder_transformation_matrices, verbose=True)
+Act2KL, KL2Act = compute_KL2Act(nact, npix_small_pupil_grid, nmodes_kl, dm_modes_full, small_pupil_mask, folder_transformation_matrices, verbose=True)
 KL2Phs, Phs2KL = compute_KL2Phs(nact, npix_small_pupil_grid, nmodes_kl, Act2Phs, Phs2Act, KL2Act, Act2KL, folder_transformation_matrices, verbose=True)
 
 # Plot KL projected| on actuators
