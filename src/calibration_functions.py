@@ -100,7 +100,7 @@ def perform_push_pull_calibration_with_phase_basis(basis, phase_amp, ref_image, 
         pp_acc = np.zeros((height, width), dtype=np.float32)
         t1 = time.time()
 
-        for _ in range(rep_count):
+        for i in range(rep_count):
             push_pull_img = np.zeros((height, width), dtype=np.float32)
 
             for amp in [-phase_amp, phase_amp]:
