@@ -215,8 +215,18 @@ import os
 import numpy as np
 from astropy.io import fits
 
-def create_response_matrix(KL2Act, phase_amp, reference_image, mask,
-                           verbose=True, verbose_plot=False, mode_repetitions=None, **kwargs):
+def create_response_matrix(
+    KL2Act,
+    phase_amp,
+    reference_image,
+    mask,
+    *,
+    verbose=True,
+    verbose_plot=False,
+    mode_repetitions=None,
+    calibration_repetitions=1,
+    **kwargs,
+):
     """
     Run push-pull calibration and compute the response matrix.
 
@@ -243,6 +253,9 @@ def create_response_matrix(KL2Act, phase_amp, reference_image, mask,
     mode_repetitions : sequence, dict, or None
         Optional number of times to repeat and average each mode. Unspecified
         modes default to 1.
+    calibration_repetitions : int
+        Number of times to repeat the whole calibration process. The returned
+        response matrices are the average over these runs.
     kwargs:
         - pupil_size
         - nact
@@ -259,9 +272,41 @@ def create_response_matrix(KL2Act, phase_amp, reference_image, mask,
     folder_calib = kwargs.get("folder_calib", dao_setup.folder_calib)
 
     # Run push-pull calibration
-    pull_images, push_images, push_pull_images = perform_push_pull_calibration_with_phase_basis(
-        KL2Act, phase_amp, reference_image, mask,
-        verbose=verbose, verbose_plot=verbose_plot, mode_repetitions=mode_repetitions)
+    n_runs = max(1, int(calibration_repetitions))
+
+    pull_sum = None
+    push_sum = None
+    pp_sum = None
+
+    for run in range(n_runs):
+        pull_images, push_images, push_pull_images = perform_push_pull_calibration_with_phase_basis(
+            KL2Act,
+            phase_amp,
+            reference_image,
+            mask,
+            verbose=verbose,
+            verbose_plot=verbose_plot,
+            mode_repetitions=mode_repetitions,
+        )
+
+        # Initialize accumulators using first run dimensions
+        if pull_sum is None:
+            pull_sum = np.zeros_like(pull_images, dtype=np.float32)
+            push_sum = np.zeros_like(push_images, dtype=np.float32)
+            pp_sum = np.zeros_like(push_pull_images, dtype=np.float32)
+
+        pull_sum += pull_images
+        push_sum += push_images
+        pp_sum += push_pull_images
+
+
+    pull_images = pull_sum / n_runs
+    push_images = push_sum / n_runs
+    push_pull_images = pp_sum / n_runs
+
+    # Compute response matrices from the averaged push-pull images
+    response_matrix_full = compute_response_matrix(push_pull_images)
+    response_matrix_filtered = compute_response_matrix(push_pull_images, mask)
 
     # Define output filenames
     pull_filename     = f'binned_processed_response_cube_KL2PWFS_only_pull_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
@@ -278,10 +323,6 @@ def create_response_matrix(KL2Act, phase_amp, reference_image, mask,
     if verbose: print('Push-pull images saved')
     fits.writeto(os.path.join(folder_calib, pushpull_filename), push_pull_images, overwrite=True)
 
-    # Compute the response matrix
-    response_matrix_full = compute_response_matrix(push_pull_images)
-    response_matrix_filtered = compute_response_matrix(push_pull_images, mask)
-    
     # Save the matrices
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     
