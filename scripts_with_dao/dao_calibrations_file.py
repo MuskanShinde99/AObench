@@ -236,8 +236,18 @@ plt.show()
 
 #%%
 phase_amp = 0.1
-response_matrix_full, response_matrix_filtered = create_response_matrix(KL2Act, phase_amp, reference_image, mask,
-                                              verbose=True, verbose_plot=False)
+# Number of times to repeat the whole calibration
+n_calibration_repetitions = 1
+
+response_matrix_full, response_matrix_filtered = create_response_matrix(
+    KL2Act,
+    phase_amp,
+    reference_image,
+    mask,
+    verbose=True,
+    verbose_plot=False,
+    calibration_repetitions=n_calibration_repetitions,
+)
 
 #response_matrix_filtered = response_matrix_full[:, mask.ravel() > 0]
 
