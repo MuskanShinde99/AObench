@@ -6,11 +6,11 @@ from PyQt6.QtCharts import QChart, QChartView, QLineSeries,QLogValueAxis, QValue
 from PyQt6.QtCore import Qt, QRectF , QTimer, QPointF,QThread, pyqtSignal
 from PyQt6.QtGui import QMouseEvent, QWheelEvent
 from pyqtgraph import ImageView
+import pyqtgraph as pg
 import threading
 import dao
-
+import matplotlib.pyplot as plt
 import time
-
 import toml
 from astropy.io import fits
 import subprocess
@@ -23,6 +23,11 @@ daoLogLevel.value=0
 
 # ps -fA | grep python
 # /usr/lib/qt5/bin/designer
+
+def matplotlib_cmap_to_lut(cmap_name='viridis', n_colors=256):
+    cmap = plt.colormaps.get_cmap(cmap_name)  # Modern API (Matplotlib 3.7+)
+    lut = (cmap(np.linspace(0, 1, n_colors))[:, :3] * 255).astype(np.uint8)
+    return lut
 
 class ProcessThread(QThread):
     output_received = pyqtSignal(str)  # Signal for stdout/stderr output
@@ -280,63 +285,127 @@ class MainWindow(QMainWindow):
 
         uic.loadUi("gui.ui", self)
         self.init_images()
+        self.init_vector_plots()
         self.init_shm()
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_images)
-        self.timer.start(500)
+        self.timer.start(100)
         self.sem_nb = 9
     def init_shm(self):
         with open('shm_path.toml', 'r') as f:
             shm_path = toml.load(f)
-        self.slopes_image_shm             = dao.shm('/tmp/slopes_image.im.shm')
-        self.phase_screen_shm             = dao.shm('/tmp/phase_screen.im.shm')
-        self.dm_phase_shm                 = dao.shm('/tmp/dm_phase.im.shm')
-        self.phase_residuals_shm          = dao.shm('/tmp/phase_residuals.im.shm')
-        self.normalized_psf_shm           = dao.shm('/tmp/normalized_psf.im.shm')
-        self.commands_shm                 = dao.shm('/tmp/commands.im.shm')
-        self.residual_modes_shm           = dao.shm('/tmp/residual_modes.im.shm')
-        self.computed_modes_shm           = dao.shm('/tmp/computed_modes.im.shm')
-        self.dm_kl_modes_shm              = dao.shm('/tmp/dm_kl_modes.im.shm')
+        self.slopes_image_shm             = dao.shm(shm_path['slopes_image_shm'])
+        self.phase_screen_shm             = dao.shm(shm_path['phase_screen_shm'])
+        self.dm_phase_shm                 = dao.shm(shm_path['dm_phase_shm'])
+        self.phase_residuals_shm          = dao.shm(shm_path['phase_residuals_shm'])
+        self.normalized_psf_shm           = dao.shm(shm_path['normalized_psf_shm'])
+        self.commands_shm                 = dao.shm(shm_path['commands_shm'])
+        self.residual_modes_shm           = dao.shm(shm_path['residual_modes_shm'])
+        self.computed_modes_shm           = dao.shm(shm_path['computed_modes_shm'])
+        self.dm_kl_modes_shm              = dao.shm(shm_path['dm_kl_modes_shm'])
+
+    def init_vector_plots(self):
+        self.computed_KL_modes_view = CustomChartView(self.computed_KL_modes_widget,"mode","amplitude", n_lines = 2)
+        layout = QVBoxLayout(self.computed_KL_modes_widget)
+        layout.addWidget(self.computed_KL_modes_view)
+        self.computed_KL_modes_view.set_legend(["residual modes","computed modes"])
+        self.reset_computed_KL_modes_view_button.clicked.connect(self.computed_KL_modes_view.resetZoom)
+
+        self.computed_act_pos_view = CustomChartView(self.computed_act_pos_widget,"mode","amplitude [2 pi rad ptp]")
+        layout = QVBoxLayout(self.computed_act_pos_widget)
+        layout.addWidget(self.computed_act_pos_view)
+        self.computed_act_pos_view.set_legend(["act pos projeted"])
+        self.reset_computed_act_pos_view_button.clicked.connect(self.computed_act_pos_view.resetZoom)
+
+        self.commands_view = CustomChartView(self.commands_widget,"mode","amplitude [2 pi rad ptp]")
+        layout = QVBoxLayout(self.commands_widget)
+        layout.addWidget(self.commands_view)
+        self.commands_view.set_legend(["commands"])
+        self.reset_commands_view_button.clicked.connect(self.commands_view.resetZoom)
+
+
 
     def init_images(self):
+        lut = matplotlib_cmap_to_lut('viridis')  # Change to 'inferno', 'jet', etc.
         self.pyramid_view = self.findChild(ImageView, "pyramid_widget")
-        self.pyramid_view.ui.histogram.hide()
-        self.pyramid_view.ui.roiBtn.hide()
-        self.pyramid_view.ui.menuBtn.hide()
-
+        hist = self.pyramid_view.getHistogramWidget()
+        hist.gradient.setColorMap(pg.ColorMap(pos=np.linspace(0, 1, 256), color=lut))
+ 
         self.slopes_image_view = self.findChild(ImageView, "slopes_image_widget")
-        self.slopes_image_view.ui.histogram.hide()
-        self.slopes_image_view.ui.roiBtn.hide()
-        self.slopes_image_view.ui.menuBtn.hide()
+        hist = self.slopes_image_view.getHistogramWidget()
+        hist.gradient.setColorMap(pg.ColorMap(pos=np.linspace(0, 1, 256), color=lut))
+        # self.slopes_image_view.ui.histogram.hide()
+        # self.slopes_image_view.ui.roiBtn.hide()
+        # self.slopes_image_view.ui.menuBtn.hide()
 
-        self.phase_screenview = self.findChild(ImageView, "phase_screen_widget")
-        self.phase_screenview.ui.histogram.hide()
-        self.phase_screenview.ui.roiBtn.hide()
-        self.phase_screenview.ui.menuBtn.hide()
+        self.phase_screen_view = self.findChild(ImageView, "phase_screen_widget")
+        hist = self.phase_screen_view.getHistogramWidget()
+        hist.gradient.setColorMap(pg.ColorMap(pos=np.linspace(0, 1, 256), color=lut))
 
         self.dm_phase_view = self.findChild(ImageView, "dm_phase_widget")
-        self.dm_phase_view.ui.histogram.hide()
-        self.dm_phase_view.ui.roiBtn.hide()
-        self.dm_phase_view.ui.menuBtn.hide()
+        hist = self.dm_phase_view.getHistogramWidget()
+        hist.gradient.setColorMap(pg.ColorMap(pos=np.linspace(0, 1, 256), color=lut))
 
         self.phase_residuals_view = self.findChild(ImageView, "phase_residuals_widget")
-        self.phase_residuals_view.ui.histogram.hide()
-        self.phase_residuals_view.ui.roiBtn.hide()
-        self.phase_residuals_view.ui.menuBtn.hide()
+        hist = self.phase_residuals_view.getHistogramWidget()
+        hist.gradient.setColorMap(pg.ColorMap(pos=np.linspace(0, 1, 256), color=lut))
 
         self.normalized_psf_view = self.findChild(ImageView, "normalized_psf_widget")
-        self.normalized_psf_view.ui.histogram.hide()
-        self.normalized_psf_view.ui.roiBtn.hide()
-        self.normalized_psf_view.ui.menuBtn.hide()
+        hist = self.normalized_psf_view.getHistogramWidget()
+        hist.gradient.setColorMap(pg.ColorMap(pos=np.linspace(0, 1, 256), color=lut))
 
     def update_images(self):
         data1 = np.random.rand(100, 100)
-        self.pyramid_view.setImage(data1, autoLevels=False)
-        self.slopes_image_view.setImage(self.slopes_image_shm.get_data(check=False, semNb=self.sem_nb), autoLevels=False)
-        self.phase_screenview.setImage(self.phase_screen_shm.get_data(check=False, semNb=self.sem_nb), autoLevels=False)
-        self.dm_phase_view.setImage(self.dm_phase_shm.get_data(check=False, semNb=self.sem_nb), autoLevels=False)
-        self.phase_residuals_view.setImage(self.phase_residuals_shm.get_data(check=False, semNb=self.sem_nb), autoLevels=False)
-        self.normalized_psf_view.setImage(self.normalized_psf_shm.get_data(check=False, semNb=self.sem_nb), autoLevels=False)
+        self.pyramid_view.setImage(data1, autoLevels=False,autoRange=False)
+
+
+        # self.slopes_image_view.setImage(self.slopes_image_shm.get_data(check=False, semNb=self.sem_nb), autoLevels=(self.autoscale_slopes_image_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
+        # self.phase_screen_view.setImage(self.phase_screen_shm.get_data(check=False, semNb=self.sem_nb), autoLevels=(self.autoscale_phase_screen_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
+        # self.dm_phase_view.setImage(self.dm_phase_shm.get_data(check=False, semNb=self.sem_nb), autoLevels=(self.autoscale_dm_phase_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
+        # self.phase_residuals_view.setImage(self.phase_residuals_shm.get_data(check=False,semNb=self.sem_nb),autoLevels=(self.autoscale_phase_residuals_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
+        # self.normalized_psf_view.setImage(self.normalized_psf_shm.get_data(check=False,semNb=self.sem_nb), autoLevels=(self.autoscale_normalized_psf_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
+
+
+
+        self.slopes_image_view.setImage(fits.getdata("../outputs/GUI_tests/slopes_image.fits"), autoLevels=(self.autoscale_slopes_image_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
+        self.phase_screen_view.setImage(fits.getdata("../outputs/GUI_tests/phase_screen.fits"), autoLevels=(self.autoscale_phase_screen_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
+        self.dm_phase_view.setImage(fits.getdata("../outputs/GUI_tests/dm_phase.fits"), autoLevels=(self.autoscale_dm_phase_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
+        self.phase_residuals_view.setImage(fits.getdata("../outputs/GUI_tests/phase_residuals.fits"),autoLevels=(self.autoscale_phase_residuals_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
+        self.normalized_psf_view.setImage(fits.getdata("../outputs/GUI_tests/normalized_psf.fits"), autoLevels=(self.autoscale_normalized_psf_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
+
+        # data2 = np.random.rand(100)-0.5
+        # if(self.square_computed_KL_modes_checkbox.checkState()==Qt.CheckState.Checked):
+        #     data3 = np.sqrt(np.square(data2))
+        # else: data3 = data2
+        # self.computed_KL_modes_view.draw([(np.arange(data3.shape[0]), data3),(np.arange(data3.shape[0]), data3+1)])
+
+        # if(self.square_computed_act_pos_checkbox.checkState()==Qt.CheckState.Checked):
+        #     data4 = np.sqrt(np.square(data2))
+        # else: data4 = data2
+        # self.computed_act_pos_view.draw([(np.arange(data4.shape[0]), data4)])
+
+        # if(self.square_commands_checkbox.checkState()==Qt.CheckState.Checked):
+        #     data5 = np.sqrt(np.square(data2))
+        # else: data5 = data2
+        # self.commands_view.draw([(np.arange(data5.shape[0]), data5)])
+
+        residual_modes = self.residual_modes_shm.get_data(check=False, semNb=self.sem_nb)
+        computed_modes = self.computed_modes_shm.get_data(check=False, semNb=self.sem_nb)
+        if(self.square_computed_KL_modes_checkbox.checkState()==Qt.CheckState.Checked):
+            residual_modes = np.sqrt(np.square(residual_modes))
+            computed_modes = np.sqrt(np.square(computed_modes))
+        self.computed_KL_modes_view.draw([(np.arange(residual_modes.shape[0]), residual_modes),(np.arange(computed_modes.shape[0]), computed_modes)])
+
+        
+        dm_kl_modes = self.dm_kl_modes_shm.get_data(check=False, semNb=self.sem_nb)
+        if(self.square_computed_act_pos_checkbox.checkState()==Qt.CheckState.Checked):
+            dm_kl_modes = np.sqrt(np.square(dm_kl_modes))
+        self.computed_act_pos_view.draw([(np.arange(dm_kl_modes.shape[0]), dm_kl_modes)])
+
+        commands = self.commands_shm.get_data(check=False, semNb=self.sem_nb)
+        if(self.square_commands_checkbox.checkState()==Qt.CheckState.Checked):
+            commands = np.sqrt(np.square(commands))
+        self.commands_view.draw([(np.arange(commands.shape[0]), commands)])
 
     def closeEvent(self, event):
         print("All processes and timers stopped")
