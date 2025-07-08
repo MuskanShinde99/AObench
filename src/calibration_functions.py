@@ -8,8 +8,19 @@ from src.dao_setup import *  # Import all variables from setup
 import src.dao_setup as dao_setup
 
 
-def perform_push_pull_calibration_with_phase_basis(basis, phase_amp, ref_image, mask,
-    verbose=False, verbose_plot=False, mode_repetitions=None, **kwargs):
+def perform_push_pull_calibration_with_phase_basis(
+    basis,
+    phase_amp,
+    ref_image,
+    mask,
+    *,
+    push_pull=True,
+    pull_push=False,
+    verbose=False,
+    verbose_plot=False,
+    mode_repetitions=None,
+    **kwargs,
+):
     """
     Perform push-pull calibration using a phase basis.
 
@@ -20,6 +31,8 @@ def perform_push_pull_calibration_with_phase_basis(basis, phase_amp, ref_image, 
     - phase_amp: Phase amplitude used for push/pull.
     - verbose: Print debug messages.
     - verbose_plot: Live plot during calibration.
+    - push_pull: If True, apply push then pull.
+    - pull_push: If True, apply pull then push.
     - mode_repetitions: Sequence or dict specifying how many times each mode is
       repeated and averaged. Modes with unspecified counts default to 1.
     - kwargs:
@@ -100,10 +113,18 @@ def perform_push_pull_calibration_with_phase_basis(basis, phase_amp, ref_image, 
         pp_acc = np.zeros((height, width), dtype=np.float32)
         t1 = time.time()
 
-        for i in range(rep_count):
-            push_pull_img = np.zeros((height, width), dtype=np.float32)
+        orders = []
+        if push_pull:
+            orders.append([-phase_amp, phase_amp])
+        if pull_push:
+            orders.append([phase_amp, -phase_amp])
+        if not orders:
+            raise ValueError("Either push_pull or pull_push must be True")
 
-            for amp in [-phase_amp, phase_amp]:
+        for i in range(rep_count):
+            for order in orders:
+                push_pull_img = np.zeros((height, width), dtype=np.float32)
+                for amp in order:
                 # Compute Zernike phase pattern
                 t2 = time.time()
                 deformable_mirror.flatten()
@@ -140,13 +161,14 @@ def perform_push_pull_calibration_with_phase_basis(basis, phase_amp, ref_image, 
                 push_pull_img += slopes_image / (2 * amp)
                 t13 = time.time()
 
-            # Save the combined response for this repetition
-            pp_acc += push_pull_img
+                # Save the combined response for this sequence/repetition
+                pp_acc += push_pull_img
 
         # Average over repetitions
-        pull_images[mode, :, :] = pull_acc / rep_count
-        push_images[mode, :, :] = push_acc / rep_count
-        push_pull_images[mode, :, :] = pp_acc / rep_count
+        div = rep_count * len(orders)
+        pull_images[mode, :, :] = pull_acc / div
+        push_images[mode, :, :] = push_acc / div
+        push_pull_images[mode, :, :] = pp_acc / div
         
         # Live display of images
         if verbose_plot:
@@ -221,6 +243,7 @@ def create_response_matrix(
     reference_image,
     mask,
     *,
+    push_pull=True,
     verbose=True,
     verbose_plot=False,
     mode_repetitions=None,
@@ -250,6 +273,10 @@ def create_response_matrix(
         If True, print debug info.
     verbose_plot : bool
         If True, show live calibration images.
+    push_pull : bool
+        If True, run push then pull.
+    pull_push : bool
+        If True, run pull then push.
     mode_repetitions : sequence, dict, or None
         Optional number of times to repeat and average each mode. Unspecified
         modes default to 1.
@@ -284,6 +311,8 @@ def create_response_matrix(
             phase_amp,
             reference_image,
             mask,
+            push_pull=push_pull,
+            pull_push=pull_push,
             verbose=verbose,
             verbose_plot=verbose_plot,
             mode_repetitions=mode_repetitions,
