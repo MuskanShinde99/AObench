@@ -64,7 +64,7 @@ def cost_function(amplitudes, pupil_coords, radius, iteration):
     print(f"Iteration: {iteration} | Variance: {round(variance)} | Tipi-tilt amptitude: {amplitudes}")
 
     
-    # Check stopping condition: if variance is less than 2
+    # Check stopping condition: if variance is less than 5
     if variance < 5:
         print(f"Stopping condition met: Variance is below threshold.")
         stop_optimization = True  # Set stopping flag
@@ -146,6 +146,11 @@ def center_psf_on_pyramid_tip(mask,
     Returns:
     - new_ttf_amplitudes (list): Optimized [tip, tilt, focus] amplitudes
     """
+    
+    global stop_optimization, cost_values
+    # Reset global state so subsequent calls start a fresh optimization
+    stop_optimization = False
+    cost_values = []
 
     # Ensure mask is binary and of correct dtype
     mask = mask.astype(np.uint8)

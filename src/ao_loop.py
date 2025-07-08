@@ -219,8 +219,6 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
         pyr_img = camera_wfs.get_data()
         normalized_pyr_img = normalize_image(pyr_img, mask, bias_image)
         slopes_image = compute_pyr_slopes(normalized_pyr_img, normalized_reference_image)
-        print("slopes image data type", slopes_image.dtype)
-        print("slopes image shape", slopes_image.shape)
         slopes = slopes_image[valid_pixels_indices].flatten()
         slopes_image_shm.set_data(slopes_image)
         fits.writeto(os.path.join(folder_gui, f'slopes_image.fits'), slopes_image, overwrite=True)
