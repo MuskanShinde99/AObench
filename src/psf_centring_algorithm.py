@@ -183,11 +183,6 @@ def center_psf_on_pyramid_tip(
     stop_optimization = False
     cost_values = []
 
-    global stop_optimization, cost_values
-    # Reset global state so subsequent calls start a fresh optimization
-    stop_optimization = False
-    cost_values = []
-
     # Ensure mask is binary and of correct dtype
     mask = mask.astype(np.uint8)
 
