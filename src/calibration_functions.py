@@ -8,8 +8,8 @@ from src.dao_setup import *  # Import all variables from setup
 import src.dao_setup as dao_setup
 
 
-def perform_push_pull_calibration_with_phase_basis(basis, phase_amp, ref_image, mask, 
-    verbose=False, verbose_plot=False, **kwargs):
+def perform_push_pull_calibration_with_phase_basis(basis, phase_amp, ref_image, mask,
+    verbose=False, verbose_plot=False, mode_repetitions=None, **kwargs):
     """
     Perform push-pull calibration using a phase basis.
 
@@ -20,6 +20,8 @@ def perform_push_pull_calibration_with_phase_basis(basis, phase_amp, ref_image, 
     - phase_amp: Phase amplitude used for push/pull.
     - verbose: Print debug messages.
     - verbose_plot: Live plot during calibration.
+    - mode_repetitions: Sequence or dict specifying how many times each mode is
+      repeated and averaged. Modes with unspecified counts default to 1.
     - kwargs:
         - slm
         - camera
@@ -53,6 +55,26 @@ def perform_push_pull_calibration_with_phase_basis(basis, phase_amp, ref_image, 
     # Normalize reference image with explicit bias_img set to zero
     normalized_reference_image = normalize_image(ref_image, mask, bias_img=np.zeros_like(ref_image))
 
+    # Prepare number of repetitions per mode
+    if mode_repetitions is None:
+        mode_repetitions = np.ones(nmodes_basis, dtype=int)
+    elif isinstance(mode_repetitions, dict):
+        reps = np.ones(nmodes_basis, dtype=int)
+        for idx, rep in mode_repetitions.items():
+            if 0 <= idx < nmodes_basis:
+                reps[idx] = int(rep)
+        mode_repetitions = reps
+    else:
+        mode_repetitions = np.asarray(mode_repetitions, dtype=int)
+        if mode_repetitions.size == 1:
+            mode_repetitions = np.full(nmodes_basis, mode_repetitions.item())
+        elif mode_repetitions.size < nmodes_basis:
+            reps = np.ones(nmodes_basis, dtype=int)
+            reps[:mode_repetitions.size] = mode_repetitions
+            mode_repetitions = reps
+        elif mode_repetitions.size > nmodes_basis:
+            mode_repetitions = mode_repetitions[:nmodes_basis]
+
     # Pre-allocate arrays
     pull_images = np.zeros((nmodes_basis, height, width), dtype=np.float32)
     push_images = np.zeros((nmodes_basis, height, width), dtype=np.float32)
@@ -69,50 +91,62 @@ def perform_push_pull_calibration_with_phase_basis(basis, phase_amp, ref_image, 
 
     for mode in range(nmodes_basis):
 
-        # Initialize timing and temporary variables
+        rep_count = int(mode_repetitions[mode])
+
+        # Initialize timing and accumulation arrays
         t0 = time.time()
-        push_pull_img = np.zeros((height, width), dtype=np.float32)
+        pull_acc = np.zeros((height, width), dtype=np.float32)
+        push_acc = np.zeros((height, width), dtype=np.float32)
+        pp_acc = np.zeros((height, width), dtype=np.float32)
         t1 = time.time()
 
-        for amp in [-phase_amp, phase_amp]:
-            # Compute Zernike phase pattern
-            t2 = time.time()
-            deformable_mirror.flatten()
-            deformable_mirror.actuators = amp * basis[mode].reshape(nact**2)
-            data_dm[:, :] = deformable_mirror.opd.shaped
-            t3 = time.time()
+        for _ in range(rep_count):
+            push_pull_img = np.zeros((height, width), dtype=np.float32)
 
-            # Add and wrap data within the pupil mask
-            t4 = time.time()
-            data_slm = compute_data_slm(data_dm=data_dm)
-            slm.set_data(data_slm)
-            time.sleep(wait_time)
-            t7 = time.time()
+            for amp in [-phase_amp, phase_amp]:
+                # Compute Zernike phase pattern
+                t2 = time.time()
+                deformable_mirror.flatten()
+                deformable_mirror.actuators = amp * basis[mode].reshape(nact**2)
+                data_dm[:, :] = deformable_mirror.opd.shaped
+                t3 = time.time()
 
-            # Allow SLM to settle and capture the image
-            t8 = time.time()
-            pyr_img = camera.get_data()
-            t9 = time.time()
-            
-            # Compute slopes
-            t10 = time.time()
-            normalized_pyr_img = normalize_image(pyr_img, mask, bias_img=np.zeros_like(pyr_img))
-            slopes_image = compute_pyr_slopes(normalized_pyr_img, normalized_reference_image)
-            t11 = time.time()
+                # Add and wrap data within the pupil mask
+                t4 = time.time()
+                data_slm = compute_data_slm(data_dm=data_dm)
+                slm.set_data(data_slm)
+                time.sleep(wait_time)
+                t7 = time.time()
 
-            # Store images for push & pull
-            t12 = time.time()
-            if amp > 0:
-                pull_images[mode, :, :] = slopes_image / abs(amp)
-            else:
-                push_images[mode, :, :] = slopes_image / abs(amp)
+                # Allow SLM to settle and capture the image
+                t8 = time.time()
+                pyr_img = camera.get_data()
+                t9 = time.time()
 
-            # Combine push-pull intensity
-            push_pull_img += slopes_image / (2 * amp)
-            t13 = time.time()
+                # Compute slopes
+                t10 = time.time()
+                normalized_pyr_img = normalize_image(pyr_img, mask, bias_img=np.zeros_like(pyr_img))
+                slopes_image = compute_pyr_slopes(normalized_pyr_img, normalized_reference_image)
+                t11 = time.time()
 
-        # Save the combined response
-        push_pull_images[mode, :, :] = push_pull_img
+                # Store images for push & pull
+                t12 = time.time()
+                if amp > 0:
+                    pull_acc += slopes_image / abs(amp)
+                else:
+                    push_acc += slopes_image / abs(amp)
+
+                # Combine push-pull intensity
+                push_pull_img += slopes_image / (2 * amp)
+                t13 = time.time()
+
+            # Save the combined response for this repetition
+            pp_acc += push_pull_img
+
+        # Average over repetitions
+        pull_images[mode, :, :] = pull_acc / rep_count
+        push_images[mode, :, :] = push_acc / rep_count
+        push_pull_images[mode, :, :] = pp_acc / rep_count
         
         # Live display of images
         if verbose_plot:
@@ -181,8 +215,8 @@ import os
 import numpy as np
 from astropy.io import fits
 
-def create_response_matrix(KL2Act, phase_amp, reference_image, mask, 
-                           verbose=True, verbose_plot=False, **kwargs):
+def create_response_matrix(KL2Act, phase_amp, reference_image, mask,
+                           verbose=True, verbose_plot=False, mode_repetitions=None, **kwargs):
     """
     Run push-pull calibration and compute the response matrix.
 
@@ -206,6 +240,9 @@ def create_response_matrix(KL2Act, phase_amp, reference_image, mask,
         If True, print debug info.
     verbose_plot : bool
         If True, show live calibration images.
+    mode_repetitions : sequence, dict, or None
+        Optional number of times to repeat and average each mode. Unspecified
+        modes default to 1.
     kwargs:
         - pupil_size
         - nact
@@ -223,7 +260,8 @@ def create_response_matrix(KL2Act, phase_amp, reference_image, mask,
 
     # Run push-pull calibration
     pull_images, push_images, push_pull_images = perform_push_pull_calibration_with_phase_basis(
-        KL2Act, phase_amp, reference_image, mask, verbose=verbose, verbose_plot=verbose_plot)
+        KL2Act, phase_amp, reference_image, mask,
+        verbose=verbose, verbose_plot=verbose_plot, mode_repetitions=mode_repetitions)
 
     # Define output filenames
     pull_filename     = f'binned_processed_response_cube_KL2PWFS_only_pull_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
