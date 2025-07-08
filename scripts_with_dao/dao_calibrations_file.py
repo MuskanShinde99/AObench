@@ -236,9 +236,17 @@ plt.show()
 
 #%%
 phase_amp = 0.1
-# Number of times to repeat the whole calibration
-n_calibration_repetitions = 1
 
+# Number of times to repeat the whole calibration
+calibration_repetitions = 1
+
+# Modes repition dictionary
+#mode_repetitions = {0: 10, 3: 10} # Repeat the 0th mode ten times, the 3rd mode ten times, rest default to 1
+#mode_repetitions = [2, 3]  # Repeat the 0th mode twice, the 1st mode three times, beyond the 1st default to 1
+
+mode_repetitions = {0: 10, 1: 10}
+
+# Run calibration and compute matrices
 response_matrix_full, response_matrix_filtered = create_response_matrix(
     KL2Act,
     phase_amp,
@@ -246,7 +254,8 @@ response_matrix_full, response_matrix_filtered = create_response_matrix(
     mask,
     verbose=True,
     verbose_plot=False,
-    calibration_repetitions=n_calibration_repetitions,
+    calibration_repetitions=calibration_repetitions,
+    mode_repetitions=mode_repetitions  
 )
 
 #response_matrix_filtered = response_matrix_full[:, mask.ravel() > 0]
