@@ -238,7 +238,7 @@ plt.show()
 phase_amp = 0.1
 
 # Number of times to repeat the whole calibration
-calibration_repetitions = 1
+calibration_repetitions = 3
 
 # Modes repition dictionary
 #mode_repetitions = {0: 10, 3: 10} # Repeat the 0th mode ten times, the 3rd mode ten times, rest default to 1

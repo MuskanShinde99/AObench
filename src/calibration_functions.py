@@ -165,7 +165,7 @@ def perform_push_pull_calibration_with_phase_basis(basis, phase_amp, ref_image, 
             plt.draw()
             plt.pause(0.1)  # Pause to update the display
 
-        if verbose and mode % 10 == 0:
+        if verbose and mode % 20 == 0:
             print(f"Processing mode: {mode}")
             print(f"Time to initialize arrays: {t1 - t0:.4f} s")
             print(f"Time to initialize phase mode: {t3 - t2:.4f} s")
