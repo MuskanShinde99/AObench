@@ -39,8 +39,22 @@ def compute_pupil_intensities(img, pupil_coords, radius):
 # Global stopping flag
 stop_optimization = False  
 
-def cost_function(amplitudes, pupil_coords, radius, iteration):
-    """Cost function for optimization based on intensity variance."""
+def cost_function(amplitudes, pupil_coords, radius, iteration, variance_threshold=5):
+    """Cost function for optimization based on intensity variance.
+
+    Parameters
+    ----------
+    amplitudes : list
+        Current tip and tilt amplitudes.
+    pupil_coords : list
+        List of pupil centre coordinates.
+    radius : float
+        Radius for the pupil mask.
+    iteration : int
+        Current optimisation iteration.
+    variance_threshold : float, optional
+        Variance value below which the optimisation should stop. Defaults to ``5``.
+    """
     global stop_optimization  #Flag to stop when pupil intensities are equal
 
     fixed_amplitude = 0.4  # Keep the third amplitude fixed
@@ -64,9 +78,11 @@ def cost_function(amplitudes, pupil_coords, radius, iteration):
     print(f"Iteration: {iteration} | Variance: {round(variance)} | Tipi-tilt amptitude: {amplitudes}")
 
     
-    # Check stopping condition: if variance is less than 2
-    if variance < 5:
-        print(f"Stopping condition met: Variance is below threshold.")
+    # Check stopping condition based on the provided threshold
+    if variance < variance_threshold:
+        print(
+            f"Stopping condition met: Variance {variance:.2f} below threshold {variance_threshold}."
+        )
         stop_optimization = True  # Set stopping flag
         
     return variance + 1e-3  # Add a small noise floor
@@ -75,9 +91,14 @@ def cost_function(amplitudes, pupil_coords, radius, iteration):
 # Global list to store cost function values for debugging
 cost_values = []
 
-def optimize_amplitudes(initial_amplitudes, pupil_coords, radius,
-                        bounds=[(-1.0, 1.0), (-1.0, 1.0)],
-                        n_calls=200):
+def optimize_amplitudes(
+    initial_amplitudes,
+    pupil_coords,
+    radius,
+    bounds=[(-1.0, 1.0), (-1.0, 1.0)],
+    n_calls=200,
+    variance_threshold=5,
+):
     """
     Optimize amplitudes using Scikit-Optimize's gp_minimize. 
     Bayesian optimization using Gaussian Processes.
@@ -88,6 +109,7 @@ def optimize_amplitudes(initial_amplitudes, pupil_coords, radius,
     - radius (float): Approximate radius of pupil mask
     - bounds (list): Search bounds for tip and tilt amplitudes
     - n_calls (int): Maximum number of optimization iterations
+    - variance_threshold (float): Stopping threshold for the variance
 
     Returns:
     - result.x (list): Optimized [tip, tilt] amplitudes
@@ -97,7 +119,13 @@ def optimize_amplitudes(initial_amplitudes, pupil_coords, radius,
     def wrapped_cost_function(amps):
         iteration = wrapped_cost_function.iteration
         wrapped_cost_function.iteration += 1
-        cost = cost_function(amps, pupil_coords, radius, iteration)
+        cost = cost_function(
+            amps,
+            pupil_coords,
+            radius,
+            iteration,
+            variance_threshold=variance_threshold,
+        )
         cost_values.append(cost)  # Append cost at each iteration for debugging
         return cost
 
@@ -122,14 +150,17 @@ def optimize_amplitudes(initial_amplitudes, pupil_coords, radius,
 
 
 
-def center_psf_on_pyramid_tip(mask,
-                              initial_tt_amplitudes=[-0.5, 0.2],
-                              focus=[0.4],
-                              bounds=[(-1.0, 1.0), (-1.0, 1.0)],
-                              n_calls=200,
-                              update_setup_file=False,
-                              verbose=False,
-                              verbose_plot=False):
+def center_psf_on_pyramid_tip(
+    mask,
+    initial_tt_amplitudes=[-0.5, 0.2],
+    focus=[0.4],
+    bounds=[(-1.0, 1.0), (-1.0, 1.0)],
+    n_calls=200,
+    update_setup_file=False,
+    verbose=False,
+    verbose_plot=False,
+    variance_threshold=5,
+):
     """
     Optimize tip-tilt amplitudes to balance pupil intensities using a given binary mask.
 
@@ -142,10 +173,16 @@ def center_psf_on_pyramid_tip(mask,
     - update_setup_file (bool): If True, update `ttf_amplitudes` in dao_setup.py
     - verbose (bool): Print processing info
     - verbose_plot (bool): Show final image and optimization cost plot
+    - variance_threshold (float): Stop optimization when variance drops below this value
 
     Returns:
     - new_ttf_amplitudes (list): Optimized [tip, tilt, focus] amplitudes
     """
+
+    global stop_optimization, cost_values
+    # Reset global state so subsequent calls start a fresh optimization
+    stop_optimization = False
+    cost_values = []
 
     # Ensure mask is binary and of correct dtype
     mask = mask.astype(np.uint8)
@@ -166,7 +203,8 @@ def center_psf_on_pyramid_tip(mask,
         pupil_centers,
         radius,
         bounds=bounds,
-        n_calls=n_calls
+        n_calls=n_calls,
+        variance_threshold=variance_threshold,
     )
 
     # Append the fixed focus amplitude to complete the vector
@@ -232,7 +270,12 @@ radius = 83
 
 # Initial TTF amplitudes; third term is fixed
 new_ttf_amplitudes = [-0.5, 0.7]
-optimized_amplitudes = optimize_amplitudes(new_ttf_amplitudes, pupil_coords, radius)  # Optimize the amplitudes
+optimized_amplitudes = optimize_amplitudes(
+    new_ttf_amplitudes,
+    pupil_coords,
+    radius,
+    variance_threshold=5,
+)  # Optimize the amplitudes
 print(f"Optimized Amplitudes: {optimized_amplitudes + [0.4]}")  # Include fixed amplitude in the output
 
 # Capture and display the final image after optimization
