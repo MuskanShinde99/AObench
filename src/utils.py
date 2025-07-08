@@ -166,30 +166,6 @@ def compute_pyr_slopes(normalized_pyr_img, normalized_ref_img):
     
     return slopes_image
 
-def compute_response_matrix(images, mask=None):
-    """
-    Compute a response matrix from a list or array of 2D images.
-
-    Parameters:
-    -----------
-    images : list or np.ndarray
-        Sequence of 2D image arrays.
-    mask : np.ndarray or None
-        2D boolean or integer mask. If provided, only pixels where mask > 0 are used.
-
-    Returns:
-    --------
-    response_matrix : np.ndarray
-        2D array where each row is a flattened image (masked or full).
-    """
-    if mask is not None:
-        response_matrix = np.array([img[mask > 0].ravel() for img in images])
-    else:
-        response_matrix = np.array([img.ravel() for img in images])
-    return response_matrix
-
-
-
 # Function to check if a matrix file exists in a specified folder
 def matrix_exists(folder, filename):
     """

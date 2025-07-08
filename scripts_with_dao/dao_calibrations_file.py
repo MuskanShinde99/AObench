@@ -234,37 +234,16 @@ plt.plot(fp_image[:, 253:273])
 plt.title('PSF radial profile')
 plt.show()
 
-#%% Perform Push-Pull Calibration
-
-# Call the calibration function
+#%%
 phase_amp = 0.1
-pull_images, push_images, push_pull_images = perform_push_pull_calibration_with_phase_basis(
-    KL2Act, phase_amp, reference_image, mask, verbose=True)
+response_matrix_full, response_matrix_filtered = create_response_matrix(KL2Act, phase_amp, reference_image, mask,
+                                              verbose=True, verbose_plot=False)
 
-# Save pull images to FITS files
-print('Saving pull images')
-filename = f'binned_processed_response_cube_KL2PWFS_only_pull_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
-fits.writeto(os.path.join(folder_calib, filename), np.asarray(pull_images), overwrite=True)
-
-# Save push images to FITS files
-print('Saving push images')
-filename = f'binned_processed_response_cube_KL2PWFS_only_push_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
-fits.writeto(os.path.join(folder_calib, filename), np.asarray(push_images), overwrite=True)
-
-# Save push-pull images to FITS files
-print('Saving push-pull images')
-filename = f'binned_processed_response_cube_KL2PWFS_push-pull_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
-fits.writeto(os.path.join(folder_calib, filename), np.asarray(push_pull_images), overwrite=True)
-
-
-#%% Compute interaction matrix
-
-# Create full and filtered matrices ---
-response_matrix_full = compute_response_matrix(push_pull_images)
-response_matrix_filtered = compute_response_matrix(push_pull_images, mask=mask)
+#response_matrix_filtered = response_matrix_full[:, mask.ravel() > 0]
 
 #saving the flattened push-pull images in shared memory
 KL2PWFS_cube_shm.set_data(response_matrix_full)
+KL2S_shm.set_data(response_matrix_filtered)
 
 # Print shapes ---
 print("Full response matrix shape:    ", response_matrix_full.shape)
@@ -279,22 +258,3 @@ plt.ylabel('Modes')
 plt.colorbar()
 plt.show()
 
-#saving filetered response matrix in shared memory
-KL2S_shm.set_data(response_matrix_filtered)
-
-# Save matrices (standard and timestamped)
-timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-
-# Filtered
-filtered = f'binned_response_matrix_KL2S_filtered_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
-filtered_timestamped = f'binned_response_matrix_KL2S_filtered_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr_{timestamp}.fits'
-fits.writeto(os.path.join(folder_calib, filtered), response_matrix_filtered, overwrite=True)
-fits.writeto(os.path.join(folder_calib, filtered_timestamped), response_matrix_filtered, overwrite=True)
-print(f"Filtered matrix saved to:\n  {filtered}\n  {filtered_timestamped}")
-
-# Full
-full = f'binned_response_matrix_KL2S_full_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
-full_timestamped = f'binned_response_matrix_KL2S_full_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr_{timestamp}.fits'
-fits.writeto(os.path.join(folder_calib, full), response_matrix_full, overwrite=True)
-fits.writeto(os.path.join(folder_calib, full_timestamped), response_matrix_full, overwrite=True)
-print(f"Full matrix saved to:\n  {full}\n  {full_timestamped}")
