@@ -41,53 +41,14 @@ from src.calibration_functions import *
 from src.dao_setup import *  # Import all variables from setup
 from src.kl_basis_eigenmodes import computeEigenModes, computeEigenModes_notsquarepupil
 
-#%% Accessing Devices
-
-# Initialize Spatial Light Modulator (SLM)
-
-# Initialize Cameras
-
 
 #%% Creating and Displaying a Circular Pupil on the SLM
 
-# Access the pupil data from the setup file
-
-
-
 # Display Pupil Data on SLM
-slm.set_data(((data_pupil * 256) % 256).astype(np.uint8))
-print('Pupil successfully created on the SLM.')
-
-
-#%% Create a deformable mirror (DM)
-
-# Number of actuators
-nact = 17
-
-# Create a deformable mirror (DM)
-t0 = time.time()
-dm_modes = make_gaussian_influence_functions(small_pupil_grid, nact, pupil_size / (nact - 1), crosstalk=0.3)
-deformable_mirror = DeformableMirror(dm_modes)
-nmodes_dm = deformable_mirror.num_actuators
-t1 = time.time()
-print(f"Time to create DM: {t1 - t0:.4f} s")
-print('DM created')
-print("Number of DM modes =", nmodes_dm)
-
-# Flatten the DM surface and set actuator values
-deformable_mirror.flatten()
-deformable_mirror.actuators.fill(1)
-plt.figure()
-plt.imshow(deformable_mirror.surface.shaped)
-plt.colorbar()
-plt.title('Deformable Mirror Surface')
+data_slm = compute_data_slm()
+slm.set_data(data_slm)
 
 #%% Load Transformation matrices
-
-nmodes_zernike = 200
-nmodes_kl = nact**2 - nact
-
-
 
 Act2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'Act2Phs_nact_{nact}_npupil_{small_pupil_grid_Npix}.fits'))
 Phs2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'Phs2Act_npupil_{small_pupil_grid_Npix}_nact_{nact}.fits'))

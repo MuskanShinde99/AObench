@@ -22,6 +22,7 @@ import sys
 import scipy
 import matplotlib.animation as animation
 from pathlib import Path
+from datetime import datetime
 
 # Configure root paths without changing the working directory
 OPT_LAB_ROOT = Path(os.environ.get("OPT_LAB_ROOT", "/home/ristretto-dao/optlab-master"))
@@ -68,19 +69,9 @@ las.enable(0)
 time.sleep(2)  # Allow some time for laser to turn off
 
 # Capture and average 1000 bias frames
-num_frames = 1000
-bias_stack = []
-
-for _ in range(num_frames):
-    frame = camera_wfs.get_data()
-    bias_stack.append(frame)
-
-# Compute average bias image
-bias_image = np.median(bias_stack, axis=0)
+n_frames=1000
+bias_image = np.median([camera_wfs.get_data() for i in range(n_frames)], axis=0)
 bias_image_shm.set_data(bias_image)
-# Turn on laser
-las.enable(1) 
-time.sleep(5)
 
 # Plot
 plt.figure()
@@ -91,6 +82,11 @@ plt.show()
 
 # Save the Bias Image
 fits.writeto(os.path.join(folder_calib, f'binned_bias_image.fits'), np.asarray(bias_image), overwrite=True)
+
+#%% Turn on laser
+
+las.enable(1) 
+time.sleep(5)
 
 #%% Creating and Displaying a Circular Pupil on the SLM
 
@@ -128,18 +124,20 @@ n_iter=200 # number of iternations for dm random commands
 
 mask = create_flux_filtering_mask(method, flux_cutoff, 
                                modulation_angles, modulation_amp, n_iter,
-                               create_summed_image=False, verbose=False, verbose_plot=True)
+                               create_summed_image=True, verbose=False, verbose_plot=False)
 
 valid_pixels_mask_shm.set_data(mask)
-
-#reset the DM to flat
-
-#%% Create shared memories that depends on number of valid pixels
 
 # Get valid pixels from the mask
 valid_pixels_indices = np.where(mask > 0)
 npix_valid = valid_pixels_indices[0].shape[0]
+npix_valid_shm.set_data(np.array([[npix_valid]]))
 print(f'Number of valid pixels = {npix_valid}')
+
+#Reset the DM to flat
+slm.set_data(data_slm)
+
+#%% Create shared memories that depends on number of valid pixels
 
 KL2PWFS_cube_shm = dao.shm('/tmp/KL2PWFS_cube.im.shm' , np.zeros((nmodes_KL, img_size_wfs_cam**2)).astype(np.float32)) 
 slopes_shm = dao.shm('/tmp/slopes.im.shm', np.zeros((npix_valid, 1)).astype(np.uint32)) 
@@ -148,13 +146,9 @@ S2KL_shm = dao.shm('/tmp/S2KL.im.shm' , np.zeros((npix_valid, nmodes_KL)).astype
 
 #%% Centering the PSF on the Pyramid Tip
 
-
-center_psf_on_pyramid_tip(mask=mask, initial_tt_amplitudes=[0, 0], focus=[0.4], bounds = [(-2.0, 2.0), (-2.0, 2.0)],
-                              update_setup_file=True, verbose=True, verbose_plot=True)
-
-# average more images
-# recover the last value I stopped the optimization at
-# maybe display the tip tilt values instead of the pupil instensities
+center_psf_on_pyramid_tip(mask=mask, initial_tt_amplitudes=[0, 0], focus=[0.4], 
+                          bounds = [(-2.0, 2.0), (-2.0, 2.0)], variance_threshold=50, 
+                          update_setup_file=True, verbose=True, verbose_plot=True)
 
 #%% Scanning modes to find zero of the pyramid
 
@@ -192,20 +186,27 @@ KL2Phs_shm.set_data(KL2Phs)
 
 #%% Capture Reference Image
 
+#Timestamp
+timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
 # Compute and display Pupil Data on SLM
 data_slm = compute_data_slm()
 slm.set_data(data_slm)
 time.sleep(wait_time)  # Allow the system to stabilize
 
 # Capure the Reference Image
-reference_image = camera_wfs.get_data()
+n_frames=20
+reference_image = (np.mean([camera_wfs.get_data().astype(np.float32) for i in range(n_frames)], axis=0)).astype(camera_wfs.get_data().dtype)
 # average over several frames
 reference_image_shm.set_data(reference_image)
 fits.writeto(folder_calib / 'reference_image_raw.fits', reference_image, overwrite=True)
+fits.writeto(folder_calib / f'reference_image_raw_{timestamp}.fits', reference_image, overwrite=True)
 
 # Normailzed refrence image
 normalized_reference_image = normalize_image(reference_image, mask, bias_img=np.zeros_like(reference_image))
+normalized_ref_image_shm.set_data(normalized_reference_image)
 fits.writeto(folder_calib / 'reference_image_normalized.fits', normalized_reference_image, overwrite=True)
+fits.writeto(folder_calib / f'reference_image_normalized_{timestamp}.fits', normalized_reference_image, overwrite=True)
 
 #Plot
 plt.figure()
@@ -215,7 +216,8 @@ plt.title('Normalized Reference Image')
 plt.show()
 
 # Display the Focal plane image
-fp_image = camera_fp.get_data()
+n_frames=20
+fp_image = (np.mean([camera_fp.get_data().astype(np.float32) for i in range(n_frames)], axis=0)).astype(camera_fp.get_data().dtype)
 reference_psf_shm.set_data(fp_image)
 fits.writeto(folder_calib / 'reference_psf.fits', fp_image, overwrite=True)
 
@@ -257,14 +259,11 @@ fits.writeto(os.path.join(folder_calib, filename), np.asarray(push_pull_images),
 
 #%% Compute interaction matrix
 
-from datetime import datetime
-# Timestamp
-timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-
 # Create full and filtered matrices ---
 response_matrix_full = compute_response_matrix(push_pull_images)
 response_matrix_filtered = compute_response_matrix(push_pull_images, mask=mask)
 
+#saving the flattened push-pull images in shared memory
 KL2PWFS_cube_shm.set_data(response_matrix_full)
 
 # Print shapes ---
@@ -280,18 +279,22 @@ plt.ylabel('Modes')
 plt.colorbar()
 plt.show()
 
+#saving filetered response matrix in shared memory
+KL2S_shm.set_data(response_matrix_filtered)
+
 # Save matrices (standard and timestamped)
+timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
 # Filtered
-filtered_base = f'binned_response_matrix_KL2S_filtered_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
+filtered = f'binned_response_matrix_KL2S_filtered_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
 filtered_timestamped = f'binned_response_matrix_KL2S_filtered_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr_{timestamp}.fits'
-fits.writeto(os.path.join(folder_calib, filtered_base), response_matrix_filtered, overwrite=True)
+fits.writeto(os.path.join(folder_calib, filtered), response_matrix_filtered, overwrite=True)
 fits.writeto(os.path.join(folder_calib, filtered_timestamped), response_matrix_filtered, overwrite=True)
-print(f"Filtered matrix saved to:\n  {filtered_base}\n  {filtered_timestamped}")
+print(f"Filtered matrix saved to:\n  {filtered}\n  {filtered_timestamped}")
 
 # Full
-full_base = f'binned_response_matrix_KL2S_full_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
+full = f'binned_response_matrix_KL2S_full_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
 full_timestamped = f'binned_response_matrix_KL2S_full_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr_{timestamp}.fits'
-fits.writeto(os.path.join(folder_calib, full_base), response_matrix_full, overwrite=True)
+fits.writeto(os.path.join(folder_calib, full), response_matrix_full, overwrite=True)
 fits.writeto(os.path.join(folder_calib, full_timestamped), response_matrix_full, overwrite=True)
-print(f"Full matrix saved to:\n  {full_base}\n  {full_timestamped}")
+print(f"Full matrix saved to:\n  {full}\n  {full_timestamped}")

@@ -44,11 +44,12 @@ KL2Phs_shm           = dao.shm('/tmp/KL2Phs.im.shm',           np.zeros((nmodes_
 # Phs2Znk_shm        = dao.shm('/tmp/Phs2Znk.im.shm',          np.zeros((npix_small_pupil_grid**2, nmode_Znk), dtype=np.float32))
 
 # Calibration / Reference
-valid_pixels_mask_shm        = dao.shm('/tmp/valid_pixels_mask.im.shm',        np.zeros((img_size_wfs_cam, img_size_wfs_cam), dtype=np.uint32))
-bias_image_shm               = dao.shm('/tmp/bias_image.im.shm',               np.zeros((img_size_wfs_cam, img_size_wfs_cam), dtype=np.uint32))
-reference_psf_shm            = dao.shm('/tmp/reference_psf.im.shm',            np.zeros((img_size_fp_cam, img_size_fp_cam), dtype=np.uint32))
-reference_image_shm          = dao.shm('/tmp/reference_image.im.shm',          np.zeros((img_size_wfs_cam, img_size_wfs_cam), dtype=np.uint32))
-reference_image_slopes_shm   = dao.shm('/tmp/reference_image_slopes.im.shm',   np.zeros((img_size_wfs_cam, img_size_wfs_cam), dtype=np.float32))
+valid_pixels_mask_shm        = dao.shm('/tmp/valid_pixels_mask.im.shm',        np.zeros((img_size_wfs_cam, img_size_wfs_cam), dtype=np.uint8))
+bias_image_shm               = dao.shm('/tmp/bias_image.im.shm',               np.zeros((img_size_wfs_cam, img_size_wfs_cam), dtype=np.float64))
+reference_psf_shm            = dao.shm('/tmp/reference_psf.im.shm',            np.zeros((img_size_fp_cam, img_size_fp_cam), dtype=np.uint16))
+normalized_ref_psf_shm       = dao.shm('/tmp/normalized_ref_psf.im.shm',       np.zeros((img_size_wfs_cam, img_size_wfs_cam), dtype=np.float64))
+reference_image_shm          = dao.shm('/tmp/reference_image.im.shm',          np.zeros((img_size_wfs_cam, img_size_wfs_cam), dtype=np.uint16))
+normalized_ref_image_shm     = dao.shm('/tmp/normalized_ref_image.im.shm',     np.zeros((img_size_wfs_cam, img_size_wfs_cam), dtype=np.float64))
 npix_valid_shm               = dao.shm('/tmp/npix_valid.im.shm',               np.zeros((1, 1), dtype=np.uint32))
 
 # KL ↔ Slopes
