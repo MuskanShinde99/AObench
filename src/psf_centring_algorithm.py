@@ -77,7 +77,6 @@ def cost_function(amplitudes, pupil_coords, radius, iteration, variance_threshol
     # Print iteration number and variance
     print(f"Iteration: {iteration} | Variance: {round(variance)} | Tipi-tilt amptitude: {amplitudes}")
 
-    
     # Check stopping condition based on the provided threshold
     if variance < variance_threshold:
         print(
@@ -178,6 +177,11 @@ def center_psf_on_pyramid_tip(
     Returns:
     - new_ttf_amplitudes (list): Optimized [tip, tilt, focus] amplitudes
     """
+    
+    global stop_optimization, cost_values
+    # Reset global state so subsequent calls start a fresh optimization
+    stop_optimization = False
+    cost_values = []
 
     global stop_optimization, cost_values
     # Reset global state so subsequent calls start a fresh optimization
@@ -250,10 +254,10 @@ def center_psf_on_pyramid_tip(
             file.write(updated_content)
 
         if verbose:
-            print("✅ Updated `ttf_amplitudes` in dao_setup.py")
+            print("Updated `ttf_amplitudes` in dao_setup.py")
     else:
         if verbose:
-            print("⚠️ Skipped updating `ttf_amplitudes` in `dao_setup.py`")
+            print("Skipped updating `ttf_amplitudes` in `dao_setup.py`")
 
     return new_ttf_amplitudes
 
