@@ -125,7 +125,7 @@ zernike_basis = np.asarray(zernike_basis)
 
 # [-0.0813878287964559, 0.09992195172893337]
 # Create a Tip-Tilt (TT) matrix with specified amplitudes as the diagonal elements
-tt_amplitudes = [-1.673954049676841, 0.12878235473442645]  # Tip and Tilt amplitudes
+tt_amplitudes = [-1.6738730645700732, 0.13520669307132582]  # Tip and Tilt amplitudes
 tt_amplitude_matrix = np.diag(tt_amplitudes)
 tt_matrix = tt_amplitude_matrix @ zernike_basis[1:3, :]  # Select modes 1 (tip) and 2 (tilt)
 
@@ -278,12 +278,12 @@ nmodes_dm = deformable_mirror.num_actuators
 
 # Flatten the DM surface and set actuator values
 deformable_mirror.flatten()
-deformable_mirror.actuators.fill(1)
-plt.figure()
-plt.imshow(deformable_mirror.opd.shaped)
-plt.colorbar()
-plt.title('Deformable Mirror Surface OPD')
-plt.show()
+# deformable_mirror.actuators.fill(1)
+# plt.figure()
+# plt.imshow(deformable_mirror.opd.shaped)
+# plt.colorbar()
+# plt.title('Deformable Mirror Surface OPD')
+# plt.show()
 
 #%% Create shared memory
 

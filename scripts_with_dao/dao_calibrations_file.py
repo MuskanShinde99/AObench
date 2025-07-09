@@ -43,6 +43,7 @@ from src.psf_centring_algorithm import *
 from src.kl_basis_eigenmodes import computeEigenModes, computeEigenModes_notsquarepupil
 from src.create_transformation_matrices import *
 from src.create_shared_memories import *
+from src.scan_modes import scan_othermode_amplitudes
 
 folder_calib = ROOT_DIR / 'outputs/Calibration_files'
 folder_pyr_mask = ROOT_DIR / 'outputs/3s_pyr_mask'
@@ -124,7 +125,7 @@ n_iter=200 # number of iternations for dm random commands
 
 mask = create_flux_filtering_mask(method, flux_cutoff, 
                                modulation_angles, modulation_amp, n_iter,
-                               create_summed_image=True, verbose=False, verbose_plot=False)
+                               create_summed_image=False, verbose=False, verbose_plot=False)
 
 valid_pixels_mask_shm.set_data(mask)
 
@@ -152,39 +153,12 @@ center_psf_on_pyramid_tip(mask=mask, initial_tt_amplitudes=[0, 0],
 
 #%% Scanning modes to find zero of the pyramid
 
+test_values = np.arange(-1, 1, 0.05)
+mode_index = 0 # 0 - focus, 1 - astimgatism, 2 -astigmatism 
+scan_othermode_amplitudes(test_values, mode_index)
 
 
 
-#%% Create transformation matrices
-
-Act2Phs, Phs2Act = compute_Act2Phs(nact, npix_small_pupil_grid, dm_modes_full, folder_transformation_matrices, verbose=True)
-
-# Create KL modes
-nmodes_kl = nact_valid
-Act2KL, KL2Act = compute_KL2Act(nact, npix_small_pupil_grid, nmodes_kl, dm_modes_full, small_pupil_mask, folder_transformation_matrices, verbose=True)
-KL2Phs, Phs2KL = compute_KL2Phs(nact, npix_small_pupil_grid, nmodes_kl, Act2Phs, Phs2Act, KL2Act, Act2KL, folder_transformation_matrices, verbose=True)
-
-# Plot KL projected| on actuators
-fig, axes = plt.subplots(2, 5, figsize=(15, 6))
-# Flatten the axes array for easier indexing
-axes_flat = axes.flatten()
-
-for i, mode in enumerate(range(10)):
-    im = axes_flat[i].imshow(KL2Act[mode].reshape(nact, nact), cmap='viridis')
-    axes_flat[i].set_title(f' KL2Act {mode}')
-    axes_flat[i].axis('off')
-    fig.colorbar(im, ax=axes_flat[i], fraction=0.03, pad=0.04)
-
-plt.tight_layout()
-plt.show()
-
-# Act2Phs_shm.set_data(Act2Phs)
-# Phs2Act_shm.set_data(Phs2Act)
-
-KL2Act_shm.set_data(KL2Act)
-# Act2KL_shm.set_data(Act2KL)
-KL2Phs_shm.set_data(KL2Phs)
-# Phs2KL_shm.set_data(Phs2KL)
 
 #%% Capture Reference Image
 
@@ -235,6 +209,33 @@ plt.figure()
 plt.plot(fp_image[:, 253:273])
 plt.title('PSF radial profile')
 plt.show()
+
+#%% Create transformation matrices
+
+Act2Phs, Phs2Act = compute_Act2Phs(nact, npix_small_pupil_grid, dm_modes_full, folder_transformation_matrices, verbose=True)
+
+# Create KL modes
+nmodes_kl = nact_valid
+Act2KL, KL2Act = compute_KL2Act(nact, npix_small_pupil_grid, nmodes_kl, dm_modes_full, small_pupil_mask, folder_transformation_matrices, verbose=True)
+KL2Phs, Phs2KL = compute_KL2Phs(nact, npix_small_pupil_grid, nmodes_kl, Act2Phs, Phs2Act, KL2Act, Act2KL, folder_transformation_matrices, verbose=True)
+
+# set shared memories
+KL2Act_shm.set_data(KL2Act)
+KL2Phs_shm.set_data(KL2Phs)
+
+# Plot KL projected| on actuators
+fig, axes = plt.subplots(2, 5, figsize=(15, 6))
+# Flatten the axes array for easier indexing
+axes_flat = axes.flatten()
+
+# for i, mode in enumerate(range(10)):
+#     im = axes_flat[i].imshow(KL2Act[mode].reshape(nact, nact), vmax=1, vmin=-1, cmap='viridis')
+#     axes_flat[i].set_title(f' KL2Act {mode}')
+#     axes_flat[i].axis('off')
+#     fig.colorbar(im, ax=axes_flat[i], fraction=0.03, pad=0.04)
+
+# plt.tight_layout()
+# plt.show()
 
 #%%
 phase_amp = 0.1
