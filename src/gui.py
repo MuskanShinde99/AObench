@@ -308,18 +308,39 @@ class MainWindow(QMainWindow):
         self.timer.timeout.connect(self.update_images)
         self.timer.start(100)
         self.sem_nb = 9
+
+    def init_spinboxes(self):
+        self.gain_spinbox.valueChanged.connect(self.gain_changed)
+        self.gain_changed(self.gain_spinbox.value())
+
+        self.delay_spinbox.valueChanged.connect(self.delay_changed)
+        self.delay_changed(self.delay_spinbox.value())
+
+        self.num_iterations_spinbox.valueChanged.connect(self.num_iterations_changed)
+        self.num_iterations_changed(self.num_iterations_spinbox.value())
+
+        self.leakage_spinbox.valueChanged.connect(self.leakage_changed)
+        self.leakage_changed(self.leakage_spinbox.value())
+
+
     def init_shm(self):
         with open('shm_path.toml', 'r') as f:
             shm_path = toml.load(f)
-        self.slopes_image_shm             = dao.shm(shm_path['slopes_image_shm'])
-        self.phase_screen_shm             = dao.shm(shm_path['phase_screen_shm'])
-        self.dm_phase_shm                 = dao.shm(shm_path['dm_phase_shm'])
-        self.phase_residuals_shm          = dao.shm(shm_path['phase_residuals_shm'])
-        self.normalized_psf_shm           = dao.shm(shm_path['normalized_psf_shm'])
-        self.commands_shm                 = dao.shm(shm_path['commands_shm'])
-        self.residual_modes_shm           = dao.shm(shm_path['residual_modes_shm'])
-        self.computed_modes_shm           = dao.shm(shm_path['computed_modes_shm'])
-        self.dm_kl_modes_shm              = dao.shm(shm_path['dm_kl_modes_shm'])
+        self.slopes_image_shm             = dao.shm(shm_path['slopes_image'])
+        self.phase_screen_shm             = dao.shm(shm_path['phase_screen'])
+        self.dm_phase_shm                 = dao.shm(shm_path['dm_phase'])
+        self.phase_residuals_shm          = dao.shm(shm_path['phase_residuals'])
+        self.normalized_psf_shm           = dao.shm(shm_path['normalized_psf'])
+        self.commands_shm                 = dao.shm(shm_path['commands'])
+        self.residual_modes_shm           = dao.shm(shm_path['residual_modes'])
+        self.computed_modes_shm           = dao.shm(shm_path['computed_modes'])
+        self.dm_kl_modes_shm              = dao.shm(shm_path['dm_kl_modes'])
+        self.delay_shm                    = dao.shm(shm_path['delay'])             
+        self.gain_shm                     = dao.shm(shm_path['gain'])                
+        self.leakage_shm                  = dao.shm(shm_path['leakage'])             
+        self.num_iterations_shm           = dao.shm(shm_path['num_iterations'])
+        self.cam1_shm                     = dao.shm(shm_path['cam1'])             
+        self.cam2_shm                     = dao.shm(shm_path['cam2'])
 
     def init_vector_plots(self):
         self.computed_KL_modes_view = CustomChartView(self.computed_KL_modes_widget,"mode","amplitude", n_lines = 2)
@@ -341,7 +362,6 @@ class MainWindow(QMainWindow):
         self.reset_commands_view_button.clicked.connect(self.commands_view.resetZoom)
 
 
-
     def init_images(self):
         # Generate LUT and ColorMap once
         lut = matplotlib_cmap_to_lut('viridis')
@@ -354,8 +374,8 @@ class MainWindow(QMainWindow):
             "dm_phase_widget": "dm_phase_view",
             "phase_residuals_widget": "phase_residuals_view",
             "normalized_psf_widget": "normalized_psf_view",
-            "cam_1_widget": "cam_1_view",
-            "cam_2_widget": "cam_2_view",
+            "cam1_widget": "cam1_view",
+            "cam2_widget": "cam2_view",
         }
 
         for placeholder_name, attr_name in placeholders.items():
@@ -363,57 +383,68 @@ class MainWindow(QMainWindow):
             setattr(self, attr_name, view)
 
     def update_images(self):
-        data1 = np.random.rand(100, 100)
-        self.pyramid_view.setImage(data1, autoLevels=False,autoRange=False)
 
+        self.slopes_image_view.setImage(self.slopes_image_shm.get_data(check=False, semNb=self.sem_nb), autoLevels=(self.autoscale_slopes_image_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
+        self.phase_screen_view.setImage(self.phase_screen_shm.get_data(check=False, semNb=self.sem_nb), autoLevels=(self.autoscale_phase_screen_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
+        self.dm_phase_view.setImage(self.dm_phase_shm.get_data(check=False, semNb=self.sem_nb), autoLevels=(self.autoscale_dm_phase_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
+        self.phase_residuals_view.setImage(self.phase_residuals_shm.get_data(check=False,semNb=self.sem_nb),autoLevels=(self.autoscale_phase_residuals_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
+        self.normalized_psf_view.setImage(self.normalized_psf_shm.get_data(check=False,semNb=self.sem_nb), autoLevels=(self.autoscale_normalized_psf_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
+        self.cam1_view.setImage(self.cam1_shm.get_data(check=False,semNb=self.sem_nb), autoLevels=(self.autoscale_cam1_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
+        self.cam2_view.setImage(self.cam2_shm.get_data(check=False,semNb=self.sem_nb), autoLevels=(self.autoscale_cam2_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
 
-        # self.slopes_image_view.setImage(self.slopes_image_shm.get_data(check=False, semNb=self.sem_nb), autoLevels=(self.autoscale_slopes_image_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
-        # self.phase_screen_view.setImage(self.phase_screen_shm.get_data(check=False, semNb=self.sem_nb), autoLevels=(self.autoscale_phase_screen_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
-        # self.dm_phase_view.setImage(self.dm_phase_shm.get_data(check=False, semNb=self.sem_nb), autoLevels=(self.autoscale_dm_phase_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
-        # self.phase_residuals_view.setImage(self.phase_residuals_shm.get_data(check=False,semNb=self.sem_nb),autoLevels=(self.autoscale_phase_residuals_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
-        # self.normalized_psf_view.setImage(self.normalized_psf_shm.get_data(check=False,semNb=self.sem_nb), autoLevels=(self.autoscale_normalized_psf_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
+        # self.slopes_image_view.setImage(fits.getdata("../outputs/GUI_tests/slopes_image.fits"), autoLevels=(self.autoscale_slopes_image_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
+        # self.phase_screen_view.setImage(fits.getdata("../outputs/GUI_tests/phase_screen.fits"), autoLevels=(self.autoscale_phase_screen_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
+        # self.dm_phase_view.setImage(fits.getdata("../outputs/GUI_tests/dm_phase.fits"), autoLevels=(self.autoscale_dm_phase_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
+        # self.phase_residuals_view.setImage(fits.getdata("../outputs/GUI_tests/phase_residuals.fits"),autoLevels=(self.autoscale_phase_residuals_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
+        # self.normalized_psf_view.setImage(fits.getdata("../outputs/GUI_tests/normalized_psf.fits"), autoLevels=(self.autoscale_normalized_psf_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
+        # self.cam1_view.setImage(fits.getdata("../outputs/GUI_tests/normalized_psf.fits"), autoLevels=(self.autoscale_cam1_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
+        # self.cam2_view.setImage(fits.getdata("../outputs/GUI_tests/normalized_psf.fits"), autoLevels=(self.autoscale_cam2_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
 
-
-
-        self.slopes_image_view.setImage(fits.getdata("../outputs/GUI_tests/slopes_image.fits"), autoLevels=(self.autoscale_slopes_image_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
-        self.phase_screen_view.setImage(fits.getdata("../outputs/GUI_tests/phase_screen.fits"), autoLevels=(self.autoscale_phase_screen_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
-        self.dm_phase_view.setImage(fits.getdata("../outputs/GUI_tests/dm_phase.fits"), autoLevels=(self.autoscale_dm_phase_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
-        self.phase_residuals_view.setImage(fits.getdata("../outputs/GUI_tests/phase_residuals.fits"),autoLevels=(self.autoscale_phase_residuals_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
-        self.normalized_psf_view.setImage(fits.getdata("../outputs/GUI_tests/normalized_psf.fits"), autoLevels=(self.autoscale_normalized_psf_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
-
-        data2 = np.random.rand(100)-0.5
-        if(self.square_computed_KL_modes_checkbox.checkState()==Qt.CheckState.Checked):
-            data3 = np.sqrt(np.square(data2))
-        else: data3 = data2
-        self.computed_KL_modes_view.draw([(np.arange(data3.shape[0]), data3),(np.arange(data3.shape[0]), data3+1)])
-
-        if(self.square_computed_act_pos_checkbox.checkState()==Qt.CheckState.Checked):
-            data4 = np.sqrt(np.square(data2))
-        else: data4 = data2
-        self.computed_act_pos_view.draw([(np.arange(data4.shape[0]), data4)])
-
-        if(self.square_commands_checkbox.checkState()==Qt.CheckState.Checked):
-            data5 = np.sqrt(np.square(data2))
-        else: data5 = data2
-        self.commands_view.draw([(np.arange(data5.shape[0]), data5)])
-
-        # residual_modes = self.residual_modes_shm.get_data(check=False, semNb=self.sem_nb)
-        # computed_modes = self.computed_modes_shm.get_data(check=False, semNb=self.sem_nb)
+        # data2 = np.random.rand(100)-0.5
         # if(self.square_computed_KL_modes_checkbox.checkState()==Qt.CheckState.Checked):
-        #     residual_modes = np.sqrt(np.square(residual_modes))
-        #     computed_modes = np.sqrt(np.square(computed_modes))
-        # self.computed_KL_modes_view.draw([(np.arange(residual_modes.shape[0]), residual_modes),(np.arange(computed_modes.shape[0]), computed_modes)])
+        #     data3 = np.sqrt(np.square(data2))
+        # else: data3 = data2
+        # self.computed_KL_modes_view.draw([(np.arange(data3.shape[0]), data3),(np.arange(data3.shape[0]), data3+1)])
+
+        # if(self.square_computed_act_pos_checkbox.checkState()==Qt.CheckState.Checked):
+        #     data4 = np.sqrt(np.square(data2))
+        # else: data4 = data2
+        # self.computed_act_pos_view.draw([(np.arange(data4.shape[0]), data4)])
+
+        # if(self.square_commands_checkbox.checkState()==Qt.CheckState.Checked):
+        #     data5 = np.sqrt(np.square(data2))
+        # else: data5 = data2
+        # self.commands_view.draw([(np.arange(data5.shape[0]), data5)])
+
+        residual_modes = self.residual_modes_shm.get_data(check=False, semNb=self.sem_nb)
+        computed_modes = self.computed_modes_shm.get_data(check=False, semNb=self.sem_nb)
+        if(self.square_computed_KL_modes_checkbox.checkState()==Qt.CheckState.Checked):
+            residual_modes = np.sqrt(np.square(residual_modes))
+            computed_modes = np.sqrt(np.square(computed_modes))
+        self.computed_KL_modes_view.draw([(np.arange(residual_modes.shape[0]), residual_modes),(np.arange(computed_modes.shape[0]), computed_modes)])
 
         
-        # dm_kl_modes = self.dm_kl_modes_shm.get_data(check=False, semNb=self.sem_nb)
-        # if(self.square_computed_act_pos_checkbox.checkState()==Qt.CheckState.Checked):
-        #     dm_kl_modes = np.sqrt(np.square(dm_kl_modes))
-        # self.computed_act_pos_view.draw([(np.arange(dm_kl_modes.shape[0]), dm_kl_modes)])
+        dm_kl_modes = self.dm_kl_modes_shm.get_data(check=False, semNb=self.sem_nb)
+        if(self.square_computed_act_pos_checkbox.checkState()==Qt.CheckState.Checked):
+            dm_kl_modes = np.sqrt(np.square(dm_kl_modes))
+        self.computed_act_pos_view.draw([(np.arange(dm_kl_modes.shape[0]), dm_kl_modes)])
 
-        # commands = self.commands_shm.get_data(check=False, semNb=self.sem_nb)
-        # if(self.square_commands_checkbox.checkState()==Qt.CheckState.Checked):
-        #     commands = np.sqrt(np.square(commands))
-        # self.commands_view.draw([(np.arange(commands.shape[0]), commands)])
+        commands = self.commands_shm.get_data(check=False, semNb=self.sem_nb)
+        if(self.square_commands_checkbox.checkState()==Qt.CheckState.Checked):
+            commands = np.sqrt(np.square(commands))
+        self.commands_view.draw([(np.arange(commands.shape[0]), commands)])
+
+    def gain_changed(self,value):
+        self.gain_shm.set_data(np.array([[value]],np.float32))
+
+    def delay_changed(self,value):
+        self.delay_shm.set_data(np.array([[value]],np.uint32))
+
+    def num_iterations_changed(self,value):
+        self.num_iterations_shm.set_data(np.array([[value]],np.uint32))
+
+    def leakage_changed(self,value):
+        self.leakage_shm.set_data(np.array([[value]],np.float32))
 
     def closeEvent(self, event):
         print("All processes and timers stopped")
