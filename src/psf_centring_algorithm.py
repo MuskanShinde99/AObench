@@ -57,8 +57,7 @@ def cost_function(amplitudes, pupil_coords, radius, iteration, variance_threshol
     """
     global stop_optimization  #Flag to stop when pupil intensities are equal
 
-    fixed_amplitude = 0.4  # Keep the third amplitude fixed
-    data_pupil = update_pupil(new_ttf_amplitudes=[*amplitudes, fixed_amplitude])
+    data_pupil = update_pupil(new_ttf_amplitudes=amplitudes)
     slm.set_data(((data_pupil * 256) % 256).astype(np.uint8))  # Update SLM data
     time.sleep(wait_time)  # Wait for the update to take effect
 
@@ -152,7 +151,6 @@ def optimize_amplitudes(
 def center_psf_on_pyramid_tip(
     mask,
     initial_tt_amplitudes=[-0.5, 0.2],
-    focus=[0.4],
     bounds=[(-1.0, 1.0), (-1.0, 1.0)],
     n_calls=200,
     update_setup_file=False,
@@ -166,7 +164,6 @@ def center_psf_on_pyramid_tip(
     Parameters:
     - mask (np.ndarray): Binary mask of pupil regions
     - initial_tt_amplitudes (list): Initial [tip, tilt] guess
-    - focus (list): Single-element list with focus value (e.g., [0.4])
     - bounds (list of tuple): Bounds for the [tip, tilt] amplitudes
     - n_calls (int): Number of iterations for the optimizer
     - update_setup_file (bool): If True, update `ttf_amplitudes` in dao_setup.py
@@ -175,7 +172,7 @@ def center_psf_on_pyramid_tip(
     - variance_threshold (float): Stop optimization when variance drops below this value
 
     Returns:
-    - new_ttf_amplitudes (list): Optimized [tip, tilt, focus] amplitudes
+    - new_tt_amplitudes (list): Optimized [tip, tilt] amplitudes
     """
     
     global stop_optimization, cost_values
@@ -206,11 +203,10 @@ def center_psf_on_pyramid_tip(
         variance_threshold=variance_threshold,
     )
 
-    # Append the fixed focus amplitude to complete the vector
-    new_ttf_amplitudes = optimized_tt_amplitudes + focus
+    new_tt_amplitudes = optimized_tt_amplitudes
 
     if verbose:
-        print(f"Optimized Tip-Tilt-Focus Amplitudes: {new_ttf_amplitudes}")
+        print(f"Optimized Tip-Tilt Amplitudes: {new_tt_amplitudes}")
 
     # Capture final image after optimization
     final_img = camera_wfs.get_data()
@@ -241,7 +237,7 @@ def center_psf_on_pyramid_tip(
             content = file.read()
 
         # Update the file with the new optimized amplitudes
-        new_line = f"ttf_amplitudes = {new_ttf_amplitudes}"
+        new_line = f"ttf_amplitudes = {new_tt_amplitudes}"
         updated_content = re.sub(r"ttf_amplitudes\s*=\s*\[.*?\]", new_line, content)
 
         # Write the updated content back to the setup file
@@ -254,7 +250,7 @@ def center_psf_on_pyramid_tip(
         if verbose:
             print("Skipped updating `ttf_amplitudes` in `dao_setup.py`")
 
-    return new_ttf_amplitudes
+    return new_tt_amplitudes
 
 
 
@@ -267,15 +263,15 @@ pupil_coords = [(1938.50, 1582.96),
                 (1827.07, 1778.61)]
 radius = 83
 
-# Initial TTF amplitudes; third term is fixed
-new_ttf_amplitudes = [-0.5, 0.7]
+# Initial TT amplitudes
+new_tt_amplitudes = [-0.5, 0.7]
 optimized_amplitudes = optimize_amplitudes(
-    new_ttf_amplitudes,
+    new_tt_amplitudes,
     pupil_coords,
     radius,
     variance_threshold=5,
 )  # Optimize the amplitudes
-print(f"Optimized Amplitudes: {optimized_amplitudes + [0.4]}")  # Include fixed amplitude in the output
+print(f"Optimized Amplitudes: {optimized_amplitudes}")
 
 # Capture and display the final image after optimization
 final_img = camera_wfs.get_data()  # Capture final image
@@ -283,5 +279,4 @@ plt.figure()
 plt.imshow(final_img, cmap='gray')
 plt.title('Final Balanced Pupil Intensities')
 plt.colorbar()
-plt.show()
-"""
+plt.show()"""
