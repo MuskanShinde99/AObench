@@ -119,20 +119,28 @@ pupil_mask = pupil_mask.astype(bool)
 data_pupil = create_slm_circular_pupil(tilt_amp_outer, tilt_amp_inner, pupil_size, pupil_mask, slm)
 
 # Create Zernike basis
-zernike_basis = make_zernike_basis(4, pupil_size, pupil_grid)
+zernike_basis = make_zernike_basis(11, pupil_size, pupil_grid)
 zernike_basis = [mode / np.ptp(mode) for mode in zernike_basis]
 zernike_basis = np.asarray(zernike_basis)
 
 # [-0.0813878287964559, 0.09992195172893337, 0.4] 
 # Create a Tip, Tilt, and Focus (TTF) matrix with specified amplitudes as the diagonal elements
-ttf_amplitudes = [-1.6777304187076303, 0.129215993520571, 0.4] # Tip, Tilt, and Focus amplitudes - Focus 0.4
+ttf_amplitudes = [-1.6667823542306033, 0.13384915911398743, 0.4] # Tip, Tilt, and Focus amplitudes - Focus 0.4
 ttf_amplitude_matrix = np.diag(ttf_amplitudes)
 ttf_matrix = ttf_amplitude_matrix @ zernike_basis[1:4, :]  # Select modes 1 (tip), 2 (tilt), and 3 (focus)
 
 data_ttf = np.zeros((dataHeight, dataWidth), dtype=np.float32)
 data_ttf[:, :] = (ttf_matrix[0] + ttf_matrix[1] + ttf_matrix[2]).reshape(dataHeight, dataWidth) 
 
-data_pupil = data_pupil + data_ttf # Add TTF matrix to pupil
+othermodes_amplitudes = [0, 0, 0, 0, 0, 0, 0] #Mode 4 to mode 10
+othermodes_amplitude_matrix = np.diag(othermodes_amplitudes)
+othermodes_matrix = othermodes_amplitude_matrix @ zernike_basis[4:11, :]  # Select modes 4 to 10
+
+data_othermodes = np.zeros((dataHeight, dataWidth), dtype=np.float32)
+data_othermodes[:, :] = (othermodes_matrix[0] + othermodes_matrix[1] + othermodes_matrix[2]).reshape(dataHeight, dataWidth) 
+
+# Add all the modes to data pupil
+data_pupil = data_pupil + data_ttf + data_othermodes# Add TTF matrix to pupil
 
 
 # Function to update pupil with new TTF amplitude
