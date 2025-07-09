@@ -119,29 +119,56 @@ pupil_mask = pupil_mask.astype(bool)
 data_pupil = create_slm_circular_pupil(tilt_amp_outer, tilt_amp_inner, pupil_size, pupil_mask, slm)
 
 # Create Zernike basis
-zernike_basis = make_zernike_basis(4, pupil_size, pupil_grid)
+zernike_basis = make_zernike_basis(11, pupil_size, pupil_grid)
 zernike_basis = [mode / np.ptp(mode) for mode in zernike_basis]
 zernike_basis = np.asarray(zernike_basis)
 
-# [-0.0813878287964559, 0.09992195172893337, 0.4] 
-# Create a Tip, Tilt, and Focus (TTF) matrix with specified amplitudes as the diagonal elements
-ttf_amplitudes = [-1.6509624363993944, 0.1245226831954116, 0.4] # Tip, Tilt, and Focus amplitudes - Focus 0.4
-ttf_amplitude_matrix = np.diag(ttf_amplitudes)
-ttf_matrix = ttf_amplitude_matrix @ zernike_basis[1:4, :]  # Select modes 1 (tip), 2 (tilt), and 3 (focus)
+# [-0.0813878287964559, 0.09992195172893337]
+# Create a Tip-Tilt (TT) matrix with specified amplitudes as the diagonal elements
+tt_amplitudes = [-1.680357716565717, 0.12651517048626593]  # Tip and Tilt amplitudes
+tt_amplitude_matrix = np.diag(tt_amplitudes)
+tt_matrix = tt_amplitude_matrix @ zernike_basis[1:3, :]  # Select modes 1 (tip) and 2 (tilt)
 
-data_ttf = np.zeros((dataHeight, dataWidth), dtype=np.float32)
-data_ttf[:, :] = (ttf_matrix[0] + ttf_matrix[1] + ttf_matrix[2]).reshape(dataHeight, dataWidth) 
+data_tt = np.zeros((dataHeight, dataWidth), dtype=np.float32)
+data_tt[:, :] = (tt_matrix[0] + tt_matrix[1]).reshape(dataHeight, dataWidth)
 
-data_pupil = data_pupil + data_ttf # Add TTF matrix to pupil
+othermodes_amplitudes = [0.36500000000000077, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]  # Focus (mode 3) + modes 4 to 10
+othermodes_amplitude_matrix = np.diag(othermodes_amplitudes)
+othermodes_matrix = othermodes_amplitude_matrix @ zernike_basis[3:11, :]  # Select modes 3 (focus) to 10
+
+data_othermodes = np.zeros((dataHeight, dataWidth), dtype=np.float32)
+data_othermodes[:, :] = (othermodes_matrix[0] + othermodes_matrix[1] + othermodes_matrix[2]).reshape(dataHeight, dataWidth) 
+
+# Add all the modes to data pupil
+data_pupil = data_pupil + data_tt + data_othermodes  # Add TT and higher-order terms to pupil
 
 
-# Function to update pupil with new TTF amplitude
-def update_pupil(new_ttf_amplitudes=None, new_tilt_amp_outer=None, new_tilt_amp_inner=None):
-    global ttf_amplitudes, tilt_amp_outer, tilt_amp_inner, data_pupil
+# Function to update pupil with new TT amplitudes and other modes
+def update_pupil(new_tt_amplitudes=None, new_othermodes_amplitudes=None,
+                 new_tilt_amp_outer=None, new_tilt_amp_inner=None):
+    """Recompute the pupil using updated tip/tilt and higher-order amplitudes.
+
+    Parameters
+    ----------
+    new_tt_amplitudes : sequence of float, optional
+        Two-element list ``[tip, tilt]`` for the TT matrix.
+    new_othermodes_amplitudes : sequence of float, optional
+        Amplitudes for focus and higher-order Zernike modes
+        (e.g., ``[focus, astig_x, astig_y, ...]``).
+    new_tilt_amp_outer : float, optional
+        Outer grating tilt amplitude.
+    new_tilt_amp_inner : float, optional
+        Inner grating tilt amplitude.
+    """
+    global tt_amplitudes, othermodes_amplitudes
+    global tilt_amp_outer, tilt_amp_inner, data_pupil
 
     # Update the amplitudes and tilt parameters if new values are provided
-    if new_ttf_amplitudes is not None:
-        ttf_amplitudes = np.diag(new_ttf_amplitudes)
+    if new_tt_amplitudes is not None:
+        tt_amplitudes = list(new_tt_amplitudes)
+
+    if new_othermodes_amplitudes is not None:
+        othermodes_amplitudes = list(new_othermodes_amplitudes)
 
     if new_tilt_amp_outer is not None:
         tilt_amp_outer = new_tilt_amp_outer
@@ -150,17 +177,23 @@ def update_pupil(new_ttf_amplitudes=None, new_tilt_amp_outer=None, new_tilt_amp_
         tilt_amp_inner = new_tilt_amp_inner
 
     # Recalculate pupil with updated values
-    data_pupil = create_slm_circular_pupil(tilt_amp_outer, tilt_amp_inner, pupil_size, pupil_mask, slm)
+    data_pupil = create_slm_circular_pupil(tilt_amp_outer, tilt_amp_inner,
+                                           pupil_size, pupil_mask, slm)
 
-    # Create a new Tip, Tilt, and Focus (TTF) matrix with the updated amplitudes
-    ttf_matrix = ttf_amplitudes @ zernike_basis[1:4, :]  # Select modes 1 (tip), 2 (tilt), and 3 (focus)
+    # Create a new Tip-Tilt (TT) matrix with the updated amplitudes
+    tt_matrix = np.diag(tt_amplitudes) @ zernike_basis[1:3, :]  # Select modes 1 (tip) and 2 (tilt)
     
-    # Create TTF data
-    data_ttf = np.zeros((dataHeight, dataWidth), dtype=np.float32)
-    data_ttf[:, :] = (ttf_matrix[0] + ttf_matrix[1] + ttf_matrix[2]).reshape(dataHeight, dataWidth)
+    # Create TT data
+    data_tt = np.zeros((dataHeight, dataWidth), dtype=np.float32)
+    data_tt[:, :] = (tt_matrix[0] + tt_matrix[1]).reshape(dataHeight, dataWidth)
 
-    # Add the new TTF to the pupil and return
-    return data_pupil + data_ttf
+    # Recompute focus and higher-order terms
+    othermodes_matrix = np.diag(othermodes_amplitudes) @ zernike_basis[3:11, :]
+    data_othermodes = np.zeros((dataHeight, dataWidth), dtype=np.float32)
+    data_othermodes[:, :] = (othermodes_matrix[0] + othermodes_matrix[1] + othermodes_matrix[2]).reshape(dataHeight, dataWidth)
+
+    # Add the new TT and other modes to the pupil and return
+    return data_pupil + data_tt + data_othermodes
 
 #%% Create a pupil grid for a smaller pupil area
 
@@ -243,8 +276,8 @@ nmodes_dm = deformable_mirror.num_actuators
 
 # print("Number of DM modes =", nmodes_dm)
 
-# # Flatten the DM surface and set actuator values
-# deformable_mirror.flatten()
+# Flatten the DM surface and set actuator values
+deformable_mirror.flatten()
 # deformable_mirror.actuators.fill(1)
 # plt.figure()
 # plt.imshow(deformable_mirror.opd.shaped)
@@ -256,5 +289,5 @@ nmodes_dm = deformable_mirror.num_actuators
 
 nmodes_dm = nact_valid
 nmodes_KL = nact_valid
-nmode_Znk = nact_valid
+nmodes_Znk = nact_valid
 

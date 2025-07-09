@@ -45,11 +45,11 @@ camera_wfs.Open()
 
 #Create a circular pupil on SLM
 
-# New TTF amplitudes for Tip, Tilt, and Focus
-# new_ttf_amplitudes = [-0.3, 0.1, 0.4]  # New values for tip, tilt, and focus amplitudes
+# New TT amplitudes for Tip and Tilt
+# new_tt_amplitudes = [-0.3, 0.1]  # New values for tip and tilt amplitudes
 
 # Update the pupil with the new values
-# data_pupil = update_pupil(new_ttf_amplitudes=new_ttf_amplitudes)
+# data_pupil = update_pupil(new_tt_amplitudes=new_tt_amplitudes)
 print('Pupil created on the SLM')
 
 # Display the pupil

@@ -39,12 +39,25 @@ def compute_pupil_intensities(img, pupil_coords, radius):
 # Global stopping flag
 stop_optimization = False  
 
-def cost_function(amplitudes, pupil_coords, radius, iteration):
-    """Cost function for optimization based on intensity variance."""
+def cost_function(amplitudes, pupil_coords, radius, iteration, variance_threshold=5):
+    """Cost function for optimization based on intensity variance.
+
+    Parameters
+    ----------
+    amplitudes : list
+        Current tip and tilt amplitudes.
+    pupil_coords : list
+        List of pupil centre coordinates.
+    radius : float
+        Radius for the pupil mask.
+    iteration : int
+        Current optimisation iteration.
+    variance_threshold : float, optional
+        Variance value below which the optimisation should stop. Defaults to ``5``.
+    """
     global stop_optimization  #Flag to stop when pupil intensities are equal
 
-    fixed_amplitude = 0.4  # Keep the third amplitude fixed
-    data_pupil = update_pupil(new_ttf_amplitudes=[*amplitudes, fixed_amplitude])
+    data_pupil = update_pupil(new_tt_amplitudes=amplitudes)
     slm.set_data(((data_pupil * 256) % 256).astype(np.uint8))  # Update SLM data
     time.sleep(wait_time)  # Wait for the update to take effect
 
@@ -63,10 +76,11 @@ def cost_function(amplitudes, pupil_coords, radius, iteration):
     # Print iteration number and variance
     print(f"Iteration: {iteration} | Variance: {round(variance)} | Tipi-tilt amptitude: {amplitudes}")
 
-    
-    # Check stopping condition: if variance is less than 2
-    if variance < 5:
-        print(f"Stopping condition met: Variance is below threshold.")
+    # Check stopping condition based on the provided threshold
+    if variance < variance_threshold:
+        print(
+            f"Stopping condition met: Variance {variance:.2f} below threshold {variance_threshold}."
+        )
         stop_optimization = True  # Set stopping flag
         
     return variance + 1e-3  # Add a small noise floor
@@ -75,9 +89,14 @@ def cost_function(amplitudes, pupil_coords, radius, iteration):
 # Global list to store cost function values for debugging
 cost_values = []
 
-def optimize_amplitudes(initial_amplitudes, pupil_coords, radius,
-                        bounds=[(-1.0, 1.0), (-1.0, 1.0)],
-                        n_calls=200):
+def optimize_amplitudes(
+    initial_amplitudes,
+    pupil_coords,
+    radius,
+    bounds=[(-1.0, 1.0), (-1.0, 1.0)],
+    n_calls=200,
+    variance_threshold=5,
+):
     """
     Optimize amplitudes using Scikit-Optimize's gp_minimize. 
     Bayesian optimization using Gaussian Processes.
@@ -88,6 +107,7 @@ def optimize_amplitudes(initial_amplitudes, pupil_coords, radius,
     - radius (float): Approximate radius of pupil mask
     - bounds (list): Search bounds for tip and tilt amplitudes
     - n_calls (int): Maximum number of optimization iterations
+    - variance_threshold (float): Stopping threshold for the variance
 
     Returns:
     - result.x (list): Optimized [tip, tilt] amplitudes
@@ -97,7 +117,13 @@ def optimize_amplitudes(initial_amplitudes, pupil_coords, radius,
     def wrapped_cost_function(amps):
         iteration = wrapped_cost_function.iteration
         wrapped_cost_function.iteration += 1
-        cost = cost_function(amps, pupil_coords, radius, iteration)
+        cost = cost_function(
+            amps,
+            pupil_coords,
+            radius,
+            iteration,
+            variance_threshold=variance_threshold,
+        )
         cost_values.append(cost)  # Append cost at each iteration for debugging
         return cost
 
@@ -122,30 +148,37 @@ def optimize_amplitudes(initial_amplitudes, pupil_coords, radius,
 
 
 
-def center_psf_on_pyramid_tip(mask,
-                              initial_tt_amplitudes=[-0.5, 0.2],
-                              focus=[0.4],
-                              bounds=[(-1.0, 1.0), (-1.0, 1.0)],
-                              n_calls=200,
-                              update_setup_file=False,
-                              verbose=False,
-                              verbose_plot=False):
+def center_psf_on_pyramid_tip(
+    mask,
+    initial_tt_amplitudes=[-0.5, 0.2],
+    bounds=[(-1.0, 1.0), (-1.0, 1.0)],
+    n_calls=200,
+    update_setup_file=False,
+    verbose=False,
+    verbose_plot=False,
+    variance_threshold=5,
+):
     """
     Optimize tip-tilt amplitudes to balance pupil intensities using a given binary mask.
 
     Parameters:
     - mask (np.ndarray): Binary mask of pupil regions
     - initial_tt_amplitudes (list): Initial [tip, tilt] guess
-    - focus (list): Single-element list with focus value (e.g., [0.4])
     - bounds (list of tuple): Bounds for the [tip, tilt] amplitudes
     - n_calls (int): Number of iterations for the optimizer
-    - update_setup_file (bool): If True, update `ttf_amplitudes` in dao_setup.py
+    - update_setup_file (bool): If True, update `tt_amplitudes` in dao_setup.py
     - verbose (bool): Print processing info
     - verbose_plot (bool): Show final image and optimization cost plot
+    - variance_threshold (float): Stop optimization when variance drops below this value
 
     Returns:
-    - new_ttf_amplitudes (list): Optimized [tip, tilt, focus] amplitudes
+    - new_tt_amplitudes (list): Optimized [tip, tilt] amplitudes
     """
+    
+    global stop_optimization, cost_values
+    # Reset global state so subsequent calls start a fresh optimization
+    stop_optimization = False
+    cost_values = []
 
     # Ensure mask is binary and of correct dtype
     mask = mask.astype(np.uint8)
@@ -166,14 +199,14 @@ def center_psf_on_pyramid_tip(mask,
         pupil_centers,
         radius,
         bounds=bounds,
-        n_calls=n_calls
+        n_calls=n_calls,
+        variance_threshold=variance_threshold,
     )
 
-    # Append the fixed focus amplitude to complete the vector
-    new_ttf_amplitudes = optimized_tt_amplitudes + focus
+    new_tt_amplitudes = optimized_tt_amplitudes
 
     if verbose:
-        print(f"Optimized Tip-Tilt-Focus Amplitudes: {new_ttf_amplitudes}")
+        print(f"Optimized Tip-Tilt Amplitudes: {new_tt_amplitudes}")
 
     # Capture final image after optimization
     final_img = camera_wfs.get_data()
@@ -204,20 +237,20 @@ def center_psf_on_pyramid_tip(mask,
             content = file.read()
 
         # Update the file with the new optimized amplitudes
-        new_line = f"ttf_amplitudes = {new_ttf_amplitudes}"
-        updated_content = re.sub(r"ttf_amplitudes\s*=\s*\[.*?\]", new_line, content)
+        new_line = f"tt_amplitudes = {new_tt_amplitudes}"
+        updated_content = re.sub(r"tt_amplitudes\s*=\s*\[.*?\]", new_line, content)
 
         # Write the updated content back to the setup file
         with open(dao_setup_path, 'w') as file:
             file.write(updated_content)
 
         if verbose:
-            print("✅ Updated `ttf_amplitudes` in dao_setup.py")
+            print("Updated `tt_amplitudes` in dao_setup.py")
     else:
         if verbose:
-            print("⚠️ Skipped updating `ttf_amplitudes` in `dao_setup.py`")
+            print("Skipped updating `tt_amplitudes` in `dao_setup.py`")
 
-    return new_ttf_amplitudes
+    return new_tt_amplitudes
 
 
 
@@ -230,10 +263,15 @@ pupil_coords = [(1938.50, 1582.96),
                 (1827.07, 1778.61)]
 radius = 83
 
-# Initial TTF amplitudes; third term is fixed
-new_ttf_amplitudes = [-0.5, 0.7]
-optimized_amplitudes = optimize_amplitudes(new_ttf_amplitudes, pupil_coords, radius)  # Optimize the amplitudes
-print(f"Optimized Amplitudes: {optimized_amplitudes + [0.4]}")  # Include fixed amplitude in the output
+# Initial TT amplitudes
+new_tt_amplitudes = [-0.5, 0.7]
+optimized_amplitudes = optimize_amplitudes(
+    new_tt_amplitudes,
+    pupil_coords,
+    radius,
+    variance_threshold=5,
+)  # Optimize the amplitudes
+print(f"Optimized Amplitudes: {optimized_amplitudes}")
 
 # Capture and display the final image after optimization
 final_img = camera_wfs.get_data()  # Capture final image
@@ -241,5 +279,4 @@ plt.figure()
 plt.imshow(final_img, cmap='gray')
 plt.title('Final Balanced Pupil Intensities')
 plt.colorbar()
-plt.show()
-"""
+plt.show()"""

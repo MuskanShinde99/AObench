@@ -67,90 +67,6 @@ def compute_Act2Phs(nact, npix, IFs, folder, verbose=False):
             print("Act2Phs and Phs2Act matrices loaded from file.")
     return Act2Phs, Phs2Act
 
-# # Compute KL-to-phase matrix
-# def compute_KL2Phs(nact, npix, nmodes_kl, IFs, pupil_mask, Act2Phs, folder, verbose=False):
-#     """
-#     Compute the KL-to-phase transformation matrix (KL2Phs) and its inverse (Phs2KL).
-#     If matrices exist as FITS files, they are loaded; otherwise, they are generated and saved.
-
-#     Parameters:
-#     nact (int): Number of actuators.
-#     npix (int): Number of pixels in the pupil grid.
-#     pupil_size (float): Physical size of the pupil.
-#     pupil_grid (array-like): The pupil grid.
-#     pupil_mask (array-like): Mask applied to the pupil.
-#     verbose (bool, optional): If True, prints debugging information.
-
-#     Returns:
-#     tuple:
-#         - KL2Phs (ndarray): KL-to-phase transformation matrix.
-#         - Phs2KL (ndarray): Inverse phase-to-KL matrix.
-#     """
-
-#     kl2phs_filename = f'KL2Phs_nkl_{nmodes_kl}_npupil_{npix}.fits'
-#     phs2kl_filename = f'Phs2KL_npupil_{npix}_nkl_{nmodes_kl}.fits'
-    
-#     if not matrix_exists(folder, kl2phs_filename) or not matrix_exists(folder, phs2kl_filename):
-#         IFs = IFs.transformation_matrix #.toarray()
-#         IFs =  IFs * pupil_mask.flatten()[:, np.newaxis]
-#         M2C, KLphiVec = computeEigenModes(IFs, pupil_mask.flatten())
-#         KL2Act = M2C.T
-#         KL2Phs = KL2Act @ Act2Phs
-#         KL2Phs = np.asarray([mode/np.ptp(mode) for mode in KL2Phs[:nmodes_kl, :]])
-#         print('KL2Phs', KL2Phs.shape)
-#         plt.figure()
-#         plt.imshow(KL2Phs[:, :200])
-#         plt.show()
-#         #KL2Phs = np.asarray([mode/np.ptp(mode) for mode in KLphiVec.T[:nmodes_kl, :]])
-#         Phs2KL = scipy.linalg.pinv(KL2Phs)
-#         fits.writeto(os.path.join(folder, kl2phs_filename), KL2Phs, overwrite=True)
-#         fits.writeto(os.path.join(folder, phs2kl_filename), Phs2KL, overwrite=True)
-#         if verbose:
-#             print("KL2Phs and Phs2KL matrices created.")
-#     else:
-#         KL2Phs = fits.getdata(os.path.join(folder, kl2phs_filename))
-#         Phs2KL = fits.getdata(os.path.join(folder, phs2kl_filename))
-#         if verbose:
-#             print("KL2Phs and Phs2KL matrices loaded from file.")
-#     return KL2Phs, Phs2KL
-
-# # Compute KL-to-actuator matrix
-# def compute_KL2Act(nact, nmodes_kl, Act2Phs, Phs2Act, KL2Phs, Phs2KL, folder, verbose=False):
-#     """
-#     Compute the KL-to-actuator transformation matrix (KL2Act) and its inverse (Act2KL).
-#     If matrices exist as FITS files, they are loaded; otherwise, they are computed and saved.
-
-#     Parameters:
-#     nact (int): Number of actuators.
-#     Act2Phs (ndarray): Actuator-to-phase transformation matrix.
-#     Phs2Act (ndarray): Phase-to-actuator matrix.
-#     KL2Phs (ndarray): KL-to-phase transformation matrix.
-#     Phs2KL (ndarray): Phase-to-KL matrix.
-#     verbose (bool, optional): If True, prints debugging information.
-
-#     Returns:
-#     tuple:
-#         - Act2KL (ndarray): Actuator-to-KL transformation matrix.
-#         - KL2Act (ndarray): KL-to-actuator transformation matrix.
-#     """
-
-#     kl2act_filename = f'KL2Act_nkl_{nmodes_kl}_nact_{nact}.fits'
-#     act2kl_filename = f'Act2KL_nact_{nact}_nkl_{nmodes_kl}.fits'
-    
-#     if not matrix_exists(folder, kl2act_filename) or not matrix_exists(folder, act2kl_filename):
-#         Act2KL = Act2Phs @ Phs2KL
-#         KL2Act = KL2Phs @ Phs2Act
-#         fits.writeto(os.path.join(folder, kl2act_filename), KL2Act, overwrite=True)
-#         fits.writeto(os.path.join(folder, act2kl_filename), Act2KL, overwrite=True)
-#         if verbose:
-#             print("KL2Act and Act2KL matrices created.")
-#     else:
-#         KL2Act = fits.getdata(os.path.join(folder, kl2act_filename))
-#         Act2KL = fits.getdata(os.path.join(folder, act2kl_filename))
-#         if verbose:
-#             print("KL2Act and Act2KL matrices loaded from file.")
-#     return Act2KL, KL2Act
-
 
 # Compute KL-to-act matrix
 def compute_KL2Act(nact, npix, nmodes_kl, IFs, pupil_mask, folder, verbose=False):
@@ -175,7 +91,7 @@ def compute_KL2Act(nact, npix, nmodes_kl, IFs, pupil_mask, folder, verbose=False
     act2kl_filename = f'Act2KL_nact_{nact}_nkl_{nmodes_kl}.fits'
     
     if not matrix_exists(folder, kl2act_filename) or not matrix_exists(folder, act2kl_filename):
-        IFs = IFs.transformation_matrix #.toarray()
+        IFs = IFs.transformation_matrix.toarray()
         IFs =  IFs * pupil_mask.flatten()[:, np.newaxis]
         M2C, KLphiVec = computeEigenModes(IFs, pupil_mask.flatten())
         KL2Act = np.asarray([mode for mode in M2C.T[:nmodes_kl, :]])
@@ -304,6 +220,92 @@ def compute_Znk2Act(nact, nmodes_zernike, Act2Phs, Phs2Act, Znk2Phs, Phs2Znk, fo
         if verbose:
             print("Znk2Act and Act2Znk matrices loaded from file.")
     return Act2Znk, Znk2Act
+
+
+# # Compute KL-to-phase matrix
+# def compute_KL2Phs(nact, npix, nmodes_kl, IFs, pupil_mask, Act2Phs, folder, verbose=False):
+#     """
+#     Compute the KL-to-phase transformation matrix (KL2Phs) and its inverse (Phs2KL).
+#     If matrices exist as FITS files, they are loaded; otherwise, they are generated and saved.
+
+#     Parameters:
+#     nact (int): Number of actuators.
+#     npix (int): Number of pixels in the pupil grid.
+#     pupil_size (float): Physical size of the pupil.
+#     pupil_grid (array-like): The pupil grid.
+#     pupil_mask (array-like): Mask applied to the pupil.
+#     verbose (bool, optional): If True, prints debugging information.
+
+#     Returns:
+#     tuple:
+#         - KL2Phs (ndarray): KL-to-phase transformation matrix.
+#         - Phs2KL (ndarray): Inverse phase-to-KL matrix.
+#     """
+
+#     kl2phs_filename = f'KL2Phs_nkl_{nmodes_kl}_npupil_{npix}.fits'
+#     phs2kl_filename = f'Phs2KL_npupil_{npix}_nkl_{nmodes_kl}.fits'
+    
+#     if not matrix_exists(folder, kl2phs_filename) or not matrix_exists(folder, phs2kl_filename):
+#         IFs = IFs.transformation_matrix #.toarray()
+#         IFs =  IFs * pupil_mask.flatten()[:, np.newaxis]
+#         M2C, KLphiVec = computeEigenModes(IFs, pupil_mask.flatten())
+#         KL2Act = M2C.T
+#         KL2Phs = KL2Act @ Act2Phs
+#         KL2Phs = np.asarray([mode/np.ptp(mode) for mode in KL2Phs[:nmodes_kl, :]])
+#         print('KL2Phs', KL2Phs.shape)
+#         plt.figure()
+#         plt.imshow(KL2Phs[:, :200])
+#         plt.show()
+#         #KL2Phs = np.asarray([mode/np.ptp(mode) for mode in KLphiVec.T[:nmodes_kl, :]])
+#         Phs2KL = scipy.linalg.pinv(KL2Phs)
+#         fits.writeto(os.path.join(folder, kl2phs_filename), KL2Phs, overwrite=True)
+#         fits.writeto(os.path.join(folder, phs2kl_filename), Phs2KL, overwrite=True)
+#         if verbose:
+#             print("KL2Phs and Phs2KL matrices created.")
+#     else:
+#         KL2Phs = fits.getdata(os.path.join(folder, kl2phs_filename))
+#         Phs2KL = fits.getdata(os.path.join(folder, phs2kl_filename))
+#         if verbose:
+#             print("KL2Phs and Phs2KL matrices loaded from file.")
+#     return KL2Phs, Phs2KL
+
+# # Compute KL-to-actuator matrix
+# def compute_KL2Act(nact, nmodes_kl, Act2Phs, Phs2Act, KL2Phs, Phs2KL, folder, verbose=False):
+#     """
+#     Compute the KL-to-actuator transformation matrix (KL2Act) and its inverse (Act2KL).
+#     If matrices exist as FITS files, they are loaded; otherwise, they are computed and saved.
+
+#     Parameters:
+#     nact (int): Number of actuators.
+#     Act2Phs (ndarray): Actuator-to-phase transformation matrix.
+#     Phs2Act (ndarray): Phase-to-actuator matrix.
+#     KL2Phs (ndarray): KL-to-phase transformation matrix.
+#     Phs2KL (ndarray): Phase-to-KL matrix.
+#     verbose (bool, optional): If True, prints debugging information.
+
+#     Returns:
+#     tuple:
+#         - Act2KL (ndarray): Actuator-to-KL transformation matrix.
+#         - KL2Act (ndarray): KL-to-actuator transformation matrix.
+#     """
+
+#     kl2act_filename = f'KL2Act_nkl_{nmodes_kl}_nact_{nact}.fits'
+#     act2kl_filename = f'Act2KL_nact_{nact}_nkl_{nmodes_kl}.fits'
+    
+#     if not matrix_exists(folder, kl2act_filename) or not matrix_exists(folder, act2kl_filename):
+#         Act2KL = Act2Phs @ Phs2KL
+#         KL2Act = KL2Phs @ Phs2Act
+#         fits.writeto(os.path.join(folder, kl2act_filename), KL2Act, overwrite=True)
+#         fits.writeto(os.path.join(folder, act2kl_filename), Act2KL, overwrite=True)
+#         if verbose:
+#             print("KL2Act and Act2KL matrices created.")
+#     else:
+#         KL2Act = fits.getdata(os.path.join(folder, kl2act_filename))
+#         Act2KL = fits.getdata(os.path.join(folder, act2kl_filename))
+#         if verbose:
+#             print("KL2Act and Act2KL matrices loaded from file.")
+#     return Act2KL, KL2Act
+
 
 
 # # Example usage
