@@ -132,7 +132,7 @@ tt_matrix = tt_amplitude_matrix @ zernike_basis[1:3, :]  # Select modes 1 (tip) 
 data_tt = np.zeros((dataHeight, dataWidth), dtype=np.float32)
 data_tt[:, :] = (tt_matrix[0] + tt_matrix[1]).reshape(dataHeight, dataWidth)
 
-othermodes_amplitudes = [0.36500000000000077, 0.0, -0.0, 0.0, 0.0, 0.0, 0.0, 0.0]  # Focus (mode 3) + modes 4 to 10
+othermodes_amplitudes = [0.36500000000000077, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]  # Focus (mode 3) + modes 4 to 10
 othermodes_amplitude_matrix = np.diag(othermodes_amplitudes)
 othermodes_matrix = othermodes_amplitude_matrix @ zernike_basis[3:11, :]  # Select modes 3 (focus) to 10
 
