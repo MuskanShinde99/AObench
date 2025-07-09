@@ -153,11 +153,9 @@ center_psf_on_pyramid_tip(mask=mask, initial_tt_amplitudes=[0, 0],
 
 #%% Scanning modes to find zero of the pyramid
 
-test_values = np.arange(-1, 1, 0.05)
+test_values = np.arange(-0.5, 0.5, 0.01)
 mode_index = 0 # 0 - focus, 1 - astimgatism, 2 -astigmatism 
-scan_othermode_amplitudes(test_values, mode_index)
-
-
+scan_othermode_amplitudes(test_values, mode_index, update_setup_file=True)
 
 
 #%% Capture Reference Image
