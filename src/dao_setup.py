@@ -125,12 +125,12 @@ zernike_basis = np.asarray(zernike_basis)
 
 # [-0.0813878287964559, 0.09992195172893337]
 # Create a Tip-Tilt (TT) matrix with specified amplitudes as the diagonal elements
-ttf_amplitudes = [-1.673954049676841, 0.12878235473442645]  # Tip and Tilt amplitudes
-ttf_amplitude_matrix = np.diag(ttf_amplitudes)
-ttf_matrix = ttf_amplitude_matrix @ zernike_basis[1:3, :]  # Select modes 1 (tip) and 2 (tilt)
+tt_amplitudes = [-1.673954049676841, 0.12878235473442645]  # Tip and Tilt amplitudes
+tt_amplitude_matrix = np.diag(tt_amplitudes)
+tt_matrix = tt_amplitude_matrix @ zernike_basis[1:3, :]  # Select modes 1 (tip) and 2 (tilt)
 
-data_ttf = np.zeros((dataHeight, dataWidth), dtype=np.float32)
-data_ttf[:, :] = (ttf_matrix[0] + ttf_matrix[1]).reshape(dataHeight, dataWidth)
+data_tt = np.zeros((dataHeight, dataWidth), dtype=np.float32)
+data_tt[:, :] = (tt_matrix[0] + tt_matrix[1]).reshape(dataHeight, dataWidth)
 
 othermodes_amplitudes = [0.4, 0, 0, 0, 0, 0, 0, 0]  # Focus (mode 3) + modes 4 to 10
 othermodes_amplitude_matrix = np.diag(othermodes_amplitudes)
@@ -140,17 +140,17 @@ data_othermodes = np.zeros((dataHeight, dataWidth), dtype=np.float32)
 data_othermodes[:, :] = (othermodes_matrix[0] + othermodes_matrix[1] + othermodes_matrix[2]).reshape(dataHeight, dataWidth) 
 
 # Add all the modes to data pupil
-data_pupil = data_pupil + data_ttf + data_othermodes  # Add TT and higher-order terms to pupil
+data_pupil = data_pupil + data_tt + data_othermodes  # Add TT and higher-order terms to pupil
 
 
 # Function to update pupil with new TT amplitudes and other modes
-def update_pupil(new_ttf_amplitudes=None, new_othermodes_amplitudes=None,
+def update_pupil(new_tt_amplitudes=None, new_othermodes_amplitudes=None,
                  new_tilt_amp_outer=None, new_tilt_amp_inner=None):
     """Recompute the pupil using updated tip/tilt and higher-order amplitudes.
 
     Parameters
     ----------
-    new_ttf_amplitudes : sequence of float, optional
+    new_tt_amplitudes : sequence of float, optional
         Two-element list ``[tip, tilt]`` for the TT matrix.
     new_othermodes_amplitudes : sequence of float, optional
         Amplitudes for focus and higher-order Zernike modes
@@ -160,12 +160,12 @@ def update_pupil(new_ttf_amplitudes=None, new_othermodes_amplitudes=None,
     new_tilt_amp_inner : float, optional
         Inner grating tilt amplitude.
     """
-    global ttf_amplitudes, othermodes_amplitudes
+    global tt_amplitudes, othermodes_amplitudes
     global tilt_amp_outer, tilt_amp_inner, data_pupil
 
     # Update the amplitudes and tilt parameters if new values are provided
-    if new_ttf_amplitudes is not None:
-        ttf_amplitudes = list(new_ttf_amplitudes)
+    if new_tt_amplitudes is not None:
+        tt_amplitudes = list(new_tt_amplitudes)
 
     if new_othermodes_amplitudes is not None:
         othermodes_amplitudes = list(new_othermodes_amplitudes)
@@ -181,11 +181,11 @@ def update_pupil(new_ttf_amplitudes=None, new_othermodes_amplitudes=None,
                                            pupil_size, pupil_mask, slm)
 
     # Create a new Tip-Tilt (TT) matrix with the updated amplitudes
-    ttf_matrix = np.diag(ttf_amplitudes) @ zernike_basis[1:3, :]  # Select modes 1 (tip) and 2 (tilt)
+    tt_matrix = np.diag(tt_amplitudes) @ zernike_basis[1:3, :]  # Select modes 1 (tip) and 2 (tilt)
     
     # Create TT data
-    data_ttf = np.zeros((dataHeight, dataWidth), dtype=np.float32)
-    data_ttf[:, :] = (ttf_matrix[0] + ttf_matrix[1]).reshape(dataHeight, dataWidth)
+    data_tt = np.zeros((dataHeight, dataWidth), dtype=np.float32)
+    data_tt[:, :] = (tt_matrix[0] + tt_matrix[1]).reshape(dataHeight, dataWidth)
 
     # Recompute focus and higher-order terms
     othermodes_matrix = np.diag(othermodes_amplitudes) @ zernike_basis[3:11, :]
@@ -193,7 +193,7 @@ def update_pupil(new_ttf_amplitudes=None, new_othermodes_amplitudes=None,
     data_othermodes[:, :] = (othermodes_matrix[0] + othermodes_matrix[1] + othermodes_matrix[2]).reshape(dataHeight, dataWidth)
 
     # Add the new TT and other modes to the pupil and return
-    return data_pupil + data_ttf + data_othermodes
+    return data_pupil + data_tt + data_othermodes
 
 #%% Create a pupil grid for a smaller pupil area
 

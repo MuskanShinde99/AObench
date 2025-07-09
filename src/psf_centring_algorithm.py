@@ -57,7 +57,7 @@ def cost_function(amplitudes, pupil_coords, radius, iteration, variance_threshol
     """
     global stop_optimization  #Flag to stop when pupil intensities are equal
 
-    data_pupil = update_pupil(new_ttf_amplitudes=amplitudes)
+    data_pupil = update_pupil(new_tt_amplitudes=amplitudes)
     slm.set_data(((data_pupil * 256) % 256).astype(np.uint8))  # Update SLM data
     time.sleep(wait_time)  # Wait for the update to take effect
 
@@ -166,7 +166,7 @@ def center_psf_on_pyramid_tip(
     - initial_tt_amplitudes (list): Initial [tip, tilt] guess
     - bounds (list of tuple): Bounds for the [tip, tilt] amplitudes
     - n_calls (int): Number of iterations for the optimizer
-    - update_setup_file (bool): If True, update `ttf_amplitudes` in dao_setup.py
+    - update_setup_file (bool): If True, update `tt_amplitudes` in dao_setup.py
     - verbose (bool): Print processing info
     - verbose_plot (bool): Show final image and optimization cost plot
     - variance_threshold (float): Stop optimization when variance drops below this value
@@ -237,18 +237,18 @@ def center_psf_on_pyramid_tip(
             content = file.read()
 
         # Update the file with the new optimized amplitudes
-        new_line = f"ttf_amplitudes = {new_tt_amplitudes}"
-        updated_content = re.sub(r"ttf_amplitudes\s*=\s*\[.*?\]", new_line, content)
+        new_line = f"tt_amplitudes = {new_tt_amplitudes}"
+        updated_content = re.sub(r"tt_amplitudes\s*=\s*\[.*?\]", new_line, content)
 
         # Write the updated content back to the setup file
         with open(dao_setup_path, 'w') as file:
             file.write(updated_content)
 
         if verbose:
-            print("Updated `ttf_amplitudes` in dao_setup.py")
+            print("Updated `tt_amplitudes` in dao_setup.py")
     else:
         if verbose:
-            print("Skipped updating `ttf_amplitudes` in `dao_setup.py`")
+            print("Skipped updating `tt_amplitudes` in `dao_setup.py`")
 
     return new_tt_amplitudes
 
