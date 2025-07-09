@@ -24,10 +24,27 @@ daoLogLevel.value=0
 # ps -fA | grep python
 # /usr/lib/qt5/bin/designer
 
-def matplotlib_cmap_to_lut(cmap_name='viridis', n_colors=256):
-    cmap = plt.colormaps.get_cmap(cmap_name)  # Modern API (Matplotlib 3.7+)
-    lut = (cmap(np.linspace(0, 1, n_colors))[:, :3] * 255).astype(np.uint8)
-    return lut
+def matplotlib_cmap_to_lut(name: str, n: int = 256):
+    cmap = plt.get_cmap(name)
+    colors = (cmap(np.linspace(0, 1, n))[:, :3] * 255).astype(np.ubyte)
+    return colors
+
+def create_image_view_in_placeholder(parent, name: str, cmap: pg.ColorMap) -> ImageView:
+    placeholder = parent.findChild(QWidget, name)
+    layout = QVBoxLayout(placeholder)
+    layout.setContentsMargins(0, 0, 0, 0)
+
+    view = ImageView()
+    layout.addWidget(view)
+
+    # Hide buttons and color bar, set colormap
+    if hasattr(view, 'ui'):
+        view.ui.roiBtn.hide()
+        view.ui.menuBtn.hide()
+        view.ui.histogram.gradient.hide()
+        view.getHistogramWidget().gradient.setColorMap(cmap)
+
+    return view
 
 class ProcessThread(QThread):
     output_received = pyqtSignal(str)  # Signal for stdout/stderr output
@@ -326,33 +343,24 @@ class MainWindow(QMainWindow):
 
 
     def init_images(self):
-        lut = matplotlib_cmap_to_lut('viridis')  # Change to 'inferno', 'jet', etc.
-        self.pyramid_view = self.findChild(ImageView, "pyramid_widget")
-        hist = self.pyramid_view.getHistogramWidget()
-        hist.gradient.setColorMap(pg.ColorMap(pos=np.linspace(0, 1, 256), color=lut))
- 
-        self.slopes_image_view = self.findChild(ImageView, "slopes_image_widget")
-        hist = self.slopes_image_view.getHistogramWidget()
-        hist.gradient.setColorMap(pg.ColorMap(pos=np.linspace(0, 1, 256), color=lut))
-        # self.slopes_image_view.ui.histogram.hide()
-        # self.slopes_image_view.ui.roiBtn.hide()
-        # self.slopes_image_view.ui.menuBtn.hide()
+        # Generate LUT and ColorMap once
+        lut = matplotlib_cmap_to_lut('viridis')
+        cmap = pg.ColorMap(pos=np.linspace(0, 1, 256), color=lut)
 
-        self.phase_screen_view = self.findChild(ImageView, "phase_screen_widget")
-        hist = self.phase_screen_view.getHistogramWidget()
-        hist.gradient.setColorMap(pg.ColorMap(pos=np.linspace(0, 1, 256), color=lut))
+        # All image views and their corresponding placeholder names
+        placeholders = {
+            "slopes_image_widget": "slopes_image_view",
+            "phase_screen_widget": "phase_screen_view",
+            "dm_phase_widget": "dm_phase_view",
+            "phase_residuals_widget": "phase_residuals_view",
+            "normalized_psf_widget": "normalized_psf_view",
+            "cam_1_widget": "cam_1_view",
+            "cam_2_widget": "cam_2_view",
+        }
 
-        self.dm_phase_view = self.findChild(ImageView, "dm_phase_widget")
-        hist = self.dm_phase_view.getHistogramWidget()
-        hist.gradient.setColorMap(pg.ColorMap(pos=np.linspace(0, 1, 256), color=lut))
-
-        self.phase_residuals_view = self.findChild(ImageView, "phase_residuals_widget")
-        hist = self.phase_residuals_view.getHistogramWidget()
-        hist.gradient.setColorMap(pg.ColorMap(pos=np.linspace(0, 1, 256), color=lut))
-
-        self.normalized_psf_view = self.findChild(ImageView, "normalized_psf_widget")
-        hist = self.normalized_psf_view.getHistogramWidget()
-        hist.gradient.setColorMap(pg.ColorMap(pos=np.linspace(0, 1, 256), color=lut))
+        for placeholder_name, attr_name in placeholders.items():
+            view = create_image_view_in_placeholder(self, placeholder_name, cmap)
+            setattr(self, attr_name, view)
 
     def update_images(self):
         data1 = np.random.rand(100, 100)
@@ -373,39 +381,39 @@ class MainWindow(QMainWindow):
         self.phase_residuals_view.setImage(fits.getdata("../outputs/GUI_tests/phase_residuals.fits"),autoLevels=(self.autoscale_phase_residuals_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
         self.normalized_psf_view.setImage(fits.getdata("../outputs/GUI_tests/normalized_psf.fits"), autoLevels=(self.autoscale_normalized_psf_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
 
-        # data2 = np.random.rand(100)-0.5
-        # if(self.square_computed_KL_modes_checkbox.checkState()==Qt.CheckState.Checked):
-        #     data3 = np.sqrt(np.square(data2))
-        # else: data3 = data2
-        # self.computed_KL_modes_view.draw([(np.arange(data3.shape[0]), data3),(np.arange(data3.shape[0]), data3+1)])
-
-        # if(self.square_computed_act_pos_checkbox.checkState()==Qt.CheckState.Checked):
-        #     data4 = np.sqrt(np.square(data2))
-        # else: data4 = data2
-        # self.computed_act_pos_view.draw([(np.arange(data4.shape[0]), data4)])
-
-        # if(self.square_commands_checkbox.checkState()==Qt.CheckState.Checked):
-        #     data5 = np.sqrt(np.square(data2))
-        # else: data5 = data2
-        # self.commands_view.draw([(np.arange(data5.shape[0]), data5)])
-
-        residual_modes = self.residual_modes_shm.get_data(check=False, semNb=self.sem_nb)
-        computed_modes = self.computed_modes_shm.get_data(check=False, semNb=self.sem_nb)
+        data2 = np.random.rand(100)-0.5
         if(self.square_computed_KL_modes_checkbox.checkState()==Qt.CheckState.Checked):
-            residual_modes = np.sqrt(np.square(residual_modes))
-            computed_modes = np.sqrt(np.square(computed_modes))
-        self.computed_KL_modes_view.draw([(np.arange(residual_modes.shape[0]), residual_modes),(np.arange(computed_modes.shape[0]), computed_modes)])
+            data3 = np.sqrt(np.square(data2))
+        else: data3 = data2
+        self.computed_KL_modes_view.draw([(np.arange(data3.shape[0]), data3),(np.arange(data3.shape[0]), data3+1)])
+
+        if(self.square_computed_act_pos_checkbox.checkState()==Qt.CheckState.Checked):
+            data4 = np.sqrt(np.square(data2))
+        else: data4 = data2
+        self.computed_act_pos_view.draw([(np.arange(data4.shape[0]), data4)])
+
+        if(self.square_commands_checkbox.checkState()==Qt.CheckState.Checked):
+            data5 = np.sqrt(np.square(data2))
+        else: data5 = data2
+        self.commands_view.draw([(np.arange(data5.shape[0]), data5)])
+
+        # residual_modes = self.residual_modes_shm.get_data(check=False, semNb=self.sem_nb)
+        # computed_modes = self.computed_modes_shm.get_data(check=False, semNb=self.sem_nb)
+        # if(self.square_computed_KL_modes_checkbox.checkState()==Qt.CheckState.Checked):
+        #     residual_modes = np.sqrt(np.square(residual_modes))
+        #     computed_modes = np.sqrt(np.square(computed_modes))
+        # self.computed_KL_modes_view.draw([(np.arange(residual_modes.shape[0]), residual_modes),(np.arange(computed_modes.shape[0]), computed_modes)])
 
         
-        dm_kl_modes = self.dm_kl_modes_shm.get_data(check=False, semNb=self.sem_nb)
-        if(self.square_computed_act_pos_checkbox.checkState()==Qt.CheckState.Checked):
-            dm_kl_modes = np.sqrt(np.square(dm_kl_modes))
-        self.computed_act_pos_view.draw([(np.arange(dm_kl_modes.shape[0]), dm_kl_modes)])
+        # dm_kl_modes = self.dm_kl_modes_shm.get_data(check=False, semNb=self.sem_nb)
+        # if(self.square_computed_act_pos_checkbox.checkState()==Qt.CheckState.Checked):
+        #     dm_kl_modes = np.sqrt(np.square(dm_kl_modes))
+        # self.computed_act_pos_view.draw([(np.arange(dm_kl_modes.shape[0]), dm_kl_modes)])
 
-        commands = self.commands_shm.get_data(check=False, semNb=self.sem_nb)
-        if(self.square_commands_checkbox.checkState()==Qt.CheckState.Checked):
-            commands = np.sqrt(np.square(commands))
-        self.commands_view.draw([(np.arange(commands.shape[0]), commands)])
+        # commands = self.commands_shm.get_data(check=False, semNb=self.sem_nb)
+        # if(self.square_commands_checkbox.checkState()==Qt.CheckState.Checked):
+        #     commands = np.sqrt(np.square(commands))
+        # self.commands_view.draw([(np.arange(commands.shape[0]), commands)])
 
     def closeEvent(self, event):
         print("All processes and timers stopped")

@@ -14,10 +14,10 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QTabWidget" name="Vector">
+   <widget class="QTabWidget" name="main_tab">
     <property name="geometry">
      <rect>
-      <x>10</x>
+      <x>20</x>
       <y>10</y>
       <width>1621</width>
       <height>971</height>
@@ -30,61 +30,11 @@
      <attribute name="title">
       <string>Images</string>
      </attribute>
-     <widget class="ImageView" name="slopes_image_widget" native="true">
-      <property name="geometry">
-       <rect>
-        <x>50</x>
-        <y>80</y>
-        <width>441</width>
-        <height>361</height>
-       </rect>
-      </property>
-     </widget>
-     <widget class="ImageView" name="phase_screen_widget" native="true">
-      <property name="geometry">
-       <rect>
-        <x>580</x>
-        <y>80</y>
-        <width>441</width>
-        <height>361</height>
-       </rect>
-      </property>
-     </widget>
-     <widget class="ImageView" name="normalized_psf_widget" native="true">
-      <property name="geometry">
-       <rect>
-        <x>1090</x>
-        <y>90</y>
-        <width>441</width>
-        <height>361</height>
-       </rect>
-      </property>
-     </widget>
-     <widget class="ImageView" name="dm_phase_widget" native="true">
-      <property name="geometry">
-       <rect>
-        <x>70</x>
-        <y>520</y>
-        <width>441</width>
-        <height>361</height>
-       </rect>
-      </property>
-     </widget>
-     <widget class="ImageView" name="phase_residuals_widget" native="true">
-      <property name="geometry">
-       <rect>
-        <x>590</x>
-        <y>520</y>
-        <width>441</width>
-        <height>361</height>
-       </rect>
-      </property>
-     </widget>
      <widget class="QLabel" name="label_5">
       <property name="geometry">
        <rect>
-        <x>200</x>
-        <y>30</y>
+        <x>240</x>
+        <y>20</y>
         <width>151</width>
         <height>20</height>
        </rect>
@@ -97,7 +47,7 @@
       <property name="geometry">
        <rect>
         <x>740</x>
-        <y>40</y>
+        <y>30</y>
         <width>151</width>
         <height>20</height>
        </rect>
@@ -109,8 +59,8 @@
      <widget class="QLabel" name="label_7">
       <property name="geometry">
        <rect>
-        <x>1240</x>
-        <y>50</y>
+        <x>1230</x>
+        <y>30</y>
         <width>151</width>
         <height>20</height>
        </rect>
@@ -214,6 +164,204 @@
        <rect>
         <x>230</x>
         <y>890</y>
+        <width>121</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>autoscale</string>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QWidget" name="normalized_psf_widget" native="true">
+      <property name="geometry">
+       <rect>
+        <x>1079</x>
+        <y>79</y>
+        <width>471</width>
+        <height>351</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QWidget" name="phase_screen_widget" native="true">
+      <property name="geometry">
+       <rect>
+        <x>570</x>
+        <y>70</y>
+        <width>471</width>
+        <height>351</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QWidget" name="slopes_image_widget" native="true">
+      <property name="geometry">
+       <rect>
+        <x>60</x>
+        <y>70</y>
+        <width>471</width>
+        <height>351</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QWidget" name="dm_phase_widget" native="true">
+      <property name="geometry">
+       <rect>
+        <x>70</x>
+        <y>530</y>
+        <width>471</width>
+        <height>351</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QWidget" name="phase_residuals_widget" native="true">
+      <property name="geometry">
+       <rect>
+        <x>580</x>
+        <y>520</y>
+        <width>471</width>
+        <height>351</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_15">
+      <property name="geometry">
+       <rect>
+        <x>260</x>
+        <y>40</y>
+        <width>151</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>2pi rad = λ</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_17">
+      <property name="geometry">
+       <rect>
+        <x>750</x>
+        <y>50</y>
+        <width>151</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>2pi rad = λ</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_18">
+      <property name="geometry">
+       <rect>
+        <x>1240</x>
+        <y>50</y>
+        <width>151</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>2pi rad = λ</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_19">
+      <property name="geometry">
+       <rect>
+        <x>740</x>
+        <y>500</y>
+        <width>151</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>2pi rad = λ</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_20">
+      <property name="geometry">
+       <rect>
+        <x>220</x>
+        <y>510</y>
+        <width>151</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>2pi rad = λ</string>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="cam">
+     <attribute name="title">
+      <string>Cam</string>
+     </attribute>
+     <widget class="QLabel" name="label_22">
+      <property name="geometry">
+       <rect>
+        <x>210</x>
+        <y>30</y>
+        <width>151</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>cam 1</string>
+      </property>
+     </widget>
+     <widget class="QWidget" name="cam_1_widget" native="true">
+      <property name="geometry">
+       <rect>
+        <x>30</x>
+        <y>80</y>
+        <width>471</width>
+        <height>351</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="autoscale_cam_1_checkbox">
+      <property name="geometry">
+       <rect>
+        <x>190</x>
+        <y>460</y>
+        <width>121</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>autoscale</string>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_24">
+      <property name="geometry">
+       <rect>
+        <x>720</x>
+        <y>30</y>
+        <width>151</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>cam 2</string>
+      </property>
+     </widget>
+     <widget class="QWidget" name="cam_2_widget" native="true">
+      <property name="geometry">
+       <rect>
+        <x>540</x>
+        <y>80</y>
+        <width>471</width>
+        <height>351</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="autoscale_cam_2_checkbox">
+      <property name="geometry">
+       <rect>
+        <x>700</x>
+        <y>460</y>
         <width>121</width>
         <height>24</height>
        </rect>
@@ -613,16 +761,6 @@
        <string>square</string>
       </property>
      </widget>
-     <widget class="ImageView" name="pyramid_widget" native="true">
-      <property name="geometry">
-       <rect>
-        <x>999</x>
-        <y>99</y>
-        <width>350</width>
-        <height>350</height>
-       </rect>
-      </property>
-     </widget>
     </widget>
     <widget class="QWidget" name="calibration">
      <attribute name="title">
@@ -812,20 +950,12 @@
      <x>0</x>
      <y>0</y>
      <width>1654</width>
-     <height>24</height>
+     <height>27</height>
     </rect>
    </property>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>ImageView</class>
-   <extends>QWidget</extends>
-   <header>pyqtgraph</header>
-   <container>1</container>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections/>
 </ui>
