@@ -24,7 +24,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>0</number>
     </property>
     <widget class="QWidget" name="Images">
      <attribute name="title">
@@ -85,7 +85,7 @@
      <widget class="QLabel" name="label_9">
       <property name="geometry">
        <rect>
-        <x>230</x>
+        <x>210</x>
         <y>480</y>
         <width>151</width>
         <height>20</height>
@@ -218,8 +218,8 @@
      <widget class="QWidget" name="phase_residuals_widget" native="true">
       <property name="geometry">
        <rect>
-        <x>580</x>
-        <y>520</y>
+        <x>550</x>
+        <y>530</y>
         <width>471</width>
         <height>351</height>
        </rect>
@@ -235,7 +235,7 @@
        </rect>
       </property>
       <property name="text">
-       <string>2pi rad = λ</string>
+       <string>scale λ</string>
       </property>
      </widget>
      <widget class="QLabel" name="label_17">
@@ -248,7 +248,7 @@
        </rect>
       </property>
       <property name="text">
-       <string>2pi rad = λ</string>
+       <string>scale λ</string>
       </property>
      </widget>
      <widget class="QLabel" name="label_18">
@@ -261,7 +261,7 @@
        </rect>
       </property>
       <property name="text">
-       <string>2pi rad = λ</string>
+       <string>scale λ</string>
       </property>
      </widget>
      <widget class="QLabel" name="label_19">
@@ -274,7 +274,7 @@
        </rect>
       </property>
       <property name="text">
-       <string>2pi rad = λ</string>
+       <string>scale λ</string>
       </property>
      </widget>
      <widget class="QLabel" name="label_20">
@@ -287,7 +287,59 @@
        </rect>
       </property>
       <property name="text">
-       <string>2pi rad = λ</string>
+       <string>scale λ</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_21">
+      <property name="geometry">
+       <rect>
+        <x>1210</x>
+        <y>530</y>
+        <width>151</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>scale λ</string>
+      </property>
+     </widget>
+     <widget class="QWidget" name="dm_command_widget" native="true">
+      <property name="geometry">
+       <rect>
+        <x>1060</x>
+        <y>550</y>
+        <width>471</width>
+        <height>351</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="autoscale_dm_command_checkbox">
+      <property name="geometry">
+       <rect>
+        <x>1200</x>
+        <y>900</y>
+        <width>121</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>autoscale</string>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_23">
+      <property name="geometry">
+       <rect>
+        <x>1200</x>
+        <y>500</y>
+        <width>151</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>dm command</string>
       </property>
      </widget>
     </widget>
@@ -838,7 +890,7 @@
      <x>0</x>
      <y>0</y>
      <width>1654</width>
-     <height>27</height>
+     <height>24</height>
     </rect>
    </property>
   </widget>
