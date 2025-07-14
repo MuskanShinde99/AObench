@@ -71,15 +71,16 @@ def cost_function(amplitudes, pupil_coords, radius, iteration, variance_threshol
     
     # Calculate the variance of the intensities as the cost
     mean_intensity = np.mean(intensities)
-    variance = np.mean((intensities - mean_intensity) ** 2)
+    normalized_intensities = intensities / mean_intensity 
+    variance = np.mean((normalized_intensities - 1) ** 2)
     
     # Print iteration number and variance
-    print(f"Iteration: {iteration} | Variance: {round(variance)} | Tipi-tilt amptitude: {amplitudes}")
+    print(f"Iteration: {iteration} | Variance: {variance:.3f} | Tipi-tilt amptitude: {amplitudes}")
 
     # Check stopping condition based on the provided threshold
     if variance < variance_threshold:
         print(
-            f"Stopping condition met: Variance {variance:.2f} below threshold {variance_threshold}."
+            f"Stopping condition met: Variance {variance:.3f} below threshold {variance_threshold}."
         )
         stop_optimization = True  # Set stopping flag
         

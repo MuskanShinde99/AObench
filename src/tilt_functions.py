@@ -56,7 +56,7 @@ def apply_intensity_tilt(image, pupil_radius, tilt_angle):
 
 
 
-def apply_intensity_tilt_kl(tiltx, tilty, tilt_angle):
+def apply_intensity_tilt_kl(tiltx, tilty, tilt_angle, mask):
     """
     Apply an intensity tilt effect at a specific angle,
     with the tilt effect ranging from -1 to 1 within the pupil.
@@ -72,7 +72,10 @@ def apply_intensity_tilt_kl(tiltx, tilty, tilt_angle):
     
     # Convert angle to radians
     tilt_angle_rad = np.deg2rad(tilt_angle)
-
+    
+    # Apply pupil mask to titx and titly
+    tiltx = tiltx[mask]
+    tilty = tilty[mask]
 
     # Tilt effect based on angle
     tilt_effect = (tiltx * np.cos(tilt_angle_rad) + 
