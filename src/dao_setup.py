@@ -97,6 +97,50 @@ wait_time = 0.15
 # dataHeight = slm.height_px
 # pixel_size = slm.pixelsize_m * 1e3  # Pixel size in mm
 
+
+#%% Create Pupil grid
+
+# Parameters for the circular pupil
+pupil_size = 4  # [mm]
+npix_pupil = int(pupil_size / pixel_size)   # Convert pupil size to pixels
+blaze_period_outer = 20
+blaze_period_inner = 15
+tilt_amp_outer = 150
+tilt_amp_inner = -70.5  # -70.5 -67 -40
+
+# Create the circular pupil mask
+pupil_grid = make_pupil_grid([dataWidth, dataHeight], [dataWidth * pixel_size, dataHeight * pixel_size])
+vlt_aperture_generator = make_obstructed_circular_aperture(pupil_size, 0, 0, 0)
+pupil_mask = evaluate_supersampled(vlt_aperture_generator, pupil_grid, 1)
+pupil_mask =pupil_mask.reshape(dataHeight, dataWidth)
+pupil_mask = pupil_mask.astype(bool)
+
+#%% Create a pupil grid for a smaller pupil area
+
+# Set up pupil grid dimensions with size 1.1 times the pupil size
+oversizing = 1.1
+npix_small_pupil_grid = int(npix_pupil * oversizing) 
+small_pupil_grid = make_pupil_grid(npix_small_pupil_grid, npix_small_pupil_grid * pixel_size)
+# print('New  small pupil grid created')
+# print('Pupil grid shape:', npix_small_pupil_grid, npix_small_pupil_grid)
+
+# Calculate offsets to center the pupil grid with respect to the SLM grid
+offset_height = (dataHeight - npix_small_pupil_grid) // 2
+offset_width = (dataWidth - npix_small_pupil_grid) // 2
+
+# Create a grid mask 
+small_pupil_grid_mask = np.zeros((dataHeight, dataWidth), dtype=bool)
+small_pupil_grid_mask[offset_height:offset_height + npix_small_pupil_grid, offset_width:offset_width + npix_small_pupil_grid] = 1
+
+# Create the circular pupil mask for small square grid
+small_pupil_mask = pupil_mask[offset_height:offset_height + npix_small_pupil_grid, 
+                               offset_width:offset_width + npix_small_pupil_grid]
+# plt.figure()
+# plt.imshow(small_pupil_mask)
+# plt.colorbar()
+# plt.title('Small Pupil Mask')
+# plt.show()
+
 #%% Define deformable mirror
 
 # Number of actuators
@@ -151,23 +195,8 @@ nmodes_Znk = nact_valid
 KL2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Act_nkl_{nmodes_kl}_nact_{nact}.fits'))
 KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_{nmodes_kl}_npupil_{npix_small_pupil_grid}.fits'))
 
-#%% Create Pupil
 
-# Parameters for the circular pupil
-pupil_size = 4  # [mm]
-npix_pupil = int(pupil_size / pixel_size)   # Convert pupil size to pixels
-blaze_period_outer = 20
-blaze_period_inner = 15
-tilt_amp_outer = 150
-tilt_amp_inner = -70.5  # -70.5 -67 -40
-
-# Create the circular pupil mask
-pupil_grid = make_pupil_grid([dataWidth, dataHeight], [dataWidth * pixel_size, dataHeight * pixel_size])
-vlt_aperture_generator = make_obstructed_circular_aperture(pupil_size, 0, 0, 0)
-pupil_mask = evaluate_supersampled(vlt_aperture_generator, pupil_grid, 1)
-pupil_mask =pupil_mask.reshape(dataHeight, dataWidth)
-pupil_mask = pupil_mask.astype(bool)
-
+#%%
 # Create circular pupil
 data_pupil = create_slm_circular_pupil(tilt_amp_outer, tilt_amp_inner, pupil_size, pupil_mask, slm)
 
@@ -202,18 +231,18 @@ tt_amplitudes = [-1.6510890005150187, 0.14406016044318903]  # Tip and Tilt ampli
 tt_amplitude_matrix = np.diag(tt_amplitudes)
 tt_matrix = tt_amplitude_matrix @ KL2Act[0:2, :]  # Select modes 1 (tip) and 2 (tilt)
 
-data_tt = np.zeros((dataHeight, dataWidth), dtype=np.float32)
-data_tt[:, :] = (tt_matrix[0] + tt_matrix[1]).reshape(dataHeight, dataWidth)
+data_tt = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
+data_tt[:, :] = (tt_matrix[0] + tt_matrix[1]).reshape(npix_small_pupil_grid, npix_small_pupil_grid)
 
 othermodes_amplitudes = [0.4, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]  # Focus (mode 3) + modes 4 to 10
 othermodes_amplitude_matrix = np.diag(othermodes_amplitudes)
 othermodes_matrix = othermodes_amplitude_matrix @ KL2Act[2:10, :]  # Select modes 3 (focus) to 10
 
-data_othermodes = np.zeros((dataHeight, dataWidth), dtype=np.float32)
-data_othermodes[:, :] = (othermodes_matrix[0] + othermodes_matrix[1] + othermodes_matrix[2]).reshape(dataHeight, dataWidth) 
+data_othermodes = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
+data_othermodes[:, :] = (othermodes_matrix[0] + othermodes_matrix[1] + othermodes_matrix[2]).reshape(npix_small_pupil_grid, npix_small_pupil_grid) 
 
 #Put the modes on the dm
-data_dm = np.zeros((dataHeight, dataWidth), dtype=np.float32)
+data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
 deformable_mirror.flatten()
 deformable_mirror.actuators = data_tt + data_othermodes  # Add TT and higher-order terms to pupil
 data_dm[:, :] = deformable_mirror.opd.shaped
@@ -259,45 +288,27 @@ def update_pupil(new_tt_amplitudes=None, new_othermodes_amplitudes=None,
                                            pupil_size, pupil_mask, slm)
 
     # Create a new Tip-Tilt (TT) matrix with the updated amplitudes
-    tt_matrix = np.diag(tt_amplitudes) @ zernike_basis[1:3, :]  # Select modes 1 (tip) and 2 (tilt)
-    
-    # Create TT data
-    data_tt = np.zeros((dataHeight, dataWidth), dtype=np.float32)
-    data_tt[:, :] = (tt_matrix[0] + tt_matrix[1]).reshape(dataHeight, dataWidth)
+    tt_matrix = tt_amplitude_matrix @ KL2Act[0:2, :]  # Select modes 1 (tip) and 2 (tilt)
+    data_tt = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
+    data_tt[:, :] = (tt_matrix[0] + tt_matrix[1]).reshape(npix_small_pupil_grid, npix_small_pupil_grid)
 
     # Recompute focus and higher-order terms
     othermodes_matrix = np.diag(othermodes_amplitudes) @ zernike_basis[3:11, :]
     data_othermodes = np.zeros((dataHeight, dataWidth), dtype=np.float32)
-    data_othermodes[:, :] = (othermodes_matrix[0] + othermodes_matrix[1] + othermodes_matrix[2]).reshape(dataHeight, dataWidth)
+    data_othermodes[:, :] = (othermodes_matrix[0] + othermodes_matrix[1] + othermodes_matrix[2]).reshape(npix_small_pupil_grid, npix_small_pupil_grid)
+        
+    #Put the modes on the dm
+    data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
+    deformable_mirror.flatten()
+    deformable_mirror.actuators = data_tt + data_othermodes  # Add TT and higher-order terms to pupil
+    data_dm[:, :] = deformable_mirror.opd.shaped
+    
+    # Add all the modes to data pupil
+    data_pupil_new = data_pupil + data_dm
 
     # Add the new TT and other modes to the pupil and return
-    return data_pupil + data_tt + data_othermodes
+    return data_pupil_new
 
-#%% Create a pupil grid for a smaller pupil area
-
-# Set up pupil grid dimensions with size 1.1 times the pupil size
-oversizing = 1.1
-npix_small_pupil_grid = int(npix_pupil * oversizing) 
-small_pupil_grid = make_pupil_grid(npix_small_pupil_grid, npix_small_pupil_grid * pixel_size)
-# print('New  small pupil grid created')
-# print('Pupil grid shape:', npix_small_pupil_grid, npix_small_pupil_grid)
-
-# Calculate offsets to center the pupil grid with respect to the SLM grid
-offset_height = (dataHeight - npix_small_pupil_grid) // 2
-offset_width = (dataWidth - npix_small_pupil_grid) // 2
-
-# Create a grid mask 
-small_pupil_grid_mask = np.zeros((dataHeight, dataWidth), dtype=bool)
-small_pupil_grid_mask[offset_height:offset_height + npix_small_pupil_grid, offset_width:offset_width + npix_small_pupil_grid] = 1
-
-# Create the circular pupil mask for small square grid
-small_pupil_mask = pupil_mask[offset_height:offset_height + npix_small_pupil_grid, 
-                               offset_width:offset_width + npix_small_pupil_grid]
-# plt.figure()
-# plt.imshow(small_pupil_mask)
-# plt.colorbar()
-# plt.title('Small Pupil Mask')
-# plt.show()
 
 #%% Create outer and inner data slm
 
