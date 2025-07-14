@@ -247,8 +247,29 @@ deformable_mirror.flatten()
 deformable_mirror.actuators = data_tt + data_othermodes  # Add TT and higher-order terms to pupil
 data_dm[:, :] = deformable_mirror.opd.shaped
 
-# Add all the modes to data pupil
-data_pupil = data_pupil + data_dm
+# Combine the DM surface with the pupil
+#
+# ``data_dm`` is defined on the small pupil grid while ``data_pupil`` has the
+# full SLM dimensions.  To create a meaningful pattern for the SLM we first
+# split ``data_pupil`` into an outer (full size) and inner (small pupil sized)
+# part and then add ``data_dm`` to the inner part.  The result is wrapped and
+# inserted back into the full pupil.
+
+# Create a new `data_pupil_outer` with the same size as `data_pupil`
+data_pupil_outer = np.copy(data_pupil)
+data_pupil_outer[pupil_mask] = 0  # Zero out inner region given by `pupil_mask`
+
+# Create a new `data_pupil_inner` with the same size as the small pupil mask
+data_pupil_inner = np.copy(
+    data_pupil[offset_height:offset_height + npix_small_pupil_grid,
+               offset_width:offset_width + npix_small_pupil_grid])
+data_pupil_inner[~small_pupil_mask] = 0  # Zero out region outside the mask
+
+# Wrap and insert DM data into the pupil
+data_inner_new = ((data_pupil_inner + data_dm) * 256) % 256
+data_slm = data_pupil_outer.copy()
+data_slm[pupil_mask] = data_inner_new[small_pupil_mask]
+data_slm = data_slm.astype(np.uint8)
 
 # Function to update pupil with new TT amplitudes and other modes
 def update_pupil(new_tt_amplitudes=None, new_othermodes_amplitudes=None,
@@ -268,7 +289,7 @@ def update_pupil(new_tt_amplitudes=None, new_othermodes_amplitudes=None,
         Inner grating tilt amplitude.
     """
     global tt_amplitudes, othermodes_amplitudes
-    global tilt_amp_outer, tilt_amp_inner, data_pupil
+    global tilt_amp_outer, tilt_amp_inner, data_pupil, data_slm, data_dm
 
     # Update the amplitudes and tilt parameters if new values are provided
     if new_tt_amplitudes is not None:
@@ -303,34 +324,26 @@ def update_pupil(new_tt_amplitudes=None, new_othermodes_amplitudes=None,
     deformable_mirror.actuators = data_tt + data_othermodes  # Add TT and higher-order terms to pupil
     data_dm[:, :] = deformable_mirror.opd.shaped
     
-    # Add all the modes to data pupil
-    data_pupil_new = data_pupil + data_dm
+    # Recreate outer and inner pupil parts
+    data_pupil_outer = np.copy(data_pupil)
+    data_pupil_outer[pupil_mask] = 0
 
-    # Add the new TT and other modes to the pupil and return
-    return data_pupil_new
+    data_pupil_inner = np.copy(
+        data_pupil[offset_height:offset_height + npix_small_pupil_grid,
+                   offset_width:offset_width + npix_small_pupil_grid])
+    data_pupil_inner[~small_pupil_mask] = 0
+
+    # Wrap and insert the DM pattern
+    data_inner_new = ((data_pupil_inner + data_dm) * 256) % 256
+    data_slm_new = data_pupil_outer.copy()
+    data_slm_new[pupil_mask] = data_inner_new[small_pupil_mask]
+
+    data_slm = data_slm_new.astype(np.uint8)
+
+    return data_slm
 
 
 #%% Create outer and inner data slm
-
-# Create a new `data_pupil_outer` with the same size as `data_pupil`
-data_pupil_outer = np.copy(data_pupil)
-data_pupil_outer[pupil_mask] = 0  # Zero out inner region given by 'pupil_mask'
-
-# Create a new `data_pupil_inner` with the same size as `small_pupil_mask`
-data_pupil_inner = np.copy(data_pupil[offset_height:offset_height + npix_small_pupil_grid, 
-                              offset_width:offset_width + npix_small_pupil_grid])
-data_pupil_inner[~small_pupil_mask] = 0 # Zero out inner region outside by 'small_pupil_mask'
-
-# plt.figure()
-# plt.imshow(data_pupil_outer)
-# plt.colorbar()
-# plt.title('Data Pupil Outer')
-# plt.show()
-
-# plt.figure()
-# plt.imshow(data_pupil_inner)
-# plt.colorbar()
-# plt.title('Data Pupil Inner')
-# plt.show()
+# (handled above when computing ``data_slm``)
 
 
