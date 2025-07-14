@@ -205,39 +205,19 @@ zernike_basis = make_zernike_basis(11, pupil_size, pupil_grid)
 zernike_basis = [mode / np.ptp(mode) for mode in zernike_basis]
 zernike_basis = np.asarray(zernike_basis)
 
-# # [-1.6510890005150187, 0.14406016044318903]
-# # Create a Tip-Tilt (TT) matrix with specified amplitudes as the diagonal elements
-# tt_amplitudes = [-1.6510890005150187, 0.14406016044318903]  # Tip and Tilt amplitudes
-# tt_amplitude_matrix = np.diag(tt_amplitudes)
-# tt_matrix = tt_amplitude_matrix @ zernike_basis[1:3, :]  # Select modes 1 (tip) and 2 (tilt)
-
-# data_tt = np.zeros((dataHeight, dataWidth), dtype=np.float32)
-# data_tt[:, :] = (tt_matrix[0] + tt_matrix[1]).reshape(dataHeight, dataWidth)
-
-# othermodes_amplitudes = [0.4, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]  # Focus (mode 3) + modes 4 to 10
-# othermodes_amplitude_matrix = np.diag(othermodes_amplitudes)
-# othermodes_matrix = othermodes_amplitude_matrix @ zernike_basis[3:11, :]  # Select modes 3 (focus) to 10
-
-# data_othermodes = np.zeros((dataHeight, dataWidth), dtype=np.float32)
-# data_othermodes[:, :] = (othermodes_matrix[0] + othermodes_matrix[1] + othermodes_matrix[2]).reshape(dataHeight, dataWidth) 
-
-# # Add all the modes to data pupil
-# data_pupil = data_pupil + data_tt + data_othermodes  # Add TT and higher-order terms to pupil
-
-
 # [-1.6510890005150187, 0.14406016044318903]
 # Create a Tip-Tilt (TT) matrix with specified amplitudes as the diagonal elements
-tt_amplitudes = [-1.6510890005150187, 0.14406016044318903]  # Tip and Tilt amplitudes
+tt_amplitudes = [-0.2, 0.1]  # Tip and Tilt amplitudes
 tt_amplitude_matrix = np.diag(tt_amplitudes)
 tt_matrix = tt_amplitude_matrix @ KL2Act[0:2, :]  # Select modes 1 (tip) and 2 (tilt)
 
-data_tt = (tt_matrix[0] + tt_matrix[1])
+data_tt = (tt_matrix[0] + tt_matrix[1]).reshape(nact**2)
 
-othermodes_amplitudes = [0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]  # Focus (mode 3) + modes 4 to 10
+othermodes_amplitudes = [0.0, 0.05, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]  # Focus (mode 3) + modes 4 to 10
 othermodes_amplitude_matrix = np.diag(othermodes_amplitudes)
 othermodes_matrix = othermodes_amplitude_matrix @ KL2Act[2:10, :]  # Select modes 3 (focus) to 10
 
-data_othermodes = (othermodes_matrix[0] + othermodes_matrix[1] + othermodes_matrix[2])
+data_othermodes = (othermodes_matrix[0] + othermodes_matrix[1] + othermodes_matrix[2]).reshape(nact**2)
 
 #Put the modes on the dm
 data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
@@ -264,6 +244,7 @@ data_pupil_inner = np.copy(
 data_pupil_inner[~small_pupil_mask] = 0  # Zero out region outside the mask
 
 # Wrap and insert DM data into the pupil
+data_summed = data_pupil_inner + data_dm
 data_inner_new = ((data_pupil_inner + data_dm) * 256) % 256
 data_slm = data_pupil_outer.copy()
 data_slm[pupil_mask] = data_inner_new[small_pupil_mask]
@@ -343,3 +324,8 @@ def update_pupil(new_tt_amplitudes=None, new_othermodes_amplitudes=None,
 # (handled above when computing ``data_slm``)
 
 
+# plt.figure()
+# plt.imshow(KL2Act[3,:].reshape(nact,nact))
+# plt.colorbar()
+# plt.title('KL mode')
+# plt.show()
