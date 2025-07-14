@@ -215,17 +215,17 @@ zernike_basis = np.asarray(zernike_basis)
 
 # [-1.6510890005150187, 0.14406016044318903]
 # Create a Tip-Tilt (TT) matrix with specified amplitudes as the diagonal elements
-tt_amplitudes = [-0.8088029459432178, 0.052797211803980115] # Tip and Tilt amplitudes
+tt_amplitudes = [-1.6280092953913103, 0.16667066083941418] # Tip and Tilt amplitudes
 tt_amplitude_matrix = np.diag(tt_amplitudes)
 tt_matrix = tt_amplitude_matrix @ KL2Act[0:2, :]  # Select modes 1 (tip) and 2 (tilt)
 
 data_tt = (tt_matrix[0] + tt_matrix[1]).reshape(nact**2)
 
-othermodes_amplitudes = [0.006249999999999881, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]  # Focus (mode 3) + modes 4 to 10
+othermodes_amplitudes = [-1.1102230246251565e-16, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.1102230246251565e-16]  # Focus (mode 3) + modes 4 to 10
 othermodes_amplitude_matrix = np.diag(othermodes_amplitudes)
 othermodes_matrix = othermodes_amplitude_matrix @ KL2Act[2:10, :]  # Select modes 3 (focus) to 10
 
-data_othermodes = (othermodes_matrix[0] + othermodes_matrix[1] + othermodes_matrix[2]).reshape(nact**2)
+data_othermodes = np.sum(othermodes_matrix, axis=0)
 
 #Put the modes on the dm
 data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
@@ -234,7 +234,6 @@ deformable_mirror.actuators = data_tt + data_othermodes  # Add TT and higher-ord
 data_dm[:, :] = deformable_mirror.opd.shaped/2 #divide by 2 is very important to get the proper phase. because for this phase to be applied the slm surface needs to half of it.
 
 # Combine the DM surface with the pupil
-#
 # ``data_dm`` is defined on the small pupil grid while ``data_pupil`` has the
 # full SLM dimensions.  To create a meaningful pattern for the SLM we first
 # split ``data_pupil`` into an outer (full size) and inner (small pupil sized)
@@ -279,7 +278,6 @@ def update_pupil(new_tt_amplitudes=None, new_othermodes_amplitudes=None,
     # Update the amplitudes and tilt parameters if new values are provided
     if new_tt_amplitudes is not None:
         tt_amplitudes = list(new_tt_amplitudes)
-        tt_amplitude_matrix = np.diag(tt_amplitudes)
 
     if new_othermodes_amplitudes is not None:
         othermodes_amplitudes = list(new_othermodes_amplitudes)
@@ -295,18 +293,17 @@ def update_pupil(new_tt_amplitudes=None, new_othermodes_amplitudes=None,
                                            pupil_size, pupil_mask, slm)
 
     # Create a new Tip-Tilt (TT) matrix with the updated amplitudes
-    tt_matrix = tt_amplitude_matrix @ KL2Act[0:2, :]  # Select modes 1 (tip) and 2 (tilt)
+    tt_matrix = np.diag(tt_amplitudes) @ KL2Act[0:2, :]  # Select modes 1 (tip) and 2 (tilt)
     data_tt = (tt_matrix[0] + tt_matrix[1])
 
     # Recompute focus and higher-order terms
     othermodes_matrix = np.diag(othermodes_amplitudes) @ KL2Act[2:10, :]
-    data_othermodes = (othermodes_matrix[0] + othermodes_matrix[1] + othermodes_matrix[2])
-        
+    data_othermodes = np.sum(othermodes_matrix, axis=0)
     #Put the modes on the dm
     data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
     deformable_mirror.flatten()
     deformable_mirror.actuators = data_tt + data_othermodes  # Add TT and higher-order terms to pupil
-    data_dm[:, :] = deformable_mirror.opd.shaped
+    data_dm[:, :] = deformable_mirror.opd.shaped/2
     
     # Recreate outer and inner pupil parts
     data_pupil_outer = np.copy(data_pupil)

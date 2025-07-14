@@ -49,28 +49,15 @@ def scan_othermode_amplitudes(test_values, mode_index, wait=wait_time,
         new_amps = list(othermodes_amplitudes)
         new_amps[mode_index] = amp
 
-        pupil = update_pupil(new_othermodes_amplitudes=new_amps)
-
-        pupil_outer = np.copy(pupil)
-        pupil_outer[pupil_mask] = 0
-
-        pupil_inner = np.copy(
-            pupil[offset_height:offset_height + npix_small_pupil_grid,
-                  offset_width:offset_width + npix_small_pupil_grid]
-        )
-        pupil_inner[~small_pupil_mask] = 0
-
-        slm_data = compute_data_slm(
-            data_pupil_inner=pupil_inner,
-            data_pupil_outer=pupil_outer,
-            pupil_mask=pupil_mask,
-            small_pupil_mask=small_pupil_mask,
-        )
+        slm_data = update_pupil(new_othermodes_amplitudes=new_amps)
         slm.set_data(slm_data)
         time.sleep(wait)
 
         # Capture focal-plane image and log stats
-        fp_img = camera_fp.get_data()
+        # Capture and average 5 images
+        num_images = 5
+        images = [camera_fp.get_data() for i in range(num_images)]
+        fp_img = np.mean(images, axis=0)
         intensity = np.max(fp_img)
         print(f"Amplitude {amp:.3f} -> max intensity {intensity:.3f}")
 
