@@ -11,7 +11,7 @@ import os
 import matplotlib.pyplot as plt
 from astropy.io import fits
 from hcipy import *
-from src.kl_basis_eigenmodes import *
+from src.kl_basis_eigenmodes_functions import *
 from src.utils import *
 import sys
 from pathlib import Path

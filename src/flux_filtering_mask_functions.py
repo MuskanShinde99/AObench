@@ -14,7 +14,7 @@ import time
 from matplotlib import pyplot as plt
 from src.dao_setup import *  # Import all variables from setup
 import src.dao_setup as dao_setup
-from src.tilt import *
+from src.tilt_functions import *
 from src.utils import *
 import matplotlib.colors as mcolors
 
