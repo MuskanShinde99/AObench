@@ -49,23 +49,12 @@ def scan_othermode_amplitudes(test_values, mode_index, wait=wait_time,
         new_amps = list(othermodes_amplitudes)
         new_amps[mode_index] = amp
 
-        pupil = update_pupil(new_othermodes_amplitudes=new_amps)
-
-        pupil_outer = np.copy(pupil)
-        pupil_outer[pupil_mask] = 0
-
-        pupil_inner = np.copy(
-            pupil[offset_height:offset_height + npix_small_pupil_grid,
-                  offset_width:offset_width + npix_small_pupil_grid]
-        )
-        pupil_inner[~small_pupil_mask] = 0
-
-        slm_data = compute_data_slm(
-            data_pupil_inner=pupil_inner,
-            data_pupil_outer=pupil_outer,
-            pupil_mask=pupil_mask,
-            small_pupil_mask=small_pupil_mask,
-        )
+        # ``update_pupil`` already recomputes the pupil and returns the
+        # SLM array.  The previous implementation attempted to treat the
+        # returned value as the pupil itself which resulted in incorrect
+        # slicing and shape errors.  We only need to call ``update_pupil``
+        # and send its result directly to the SLM.
+        slm_data = update_pupil(new_othermodes_amplitudes=new_amps)
         slm.set_data(slm_data)
         time.sleep(wait)
 

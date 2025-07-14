@@ -225,7 +225,10 @@ othermodes_amplitudes = [0.006249999999999881, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
 othermodes_amplitude_matrix = np.diag(othermodes_amplitudes)
 othermodes_matrix = othermodes_amplitude_matrix @ KL2Act[2:10, :]  # Select modes 3 (focus) to 10
 
-data_othermodes = (othermodes_matrix[0] + othermodes_matrix[1] + othermodes_matrix[2]).reshape(nact**2)
+# Sum all higher-order mode contributions.  The previous implementation
+# only added the first three rows, which meant modes beyond focus were
+# ignored.
+data_othermodes = np.sum(othermodes_matrix, axis=0).reshape(nact**2)
 
 #Put the modes on the dm
 data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
@@ -300,7 +303,9 @@ def update_pupil(new_tt_amplitudes=None, new_othermodes_amplitudes=None,
 
     # Recompute focus and higher-order terms
     othermodes_matrix = np.diag(othermodes_amplitudes) @ KL2Act[2:10, :]
-    data_othermodes = (othermodes_matrix[0] + othermodes_matrix[1] + othermodes_matrix[2])
+    # Include contributions from all provided modes instead of just the first
+    # three rows of the transformation matrix.
+    data_othermodes = np.sum(othermodes_matrix, axis=0)
         
     #Put the modes on the dm
     data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
