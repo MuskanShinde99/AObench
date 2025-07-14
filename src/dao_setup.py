@@ -97,6 +97,60 @@ wait_time = 0.15
 # dataHeight = slm.height_px
 # pixel_size = slm.pixelsize_m * 1e3  # Pixel size in mm
 
+#%% Define deformable mirror
+
+# Number of actuators
+nact = 17
+
+# Create influence functions for deformable mirror (DM)
+t0 = time.time()
+dm_modes_full = make_gaussian_influence_functions(small_pupil_grid, nact, pupil_size / (nact - 1), crosstalk=0.3)
+
+# Resize the pupil mask to exactly nactxnact and compute the valid actuqator indices
+valid_actuators_mask = resize(np.logical_not(small_pupil_mask), (nact, nact), order=0, anti_aliasing=False, preserve_range=True).astype(int)
+valid_actuator_indices= np.column_stack(np.where(valid_actuators_mask))
+
+# Compute valid actuator counts
+nact_total = valid_actuators_mask.size
+nact_outside = np.sum(valid_actuators_mask)
+nact_valid = nact_total - nact_outside
+
+#Put the dm modes outside the valid actuator indices to zero
+dm_modes = np.asarray(dm_modes_full)
+
+for x, y in valid_actuator_indices:
+    dm_modes[x * nact + y] = 0  # Zero out the corresponding mode
+
+dm_modes = ModeBasis(dm_modes.T, small_pupil_grid)
+
+deformable_mirror = DeformableMirror(dm_modes_full)
+
+nmodes_dm = deformable_mirror.num_actuators
+
+# print("Number of DM modes =", nmodes_dm)
+
+# Flatten the DM surface and set actuator values
+deformable_mirror.flatten()
+# deformable_mirror.actuators.fill(1)
+# plt.figure()
+# plt.imshow(deformable_mirror.opd.shaped)
+# plt.colorbar()
+# plt.title('Deformable Mirror Surface OPD')
+# plt.show()
+
+#%% Define number of KL and Zernike modes
+
+nmodes_dm = nact_valid
+nmodes_KL = nact_valid
+nmodes_Znk = nact_valid
+
+
+#%% Load transformation matrices
+
+# From folder 
+KL2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Act_nkl_{nmodes_kl}_nact_{nact}.fits'))
+KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_{nmodes_kl}_npupil_{npix_small_pupil_grid}.fits'))
+
 #%% Create Pupil
 
 # Parameters for the circular pupil
@@ -122,25 +176,50 @@ zernike_basis = make_zernike_basis(11, pupil_size, pupil_grid)
 zernike_basis = [mode / np.ptp(mode) for mode in zernike_basis]
 zernike_basis = np.asarray(zernike_basis)
 
-# [-0.0813878287964559, 0.09992195172893337]
+# # [-1.6510890005150187, 0.14406016044318903]
+# # Create a Tip-Tilt (TT) matrix with specified amplitudes as the diagonal elements
+# tt_amplitudes = [-1.6510890005150187, 0.14406016044318903]  # Tip and Tilt amplitudes
+# tt_amplitude_matrix = np.diag(tt_amplitudes)
+# tt_matrix = tt_amplitude_matrix @ zernike_basis[1:3, :]  # Select modes 1 (tip) and 2 (tilt)
+
+# data_tt = np.zeros((dataHeight, dataWidth), dtype=np.float32)
+# data_tt[:, :] = (tt_matrix[0] + tt_matrix[1]).reshape(dataHeight, dataWidth)
+
+# othermodes_amplitudes = [0.4, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]  # Focus (mode 3) + modes 4 to 10
+# othermodes_amplitude_matrix = np.diag(othermodes_amplitudes)
+# othermodes_matrix = othermodes_amplitude_matrix @ zernike_basis[3:11, :]  # Select modes 3 (focus) to 10
+
+# data_othermodes = np.zeros((dataHeight, dataWidth), dtype=np.float32)
+# data_othermodes[:, :] = (othermodes_matrix[0] + othermodes_matrix[1] + othermodes_matrix[2]).reshape(dataHeight, dataWidth) 
+
+# # Add all the modes to data pupil
+# data_pupil = data_pupil + data_tt + data_othermodes  # Add TT and higher-order terms to pupil
+
+
+# [-1.6510890005150187, 0.14406016044318903]
 # Create a Tip-Tilt (TT) matrix with specified amplitudes as the diagonal elements
 tt_amplitudes = [-1.6510890005150187, 0.14406016044318903]  # Tip and Tilt amplitudes
 tt_amplitude_matrix = np.diag(tt_amplitudes)
-tt_matrix = tt_amplitude_matrix @ zernike_basis[1:3, :]  # Select modes 1 (tip) and 2 (tilt)
+tt_matrix = tt_amplitude_matrix @ KL2Act[0:2, :]  # Select modes 1 (tip) and 2 (tilt)
 
 data_tt = np.zeros((dataHeight, dataWidth), dtype=np.float32)
 data_tt[:, :] = (tt_matrix[0] + tt_matrix[1]).reshape(dataHeight, dataWidth)
 
 othermodes_amplitudes = [0.4, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]  # Focus (mode 3) + modes 4 to 10
 othermodes_amplitude_matrix = np.diag(othermodes_amplitudes)
-othermodes_matrix = othermodes_amplitude_matrix @ zernike_basis[3:11, :]  # Select modes 3 (focus) to 10
+othermodes_matrix = othermodes_amplitude_matrix @ KL2Act[2:10, :]  # Select modes 3 (focus) to 10
 
 data_othermodes = np.zeros((dataHeight, dataWidth), dtype=np.float32)
 data_othermodes[:, :] = (othermodes_matrix[0] + othermodes_matrix[1] + othermodes_matrix[2]).reshape(dataHeight, dataWidth) 
 
-# Add all the modes to data pupil
-data_pupil = data_pupil + data_tt + data_othermodes  # Add TT and higher-order terms to pupil
+#Put the modes on the dm
+data_dm = np.zeros((dataHeight, dataWidth), dtype=np.float32)
+deformable_mirror.flatten()
+deformable_mirror.actuators = data_tt + data_othermodes  # Add TT and higher-order terms to pupil
+data_dm[:, :] = deformable_mirror.opd.shaped
 
+# Add all the modes to data pupil
+data_pupil = data_pupil + data_dm
 
 # Function to update pupil with new TT amplitudes and other modes
 def update_pupil(new_tt_amplitudes=None, new_othermodes_amplitudes=None,
@@ -243,50 +322,4 @@ data_pupil_inner[~small_pupil_mask] = 0 # Zero out inner region outside by 'smal
 # plt.title('Data Pupil Inner')
 # plt.show()
 
-#%% Define deformable mirror
-
-# Number of actuators
-nact = 17
-
-# Create influence functions for deformable mirror (DM)
-t0 = time.time()
-dm_modes_full = make_gaussian_influence_functions(small_pupil_grid, nact, pupil_size / (nact - 1), crosstalk=0.3)
-
-# Resize the pupil mask to exactly nactxnact and compute the valid actuqator indices
-valid_actuators_mask = resize(np.logical_not(small_pupil_mask), (nact, nact), order=0, anti_aliasing=False, preserve_range=True).astype(int)
-valid_actuator_indices= np.column_stack(np.where(valid_actuators_mask))
-
-# Compute valid actuator counts
-nact_total = valid_actuators_mask.size
-nact_outside = np.sum(valid_actuators_mask)
-nact_valid = nact_total - nact_outside
-
-#Put the dm modes outside the valid actuator indices to zero
-dm_modes = np.asarray(dm_modes_full)
-
-for x, y in valid_actuator_indices:
-    dm_modes[x * nact + y] = 0  # Zero out the corresponding mode
-
-dm_modes = ModeBasis(dm_modes.T, small_pupil_grid)
-
-deformable_mirror = DeformableMirror(dm_modes_full)
-
-nmodes_dm = deformable_mirror.num_actuators
-
-# print("Number of DM modes =", nmodes_dm)
-
-# Flatten the DM surface and set actuator values
-deformable_mirror.flatten()
-# deformable_mirror.actuators.fill(1)
-# plt.figure()
-# plt.imshow(deformable_mirror.opd.shaped)
-# plt.colorbar()
-# plt.title('Deformable Mirror Surface OPD')
-# plt.show()
-
-#%% Create shared memory
-
-nmodes_dm = nact_valid
-nmodes_KL = nact_valid
-nmodes_Znk = nact_valid
 
