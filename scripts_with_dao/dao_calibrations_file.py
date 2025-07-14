@@ -87,28 +87,7 @@ time.sleep(5)
 #%% Creating and Displaying a Circular Pupil on the SLM
 
 # Compute and display Pupil Data on SLM
-
-data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
-deformable_mirror.flatten()
-deformable_mirror.actuators = 0 * KL2Act[5].reshape(nact**2)
-data_dm[:, :] = (deformable_mirror.opd.shaped/2)*small_pupil_mask
-
-plt.figure()
-plt.imshow(data_dm)
-plt.colorbar()
-plt.title('data_dm')
-plt.show()
-
-
-kl_mode = KL2Phs[5].reshape(npix_small_pupil_grid, npix_small_pupil_grid)
-plt.figure()
-plt.imshow(kl_mode)
-plt.colorbar()
-plt.title('kl mode')
-plt.show()
-
-
-data_slm = compute_data_slm(data_dm=data_dm)
+data_slm = compute_data_slm()
 slm.set_data(data_slm)
 time.sleep(wait_time)
 
@@ -221,13 +200,13 @@ S2KL_shm = dao.shm('/tmp/S2KL.im.shm' , np.zeros((npix_valid, nmodes_KL)).astype
 
 plt.close('all')
 
-center_psf_on_pyramid_tip(mask=mask, initial_tt_amplitudes=[-2, 1], 
-                          bounds = [(-5.0, 5.0), (-5.0, 5.0)], variance_threshold=-0.01, 
-                          update_setup_file=False, verbose=True, verbose_plot=True)
+center_psf_on_pyramid_tip(mask=mask, initial_tt_amplitudes=[-0.2, 0.1], 
+                          bounds = [(-2.0, 2.0), (-2.0, 2.0)], variance_threshold=0.01, 
+                          update_setup_file=True, verbose=True, verbose_plot=True)
 
 #%% Scanning modes to find zero of the pyramid
 
-test_values = np.arange(0, 0.5, 0.05)
+test_values = np.arange(-0.5, 0.5, 0.05)
 mode_index = 0 # 0 - focus, 1 - astimgatism, 2 -astigmatism 
 scan_othermode_amplitudes(test_values, mode_index, update_setup_file=True)
 
