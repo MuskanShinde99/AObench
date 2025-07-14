@@ -57,8 +57,8 @@ def cost_function(amplitudes, pupil_coords, radius, iteration, variance_threshol
     """
     global stop_optimization  #Flag to stop when pupil intensities are equal
 
-    data_pupil = update_pupil(new_tt_amplitudes=amplitudes)
-    slm.set_data(((data_pupil * 256) % 256).astype(np.uint8))  # Update SLM data
+    data_slm = update_pupil(new_tt_amplitudes=amplitudes)
+    slm.set_data(data_slm)  # Update SLM data
     time.sleep(wait_time)  # Wait for the update to take effect
 
     # Capture and average 5 images

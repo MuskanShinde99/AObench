@@ -158,8 +158,8 @@ S2KL_shm = dao.shm('/tmp/S2KL.im.shm' , np.zeros((npix_valid, nmodes_KL)).astype
 plt.close('all')
 
 center_psf_on_pyramid_tip(mask=mask, initial_tt_amplitudes=[0, 0], 
-                          bounds = [(-2.0, 2.0), (-2.0, 2.0)], variance_threshold=0.01, 
-                          update_setup_file=True, verbose=True, verbose_plot=True)
+                          bounds = [(-5.0, 5.0), (-5.0, 5.0)], variance_threshold=0.01, 
+                          update_setup_file=False, verbose=True, verbose_plot=True)
 
 #%% Scanning modes to find zero of the pyramid
 

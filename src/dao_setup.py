@@ -192,8 +192,8 @@ nmodes_Znk = nact_valid
 #%% Load transformation matrices
 
 # From folder 
-KL2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Act_nkl_{nmodes_kl}_nact_{nact}.fits'))
-KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_{nmodes_kl}_npupil_{npix_small_pupil_grid}.fits'))
+KL2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Act_nkl_{nmodes_KL}_nact_{nact}.fits'))
+KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_{nmodes_KL}_npupil_{npix_small_pupil_grid}.fits'))
 
 
 #%%
@@ -231,15 +231,13 @@ tt_amplitudes = [-1.6510890005150187, 0.14406016044318903]  # Tip and Tilt ampli
 tt_amplitude_matrix = np.diag(tt_amplitudes)
 tt_matrix = tt_amplitude_matrix @ KL2Act[0:2, :]  # Select modes 1 (tip) and 2 (tilt)
 
-data_tt = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
-data_tt[:, :] = (tt_matrix[0] + tt_matrix[1]).reshape(npix_small_pupil_grid, npix_small_pupil_grid)
+data_tt = (tt_matrix[0] + tt_matrix[1])
 
-othermodes_amplitudes = [0.4, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]  # Focus (mode 3) + modes 4 to 10
+othermodes_amplitudes = [0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]  # Focus (mode 3) + modes 4 to 10
 othermodes_amplitude_matrix = np.diag(othermodes_amplitudes)
 othermodes_matrix = othermodes_amplitude_matrix @ KL2Act[2:10, :]  # Select modes 3 (focus) to 10
 
-data_othermodes = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
-data_othermodes[:, :] = (othermodes_matrix[0] + othermodes_matrix[1] + othermodes_matrix[2]).reshape(npix_small_pupil_grid, npix_small_pupil_grid) 
+data_othermodes = (othermodes_matrix[0] + othermodes_matrix[1] + othermodes_matrix[2])
 
 #Put the modes on the dm
 data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
@@ -310,13 +308,11 @@ def update_pupil(new_tt_amplitudes=None, new_othermodes_amplitudes=None,
 
     # Create a new Tip-Tilt (TT) matrix with the updated amplitudes
     tt_matrix = tt_amplitude_matrix @ KL2Act[0:2, :]  # Select modes 1 (tip) and 2 (tilt)
-    data_tt = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
-    data_tt[:, :] = (tt_matrix[0] + tt_matrix[1]).reshape(npix_small_pupil_grid, npix_small_pupil_grid)
+    data_tt = (tt_matrix[0] + tt_matrix[1])
 
     # Recompute focus and higher-order terms
-    othermodes_matrix = np.diag(othermodes_amplitudes) @ zernike_basis[3:11, :]
-    data_othermodes = np.zeros((dataHeight, dataWidth), dtype=np.float32)
-    data_othermodes[:, :] = (othermodes_matrix[0] + othermodes_matrix[1] + othermodes_matrix[2]).reshape(npix_small_pupil_grid, npix_small_pupil_grid)
+    othermodes_matrix = np.diag(othermodes_amplitudes) @ KL2Act[2:10, :]
+    data_othermodes = (othermodes_matrix[0] + othermodes_matrix[1] + othermodes_matrix[2])
         
     #Put the modes on the dm
     data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
