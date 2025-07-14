@@ -87,9 +87,30 @@ time.sleep(5)
 #%% Creating and Displaying a Circular Pupil on the SLM
 
 # Compute and display Pupil Data on SLM
-data_dm = 0 #100 * np.ones((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
-data_slm = compute_data_slm()
+
+data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
+deformable_mirror.flatten()
+deformable_mirror.actuators = 0 * KL2Act[5].reshape(nact**2)
+data_dm[:, :] = (deformable_mirror.opd.shaped/2)*small_pupil_mask
+
+plt.figure()
+plt.imshow(data_dm)
+plt.colorbar()
+plt.title('data_dm')
+plt.show()
+
+
+kl_mode = KL2Phs[5].reshape(npix_small_pupil_grid, npix_small_pupil_grid)
+plt.figure()
+plt.imshow(kl_mode)
+plt.colorbar()
+plt.title('kl mode')
+plt.show()
+
+
+data_slm = compute_data_slm(data_dm=data_dm)
 slm.set_data(data_slm)
+time.sleep(wait_time)
 
 print('Pupil created on the SLM.')
 
@@ -116,11 +137,54 @@ plt.title('PSF')
 plt.show()
 
 
+# Find the max position
+max_pos = np.unravel_index(np.argmax(fp_image), fp_image.shape)
+print(f"Maximum value is at position: {max_pos}, value: {fp_image[max_pos]}")
+
+# Extract vertical slice through the PSF peak column
+x_col = max_pos[1]
+profile = fp_image[:, x_col]
+y = np.arange(fp_image.shape[0])
+
+# Compute half-maximum value
+max_val = profile[max_pos[0]]
+half_max = max_val / 2
+
+# Plot the profile with horizontal lines
+plt.figure()
+plt.plot(y, profile, label='PSF profile')
+plt.axhline(max_val, color='r', linestyle='--', label='Max')
+plt.axhline(half_max, color='g', linestyle=':', label='Half Max')
+plt.title('PSF radial profile (vertical slice)')
+plt.xlabel('Y pixel')
+plt.ylabel('Intensity')
+plt.legend()
+plt.show()
+
+
 #%% Load transformation matrices
 
-# Load transformation matrices from shared memories
-KL2Act = KL2Act_shm.get_data()
-KL2Phs = KL2Phs_shm.get_data()
+# # Load transformation matrices from shared memories
+# KL2Act = KL2Act_shm.get_data()
+# KL2Phs = KL2Phs_shm.get_data()
+
+# From folder 
+KL2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Act_nkl_{nmodes_KL}_nact_{nact}.fits'))
+KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_{nmodes_KL}_npupil_{npix_small_pupil_grid}.fits'))
+
+
+plt.figure()
+plt.imshow(KL2Act[0,:].reshape(nact,nact))
+plt.colorbar()
+plt.title('KL mode')
+plt.show()
+
+plt.figure()
+plt.imshow(small_pupil_mask*KL2Phs[0,:].reshape(npix_small_pupil_grid,npix_small_pupil_grid))
+plt.colorbar()
+plt.title('KL mode')
+plt.show()
+
 
 
 #%% Creating a Flux Filtering Mask
@@ -157,8 +221,8 @@ S2KL_shm = dao.shm('/tmp/S2KL.im.shm' , np.zeros((npix_valid, nmodes_KL)).astype
 
 plt.close('all')
 
-center_psf_on_pyramid_tip(mask=mask, initial_tt_amplitudes=[0, 0], 
-                          bounds = [(-5.0, 5.0), (-5.0, 5.0)], variance_threshold=0.01, 
+center_psf_on_pyramid_tip(mask=mask, initial_tt_amplitudes=[-2, 1], 
+                          bounds = [(-5.0, 5.0), (-5.0, 5.0)], variance_threshold=-0.01, 
                           update_setup_file=False, verbose=True, verbose_plot=True)
 
 #%% Scanning modes to find zero of the pyramid
@@ -222,7 +286,7 @@ plt.title('PSF radial profile')
 plt.show()
 
 #%%
-phase_amp = 0.01
+phase_amp = 1
 
 # Number of times to repeat the whole calibration
 calibration_repetitions = 1

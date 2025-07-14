@@ -67,6 +67,46 @@ def compute_Act2Phs(nact, npix, IFs, folder, verbose=False):
             print("Act2Phs and Phs2Act matrices loaded from file.")
     return Act2Phs, Phs2Act
 
+# Compute KL
+def compute_KL(nact, npix, nmodes_kl, IFs, Act2Phs, Phs2Act, pupil_mask, folder, verbose=False):
+    """
+    Compute the KL-to-act transformation matrix (KL2Act) and its inverse (Act2KL).
+    If matrices exist as FITS files, they are loaded; otherwise, they are generated and saved.
+
+    Parameters:
+    nact (int): Number of actuators.
+    npix (int): Number of pixels in the pupil grid.
+    nmodes_kl (int): Number of KL modes.
+    IFs (array-like): The dm influence functions.
+    pupil_mask (array-like): Mask applied to the pupil.
+    verbose (bool, optional): If True, prints debugging information.
+
+    Returns:
+    tuple:
+        - Act2KL (ndarray): Actuator-to-KL transformation matrix.
+        - KL2Act (ndarray): KL-to-actuator transformation matrix.
+    """
+    kl2act_filename = f'KL2Act_nkl_{nmodes_kl}_nact_{nact}.fits'
+    kl2phs_filename = f'KL2Phs_nkl_{nmodes_kl}_npupil_{npix}.fits'
+    
+    if not matrix_exists(folder, kl2act_filename) or not matrix_exists(folder, kl2phs_filename):
+        IFs = IFs.transformation_matrix.toarray()
+        IFs =  IFs * pupil_mask.flatten()[:, np.newaxis]
+        M2C, KLphiVec = computeEigenModes(IFs, pupil_mask.flatten())
+        KL2Phs = np.asarray([mode for mode in KLphiVec.T[:nmodes_kl, :]])
+        KL2Act = np.asarray([mode for mode in M2C.T[:nmodes_kl, :]])
+        #KL2Act = KL2Phs @  Phs2Act
+        fits.writeto(os.path.join(folder, kl2act_filename), KL2Act, overwrite=True)
+        fits.writeto(os.path.join(folder, kl2phs_filename), KL2Phs, overwrite=True)
+        if verbose:
+            print("KL2Act and Act2KL matrices created.")
+    else:
+        KL2Act = fits.getdata(os.path.join(folder, kl2act_filename))
+        KL2Phs = fits.getdata(os.path.join(folder, kl2phs_filename))
+        if verbose:
+            print("KL2Act and Act2KL matrices loaded from file.")
+    return KL2Act, KL2Phs
+
 
 # Compute KL-to-act matrix
 def compute_KL2Act(nact, npix, nmodes_kl, IFs, pupil_mask, folder, verbose=False):
@@ -106,7 +146,7 @@ def compute_KL2Act(nact, npix, nmodes_kl, IFs, pupil_mask, folder, verbose=False
         Act2KL = fits.getdata(os.path.join(folder, act2kl_filename))
         if verbose:
             print("KL2Act and Act2KL matrices loaded from file.")
-    return Act2KL, KL2Act
+    return Act2KL, KL2Act, KL2Phs
 
 # Compute KL-to-phase matrix
 def compute_KL2Phs(nact, npix, nmodes_kl, Act2Phs, Phs2Act, KL2Act, Act2KL, folder, verbose=False):

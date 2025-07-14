@@ -32,23 +32,74 @@ Act2Phs, Phs2Act = compute_Act2Phs(nact, npix_small_pupil_grid, dm_modes_full, f
 
 # Create KL modes
 nmodes_kl = nact_valid
-Act2KL, KL2Act = compute_KL2Act(nact, npix_small_pupil_grid, nmodes_kl, dm_modes_full, small_pupil_mask, folder_transformation_matrices, verbose=True)
-KL2Phs, Phs2KL = compute_KL2Phs(nact, npix_small_pupil_grid, nmodes_kl, Act2Phs, Phs2Act, KL2Act, Act2KL, folder_transformation_matrices, verbose=True)
+# Act2KL, KL2Act = compute_KL2Act(nact, npix_small_pupil_grid, nmodes_kl, dm_modes_full, small_pupil_mask, folder_transformation_matrices, verbose=True)
+# KL2Phs, Phs2KL = compute_KL2Phs(nact, npix_small_pupil_grid, nmodes_kl, Act2Phs, Phs2Act, KL2Act, Act2KL, folder_transformation_matrices, verbose=True)
+KL2Act, KL2Phs = compute_KL(nact, npix_small_pupil_grid, nmodes_kl, dm_modes_full, Act2Phs, Phs2Act, small_pupil_mask, folder_transformation_matrices, verbose=False)
+
 
 # set shared memories
 KL2Act_shm.set_data(KL2Act)
 KL2Phs_shm.set_data(KL2Phs)
 
-# # Plot KL projected| on actuators
-# fig, axes = plt.subplots(2, 5, figsize=(15, 6))
-# # Flatten the axes array for easier indexing
-# axes_flat = axes.flatten()
+plt.close('all')
 
-# for i, mode in enumerate(range(10)):
-#     im = axes_flat[i].imshow(KL2Act[mode].reshape(nact, nact), vmax=1, vmin=-1, cmap='viridis')
-#     axes_flat[i].set_title(f' KL2Act {mode}')
-#     axes_flat[i].axis('off')
-#     fig.colorbar(im, ax=axes_flat[i], fraction=0.03, pad=0.04)
+# Plot KL projected| on actuators
+fig, axes = plt.subplots(2, 5, figsize=(15, 6))
+# Flatten the axes array for easier indexing
+axes_flat = axes.flatten()
 
-# plt.tight_layout()
-# plt.show()
+for i, mode in enumerate(range(10)):
+    im = axes_flat[i].imshow(KL2Act[mode].reshape(nact, nact), cmap='viridis')
+    axes_flat[i].set_title(f' KL2Act {mode}')
+    axes_flat[i].axis('off')
+    fig.colorbar(im, ax=axes_flat[i], fraction=0.03, pad=0.04)
+
+plt.tight_layout()
+plt.show()
+
+# Plot KL 
+fig, axes = plt.subplots(2, 5, figsize=(15, 6))
+# Flatten the axes array for easier indexing
+axes_flat = axes.flatten()
+
+for i, mode in enumerate(range(10)):
+    im = axes_flat[i].imshow(KL2Phs[mode].reshape(npix_small_pupil_grid, npix_small_pupil_grid), cmap='viridis')
+    axes_flat[i].set_title(f' KL2Phs {mode}')
+    axes_flat[i].axis('off')
+    fig.colorbar(im, ax=axes_flat[i], fraction=0.03, pad=0.04)
+
+plt.tight_layout()
+plt.show()
+
+
+KL2Phs_new = KL2Act @  Act2Phs
+
+# Plot KL 
+fig, axes = plt.subplots(2, 5, figsize=(15, 6))
+# Flatten the axes array for easier indexing
+axes_flat = axes.flatten()
+
+for i, mode in enumerate(range(10)):
+    im = axes_flat[i].imshow(KL2Phs_new[mode].reshape(npix_small_pupil_grid, npix_small_pupil_grid)*small_pupil_mask, cmap='viridis')
+    axes_flat[i].set_title(f' KL2Phs new {mode}')
+    axes_flat[i].axis('off')
+    fig.colorbar(im, ax=axes_flat[i], fraction=0.03, pad=0.04)
+
+plt.tight_layout()
+plt.show()
+
+KL2Act_new = KL2Phs @  Phs2Act
+
+# Plot KL projected| on actuators
+fig, axes = plt.subplots(2, 5, figsize=(15, 6))
+# Flatten the axes array for easier indexing
+axes_flat = axes.flatten()
+
+for i, mode in enumerate(range(10)):
+    im = axes_flat[i].imshow(KL2Act_new[mode].reshape(nact, nact), cmap='viridis')
+    axes_flat[i].set_title(f' KL2Act new {mode}')
+    axes_flat[i].axis('off')
+    fig.colorbar(im, ax=axes_flat[i], fraction=0.03, pad=0.04)
+
+plt.tight_layout()
+plt.show()

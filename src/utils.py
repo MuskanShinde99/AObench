@@ -34,7 +34,7 @@ def compute_data_slm(data_dm=0, data_phase_screen=0, **kwargs):
     - data_slm (ndarray): Resulting SLM data.
     """
     
-    data_pupil_inner = kwargs.get("data_pupil_inner", dao_setup.data_summed)
+    data_pupil_inner = kwargs.get("data_pupil_inner", dao_setup.data_pupil_inner_new)
     data_pupil_outer = kwargs.get("data_pupil_outer", dao_setup.data_pupil_outer)
     pupil_mask = kwargs.get("pupil_mask", dao_setup.pupil_mask)
     small_pupil_mask = kwargs.get("small_pupil_mask", dao_setup.small_pupil_mask)

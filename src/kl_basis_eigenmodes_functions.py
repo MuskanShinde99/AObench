@@ -82,7 +82,7 @@ def computeEigenModes(IF, pupil, sort=False, includeTT=True, includeModes=0):
     klPhiVec[:,0:Nmode_included] = IF@M2C[:,0:Nmode_included]
 
     # Renormalize modes to 1
-    norm     = (np.std(klPhiVec[pupil>0,:],axis=0)+1e-15)
+    norm     = (np.ptp(klPhiVec[pupil>0,:],axis=0)+1e-15)
     M2C      = M2C      / norm[np.newaxis,:]
     klPhiVec = klPhiVec / norm[np.newaxis,:]
 

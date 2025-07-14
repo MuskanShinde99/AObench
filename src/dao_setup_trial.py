@@ -215,7 +215,7 @@ zernike_basis = np.asarray(zernike_basis)
 
 # [-1.6510890005150187, 0.14406016044318903]
 # Create a Tip-Tilt (TT) matrix with specified amplitudes as the diagonal elements
-tt_amplitudes = [-1.6510890005150187, 0.14406016044318903] # Tip and Tilt amplitudes
+tt_amplitudes = [-0.2, 0.04]  # Tip and Tilt amplitudes
 tt_amplitude_matrix = np.diag(tt_amplitudes)
 tt_matrix = tt_amplitude_matrix @ KL2Act[0:2, :]  # Select modes 1 (tip) and 2 (tilt)
 
@@ -252,8 +252,11 @@ data_pupil_inner = np.copy(
 data_pupil_inner[~small_pupil_mask] = 0  # Zero out region outside the mask
 
 # Wrap and insert DM data into the pupil
-data_pupil_inner_new = data_pupil_inner + data_dm
-data_slm = compute_data_slm()
+data_summed = data_pupil_inner + data_dm
+data_inner_new = ((data_pupil_inner + data_dm) * 256) % 256
+data_slm = data_pupil_outer.copy()
+data_slm[pupil_mask] = data_inner_new[small_pupil_mask]
+data_slm = data_slm.astype(np.uint8)
 
 # Function to update pupil with new TT amplitudes and other modes
 def update_pupil(new_tt_amplitudes=None, new_othermodes_amplitudes=None,
@@ -316,8 +319,11 @@ def update_pupil(new_tt_amplitudes=None, new_othermodes_amplitudes=None,
     data_pupil_inner[~small_pupil_mask] = 0
 
     # Wrap and insert the DM pattern
-    data_pupil_inner_new = data_pupil_inner + data_dm
-    data_slm = compute_data_slm()
+    data_inner_new = ((data_pupil_inner + data_dm) * 256) % 256
+    data_slm_new = data_pupil_outer.copy()
+    data_slm_new[pupil_mask] = data_inner_new[small_pupil_mask]
+
+    data_slm = data_slm_new.astype(np.uint8)
 
     return data_slm
 
