@@ -274,10 +274,12 @@ def update_pupil(new_tt_amplitudes=None, new_othermodes_amplitudes=None,
     """
     global tt_amplitudes, othermodes_amplitudes
     global tilt_amp_outer, tilt_amp_inner, data_pupil, data_slm, data_dm
+    global tt_amplitude_matrix, data_pupil_outer, data_pupil_inner, data_pupil_inner_new
 
     # Update the amplitudes and tilt parameters if new values are provided
     if new_tt_amplitudes is not None:
         tt_amplitudes = list(new_tt_amplitudes)
+        tt_amplitude_matrix = np.diag(tt_amplitudes)
 
     if new_othermodes_amplitudes is not None:
         othermodes_amplitudes = list(new_othermodes_amplitudes)
