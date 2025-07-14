@@ -34,22 +34,17 @@ ROOT_DIR = PROJECT_ROOT
 # Import Specific Modules
 import dao
 from src.dao_setup import *  # Import all variables from setup
-from src.create_circular_pupil import *
-from src.tilt import *
 from src.utils import *
+from src.circular_pupil_functions import *
+from src.flux_filtering_mask_functions import *
+from src.tilt_functions import *
 from src.calibration_functions import *
-from src.dao_create_flux_filtering_mask import *
-from src.psf_centring_algorithm import *
-from src.kl_basis_eigenmodes import computeEigenModes, computeEigenModes_notsquarepupil
-from src.create_transformation_matrices import *
+from src.kl_basis_eigenmodes_functions import computeEigenModes, computeEigenModes_notsquarepupil
+from src.transformation_matrices_functions import * 
+from src.psf_centring_algorithm_functions import *
 from src.create_shared_memories import *
-from src.scan_modes import scan_othermode_amplitudes
-
-folder_calib = ROOT_DIR / 'outputs/Calibration_files'
-folder_pyr_mask = ROOT_DIR / 'outputs/3s_pyr_mask'
-folder_transformation_matrices = ROOT_DIR / 'outputs/Transformation_matrices'
-folder_closed_loop_tests = ROOT_DIR / 'outputs/Closed_loop_tests'
-folder_turbulence = ROOT_DIR / 'outputs/Phase_screens'
+from src.scan_modes_functions import scan_othermode_amplitudes
+from src.ao_loop_functions import *
 
 # #%% Accessing Devices
 
@@ -92,10 +87,15 @@ time.sleep(5)
 #%% Creating and Displaying a Circular Pupil on the SLM
 
 # Compute and display Pupil Data on SLM
+data_dm = 0 #100 * np.ones((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
 data_slm = compute_data_slm()
 slm.set_data(data_slm)
 
 print('Pupil created on the SLM.')
+
+#DM function for papyrus, and have a dm flat
+# for a dm flat put 10% of the total DM unit
+# make setting the shared memory part of the DM function
 
 #%% Capturing an image to check
 
@@ -115,6 +115,14 @@ plt.colorbar()
 plt.title('PSF')
 plt.show()
 
+
+#%% Load transformation matrices
+
+# Load transformation matrices from shared memories
+KL2Act = KL2Act_shm.get_data()
+KL2Phs = KL2Phs_shm.get_data()
+
+
 #%% Creating a Flux Filtering Mask
 
 method='tip_tilt_modulation'
@@ -125,11 +133,12 @@ n_iter=200 # number of iternations for dm random commands
 
 mask = create_flux_filtering_mask(method, flux_cutoff, 
                                modulation_angles, modulation_amp, n_iter,
-                               create_summed_image=False, verbose=False, verbose_plot=False)
+                               create_summed_image=False, verbose=False, verbose_plot=True)
 
 valid_pixels_mask_shm.set_data(mask)
 
 # Get valid pixels from the mask
+#put with in the function to create mask
 valid_pixels_indices = np.where(mask > 0)
 npix_valid = valid_pixels_indices[0].shape[0]
 npix_valid_shm.set_data(np.array([[npix_valid]]))
@@ -138,8 +147,7 @@ print(f'Number of valid pixels = {npix_valid}')
 #Reset the DM to flat
 slm.set_data(data_slm)
 
-#%% Create shared memories that depends on number of valid pixels
-
+# Create shared memories that depends on number of valid pixels
 KL2PWFS_cube_shm = dao.shm('/tmp/KL2PWFS_cube.im.shm' , np.zeros((nmodes_KL, img_size_wfs_cam**2)).astype(np.float32)) 
 slopes_shm = dao.shm('/tmp/slopes.im.shm', np.zeros((npix_valid, 1)).astype(np.uint32)) 
 KL2S_shm = dao.shm('/tmp/KL2S.im.shm' , np.zeros((nmodes_KL, npix_valid)).astype(np.float32)) 
@@ -147,18 +155,23 @@ S2KL_shm = dao.shm('/tmp/S2KL.im.shm' , np.zeros((npix_valid, nmodes_KL)).astype
 
 #%% Centering the PSF on the Pyramid Tip
 
+plt.close('all')
+
 center_psf_on_pyramid_tip(mask=mask, initial_tt_amplitudes=[0, 0], 
-                          bounds = [(-2.0, 2.0), (-2.0, 2.0)], variance_threshold=10, 
+                          bounds = [(-2.0, 2.0), (-2.0, 2.0)], variance_threshold=0.01, 
                           update_setup_file=True, verbose=True, verbose_plot=True)
 
 #%% Scanning modes to find zero of the pyramid
 
-test_values = np.arange(-0.5, 0.5, 0.01)
+test_values = np.arange(0, 0.5, 0.05)
 mode_index = 0 # 0 - focus, 1 - astimgatism, 2 -astigmatism 
 scan_othermode_amplitudes(test_values, mode_index, update_setup_file=True)
 
+#revise the crieteria to standard deviation of intensities within the valid pixels
 
 #%% Capture Reference Image
+
+# put functions to capture and average the frames from the camera
 
 #Timestamp
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -208,46 +221,20 @@ plt.plot(fp_image[:, 253:273])
 plt.title('PSF radial profile')
 plt.show()
 
-#%% Create transformation matrices
-
-Act2Phs, Phs2Act = compute_Act2Phs(nact, npix_small_pupil_grid, dm_modes_full, folder_transformation_matrices, verbose=True)
-
-# Create KL modes
-nmodes_kl = nact_valid
-Act2KL, KL2Act = compute_KL2Act(nact, npix_small_pupil_grid, nmodes_kl, dm_modes_full, small_pupil_mask, folder_transformation_matrices, verbose=True)
-KL2Phs, Phs2KL = compute_KL2Phs(nact, npix_small_pupil_grid, nmodes_kl, Act2Phs, Phs2Act, KL2Act, Act2KL, folder_transformation_matrices, verbose=True)
-
-# set shared memories
-KL2Act_shm.set_data(KL2Act)
-KL2Phs_shm.set_data(KL2Phs)
-
-# Plot KL projected| on actuators
-fig, axes = plt.subplots(2, 5, figsize=(15, 6))
-# Flatten the axes array for easier indexing
-axes_flat = axes.flatten()
-
-# for i, mode in enumerate(range(10)):
-#     im = axes_flat[i].imshow(KL2Act[mode].reshape(nact, nact), vmax=1, vmin=-1, cmap='viridis')
-#     axes_flat[i].set_title(f' KL2Act {mode}')
-#     axes_flat[i].axis('off')
-#     fig.colorbar(im, ax=axes_flat[i], fraction=0.03, pad=0.04)
-
-# plt.tight_layout()
-# plt.show()
-
 #%%
-phase_amp = 0.1
+phase_amp = 0.01
 
 # Number of times to repeat the whole calibration
-calibration_repetitions = 3
+calibration_repetitions = 1
 
 # Modes repition dictionary
 #mode_repetitions = {0: 10, 3: 10} # Repeat the 0th mode ten times, the 3rd mode ten times, rest default to 1
 #mode_repetitions = [2, 3]  # Repeat the 0th mode twice, the 1st mode three times, beyond the 1st default to 1
 
-mode_repetitions = {0: 10, 1: 10}
+mode_repetitions = {0: 10, 1: 10, 10: 5}
 
 # Run calibration and compute matrices
+# use the ref img, mask directly from shared memories 
 response_matrix_full, response_matrix_filtered = create_response_matrix(
     KL2Act,
     phase_amp,
@@ -258,6 +245,9 @@ response_matrix_full, response_matrix_filtered = create_response_matrix(
     calibration_repetitions=calibration_repetitions,
     mode_repetitions=mode_repetitions  
 )
+
+#Reset the DM to flat
+slm.set_data(data_slm)
 
 #response_matrix_filtered = response_matrix_full[:, mask.ravel() > 0]
 

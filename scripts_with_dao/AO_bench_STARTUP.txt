@@ -1,0 +1,86 @@
+System Setup Procedure
+======================================
+
+1. Enable Access to the Laser
+-----------------------------
+- Set permissions for Laser communication:
+  sudo chmod 666 /dev/ttyUSB0
+  (Note: There is a space between '666' and '/dev/ttyUSB0')
+- The laser control script:
+  Thorlabs_laser.py
+  (This a script to turn on and off the laser. No need to run it)
+
+2. Start DAO
+------------
+- cd ~/dao/daoRistretto/
+- tmux kill-server
+- ./ristrettoStartBin
+  (There are errors at startup; ignore them)
+
+3. Start Camera Displays
+------------------------
+- Open new terminals for each camera
+- cd ~/dao/daoRistretto/
+- Run:
+    daoImageRTD.py -s /tmp/cam2.im.shm
+    daoImageRTD.py -s /tmp/cam1.im.shm
+
+4. Open Shared Memories Viewer
+------------------------------
+- Open a new terminal
+- cd ~/dao/daoRistretto/
+- Run:
+    daoShmViewer.py &
+  (Opens shared memories viewer)
+
+5. Start the GUI
+----------------
+- Open a new terminal
+- cd /home/ristretto-dao/optlab-master/PROJECTS_3/RISTRETTO/Banc AO/src
+- Run:
+    python gui.py
+
+6. Create Shared Memories
+-------------------------
+- Open a new terminal
+- cd /home/ristretto-dao/optlab-master/PROJECTS_3/RISTRETTO/Banc AO
+- Open src/create_shared_memories.py in Spyder
+- Run the file
+
+7. Create Transformation Matrices
+---------------------------------
+- Open src/create_transformation_matrices.py in Spyder
+- Run the file
+
+8. Run Calibrations
+-------------------
+- Open scripts_with_dao/dao_calibrations_file.py
+- Run the following steps:
+  - Import libraries (especially: from src.dao_setup import *)
+  - Take a bias frame
+  - Turn on the laser
+  - Create and set a circular pupil on the SLM
+  - Capture an image to check
+  - Create a flux filtering mask
+  - Create shared memories based on the number of valid pixels
+  - Scan modes to find the pyramid's zero ??
+  - lOAF transformation matrices
+  - Capture a reference image
+  - Perform push-pull calibration
+
+9. Run Closed Loop Tests
+------------------------
+- Open scripts_with_dao/dao_AO_closed_loop_with_kl_3s_pyr.py
+- Run the following steps:
+  - Import libraries
+  - Create and set a circular pupil on the SLM
+  - Load transformation matrices
+  - Load bias image, calibration mask, and interaction matrix
+  - Load reference image and PSF
+  - Load turbulence
+  - Run AO loop with turbulence
+
+10. Load Calibration from Previous Run
+--------------------------------------
+- Load existing calibration into shared memories 
+

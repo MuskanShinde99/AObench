@@ -31,22 +31,19 @@ sys.path.append(str(PROJECT_ROOT))
 ROOT_DIR = PROJECT_ROOT
 
 # Import Specific Modules
-from DEVICES_3.Basler_Pylon.test_pylon import *
 import dao
-from src.create_circular_pupil import *
-from src.tilt import *
-from src.utils import *
-from src.calibration_functions import *
 from src.dao_setup import *  # Import all variables from setup
-from src.kl_basis_eigenmodes import computeEigenModes, computeEigenModes_notsquarepupil
-from src.create_transformation_matrices import *
-from src.ao_loop import *
-
-folder_calib = ROOT_DIR / 'outputs/Calibration_files'
-folder_pyr_mask = ROOT_DIR / 'outputs/3s_pyr_mask'
-folder_transformation_matrices = ROOT_DIR / 'outputs/Transformation_matrices'
-folder_closed_loop_tests = ROOT_DIR / 'outputs/Closed_loop_tests'
-folder_turbulence = ROOT_DIR / 'outputs/Phase_screens'
+from src.utils import *
+from src.circular_pupil_functions import *
+from src.flux_filtering_mask_functions import *
+from src.tilt_functions import *
+from src.calibration_functions import *
+from src.kl_basis_eigenmodes_functions import computeEigenModes, computeEigenModes_notsquarepupil
+from src.transformation_matrices_functions import * 
+from src.psf_centring_algorithm_functions import *
+from src.create_shared_memories import *
+from src.scan_modes_functions import scan_othermode_amplitudes
+from src.ao_loop_functions import *
 
 #%% Creating and Displaying a Circular Pupil on the SLM
 
@@ -56,13 +53,13 @@ slm.set_data(data_slm)
 
 #%% Load transformation matrices
 
-# Define folder path
-nmodes_kl = nact_valid
-KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_{nmodes_kl}_npupil_{npix_small_pupil_grid}.fits'))
-Phs2KL = fits.getdata(os.path.join(folder_transformation_matrices, f'Phs2KL_npupil_{npix_small_pupil_grid}_nkl_{nmodes_kl}.fits'))
-
+# From folder 
 KL2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Act_nkl_{nmodes_kl}_nact_{nact}.fits'))
-Act2KL = fits.getdata(os.path.join(folder_transformation_matrices, f'Act2KL_nact_{nact}_nkl_{nmodes_kl}.fits'))
+KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_{nmodes_kl}_npupil_{npix_small_pupil_grid}.fits'))
+
+# From shared memories
+KL2Act = KL2Act_shm.get_data()
+KL2Phs = KL2Phs_shm.get_data()
 
 #%% Load Bias Image, Calibration Mask and Interaction Matrix
 
@@ -80,7 +77,7 @@ print(f"Mask dimensions: {mask.shape}")
 valid_pixels_indices = np.where(mask > 0)
 
 # Load the response matrix 
-IM_filename = f'binned_response_matrix_KL2S_filtered_pup_{pupil_size}mm_nact_{nact}_amp_0.1_3s_pyr.fits'
+IM_filename = f'binned_response_matrix_KL2S_filtered_pup_{pupil_size}mm_nact_{nact}_amp_0.01_3s_pyr.fits'
 IM_KL2S = fits.getdata(os.path.join(folder_calib, IM_filename))  # /0.1
 
 #SVD
@@ -167,7 +164,7 @@ deformable_mirror.flatten()
 
 # Load the FITS data
 seeing = 4.0# in arcsec
-wl= 1700  #in nm
+wl= 1500  #in nm
 
 pup = 1.52 #in m
 wl_ref = 500 #in nm
@@ -190,8 +187,15 @@ data_phase_screen = data_phase_screen*small_pupil_mask*(wl_ref/wl)*((seeing/seei
 data_phase_screen = data_phase_screen / (2*np.pi) # in Waves
 data_phase_screen = data_phase_screen.astype(np.float32)
 
+
+# have a shared memory for phase screens 
+
 #%% AO loop with turbulence
-    
+ 
+plt.figure()
+plt.imshow(data_phase_screen[0,:, :])
+plt.show()
+   
 # Main loop parameters
 num_iterations = 100
 gain = 1
@@ -213,7 +217,7 @@ anim_title= f'Seeing: {seeing} arcsec, λ: {wl} nm, Loop speed: {loopspeed} kHz'
 strehl_ratios, residual_phases = closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, anim_path, anim_name, anim_title,
                            RM_S2KL_new, KL2Act_new, Act2KL_new, Phs2KL_new, mask, bias_image, 
                            reference_image=reference_image, diffraction_limited_psf=diffraction_limited_psf,
-                           verbose=True, verbose_plot=True)
+                           verbose=True, verbose_plot=False)
 
 # save strehl ratio and phase residual arrays
 strehl_ratios_path = os.path.join(anim_path, f"strehl_ratios_{anim_name.replace('.gif', '.npy')}")
