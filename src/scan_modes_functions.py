@@ -10,7 +10,6 @@ from src.dao_setup import (
     slm,
     ROOT_DIR,
 )
-from src.create_shared_memories import valid_pixels_mask_shm
 from pathlib import Path
 import re
 
@@ -90,7 +89,7 @@ def scan_othermode_amplitudes(test_values, mode_index, wait=wait_time,
             print('Failed to update `othermodes_amplitudes` in dao_setup.py')
 
 
-def scan_othermode_amplitudes_wfs_std(test_values, mode_index, wait=wait_time,
+def scan_othermode_amplitudes_wfs_std(test_values, mode_index, mask, wait=wait_time,
                                       update_setup_file=False):
     """Iterate over amplitude values for a specified othermode using WFS data.
 
@@ -131,7 +130,6 @@ def scan_othermode_amplitudes_wfs_std(test_values, mode_index, wait=wait_time,
         num_images = 5
         images = [camera_wfs.get_data() for _ in range(num_images)]
         wfs_img = np.mean(images, axis=0)
-        mask = valid_pixels_mask_shm.get_data().astype(bool)
         pixel_std = np.std(wfs_img[mask])
         print(f"Amplitude {amp:.3f} -> std of valid pixels {pixel_std:.3f}")
 

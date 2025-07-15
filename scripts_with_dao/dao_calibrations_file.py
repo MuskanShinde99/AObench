@@ -43,7 +43,7 @@ from src.kl_basis_eigenmodes_functions import computeEigenModes, computeEigenMod
 from src.transformation_matrices_functions import * 
 from src.psf_centring_algorithm_functions import *
 from src.create_shared_memories import *
-from src.scan_modes_functions import scan_othermode_amplitudes
+from src.scan_modes_functions import *
 from src.ao_loop_functions import *
 
 # #%% Accessing Devices
@@ -207,9 +207,10 @@ center_psf_on_pyramid_tip(mask=mask, initial_tt_amplitudes=[-0.2, 0.1],
 #%% Scanning modes to find zero of the pyramid
 
 test_values = np.arange(-0.5, 0.5, 0.05)
-mode_index = 1 # 0 - focus, 1 - astimgatism, 2 -astigmatism 
-scan_othermode_amplitudes(test_values, mode_index, update_setup_file=True)
-
+mode_index = 7 # 0 - focus, 1 - astimgatism, 2 -astigmatism 
+#scan_othermode_amplitudes(test_values, mode_index, update_setup_file=True)
+scan_othermode_amplitudes_wfs_std(test_values, mode_index, mask, update_setup_file=True)
+  
 #revise the crieteria to standard deviation of intensities within the valid pixels
 
 #%% Capture Reference Image
