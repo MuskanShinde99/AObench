@@ -153,16 +153,16 @@ KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_
 
 
 plt.figure()
-plt.imshow(KL2Act[0,:].reshape(nact,nact))
+plt.imshow(KL2Act[3,:].reshape(nact,nact))
 plt.colorbar()
 plt.title('KL mode')
 plt.show()
 
-plt.figure()
-plt.imshow(small_pupil_mask*KL2Phs[0,:].reshape(npix_small_pupil_grid,npix_small_pupil_grid))
-plt.colorbar()
-plt.title('KL mode')
-plt.show()
+# plt.figure()
+# plt.imshow(small_pupil_mask*KL2Phs[0,:].reshape(npix_small_pupil_grid,npix_small_pupil_grid))
+# plt.colorbar()
+# plt.title('KL mode')
+# plt.show()
 
 
 
@@ -207,7 +207,7 @@ center_psf_on_pyramid_tip(mask=mask, initial_tt_amplitudes=[-0.2, 0.1],
 #%% Scanning modes to find zero of the pyramid
 
 test_values = np.arange(-0.5, 0.5, 0.05)
-mode_index = 7 # 0 - focus, 1 - astimgatism, 2 -astigmatism 
+mode_index = 1 # 0 - focus, 1 - astimgatism, 2 -astigmatism 
 #scan_othermode_amplitudes(test_values, mode_index, update_setup_file=True)
 scan_othermode_amplitudes_wfs_std(test_values, mode_index, mask, update_setup_file=True)
   
