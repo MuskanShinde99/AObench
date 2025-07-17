@@ -4,7 +4,6 @@ from matplotlib import pyplot as plt
 import numpy as np
 import os
 import time
-from hcipy import *
 from skopt import gp_minimize
 from DEVICES_3.Basler_Pylon.test_pylon import *
 import sys

@@ -11,7 +11,7 @@ from pypylon import pylon
 from matplotlib import pyplot as plt
 from PIL import Image
 import numpy as np
-from hcipy import *
+from hcipy import make_gaussian_influence_functions, make_pupil_grid
 from src.hardware import DeformableMirror
 import time
 from astropy.io import fits

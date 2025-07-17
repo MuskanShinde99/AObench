@@ -7,7 +7,6 @@ Created on Wed Aug  7 16:49:32 2024
 
 from matplotlib import pyplot as plt
 import numpy as np
-from hcipy import *
 from src.tilt_functions import *
 
 def create_slm_circular_pupil(tilt_amp_outer, tilt_amp_inner, pupil_size, pupil_mask, slm):

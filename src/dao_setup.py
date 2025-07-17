@@ -7,7 +7,12 @@ Created on Mon Feb 17 13:56:42 2025
 """
 
 # Import Libraries
-from hcipy import *
+from hcipy import (
+    evaluate_supersampled,
+    make_obstructed_circular_aperture,
+    make_pupil_grid,
+    make_zernike_basis,
+)
 from matplotlib.colors import LogNorm
 import gc
 from tqdm import tqdm

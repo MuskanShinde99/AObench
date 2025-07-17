@@ -10,7 +10,7 @@ import scipy.linalg
 import os
 import matplotlib.pyplot as plt
 from astropy.io import fits
-from hcipy import *
+from hcipy import make_zernike_basis
 from src.kl_basis_eigenmodes_functions import *
 from src.utils import *
 import sys
