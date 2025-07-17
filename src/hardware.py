@@ -65,6 +65,20 @@ class DM:
         self.nmodes_dm = self.mirror.num_actuators
         self.mirror.flatten()
 
+    def __setattr__(self, attr, value):
+        local_attrs = {
+            'pupil_grid', 'pupil_mask', 'pupil_size', 'nact',
+            'dm_modes_full', 'valid_actuators_mask', 'valid_actuator_indices',
+            'nact_total', 'nact_outside', 'nact_valid', 'dm_modes',
+            'mirror', 'nmodes_dm'
+        }
+        if attr in local_attrs or 'mirror' not in self.__dict__:
+            object.__setattr__(self, attr, value)
+        elif hasattr(self.mirror, attr):
+            setattr(self.mirror, attr, value)
+        else:
+            object.__setattr__(self, attr, value)
+
     def __getattr__(self, attr):
         return getattr(self.mirror, attr)
 
