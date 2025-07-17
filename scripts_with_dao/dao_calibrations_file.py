@@ -165,33 +165,6 @@ KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_
 # plt.title('KL mode')
 # plt.show()
 
-#%% testing tip tilt
-y0 = None  # Reference y-coordinate
-
-for amp in np.arange(0, -15, -1):
-    data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
-    deformable_mirror.flatten()
-    deformable_mirror.actuators = amp * KL2Act[1]
-    data_dm[:, :] = deformable_mirror.opd.shaped / 2
-
-    # Display DM Data on SLM
-    data_slm = compute_data_slm(data_dm=data_dm)
-    slm.set_data(data_slm)
-    time.sleep(wait_time)
-
-    img = camera_fp.get_data()
-
-    # Get coordinates of maximum
-    max_coords = np.unravel_index(np.argmax(img), img.shape)
-    y,x = max_coords
-
-    if y0 is None:
-        y0 = y  # Set reference y at amp = 0
-
-    dy = y - y0
-    print(f"amp: {amp}, 19*amp: {19 * amp}, difference from amp=0: {dy}")
-
-
 #%% Creating a Flux Filtering Mask
 
 method='tip_tilt_modulation'

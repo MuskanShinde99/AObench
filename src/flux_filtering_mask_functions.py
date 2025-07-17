@@ -53,6 +53,7 @@ def create_summed_image_for_mask(modulation_angles, modulation_amp, tiltx, tilty
     small_pupil_mask = kwargs.get("small_pupil_mask", dao_setup.small_pupil_mask)
     dataHeight = kwargs.get("dataHeight", dao_setup.dataHeight)
     dataWidth = kwargs.get("dataWidth", dao_setup.dataWidth)
+    npix_small_pupil_grid = kwargs.get("npix_small_pupil_grid", dao_setup.npix_small_pupil_grid)
 
     pixel_size_mm = pixel_size
     Npix = pupil_size / pixel_size_mm  # replaced npix_pupil with Npix
