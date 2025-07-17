@@ -246,70 +246,72 @@ data_pupil_inner[~small_pupil_mask] = 0  # Zero out region outside the mask
 data_pupil_inner_new = data_pupil_inner + data_dm
 data_slm = compute_data_slm()
 
-# Function to update pupil with new TT amplitudes and other modes
-def update_pupil(new_tt_amplitudes=None, new_othermodes_amplitudes=None,
-                 new_tilt_amp_outer=None, new_tilt_amp_inner=None):
-    """Recompute the pupil using updated tip/tilt and higher-order amplitudes.
 
-    Parameters
-    ----------
-    new_tt_amplitudes : sequence of float, optional
-        Two-element list ``[tip, tilt]`` for the TT matrix.
-    new_othermodes_amplitudes : sequence of float, optional
-        Amplitudes for focus and higher-order Zernike modes
-        (e.g., ``[focus, astig_x, astig_y, ...]``).
-    new_tilt_amp_outer : float, optional
-        Outer grating tilt amplitude.
-    new_tilt_amp_inner : float, optional
-        Inner grating tilt amplitude.
-    """
-    global tt_amplitudes, othermodes_amplitudes
-    global tilt_amp_outer, tilt_amp_inner, data_pupil, data_slm, data_dm
-    global tt_amplitude_matrix, data_pupil_outer, data_pupil_inner, data_pupil_inner_new
+class PupilSetup:
+    """Encapsulate pupil parameters and provide update utilities."""
 
-    # Update the amplitudes and tilt parameters if new values are provided
-    if new_tt_amplitudes is not None:
-        tt_amplitudes = list(new_tt_amplitudes)
+    def __init__(self):
+        self.tilt_amp_outer = tilt_amp_outer
+        self.tilt_amp_inner = tilt_amp_inner
+        self.tt_amplitudes = list(tt_amplitudes)
+        self.othermodes_amplitudes = list(othermodes_amplitudes)
+        self.data_pupil = data_pupil
+        self.data_dm = data_dm
+        self.data_pupil_outer = data_pupil_outer
+        self.data_pupil_inner = data_pupil_inner
+        self.data_pupil_inner_new = data_pupil_inner_new
+        self.data_slm = data_slm
 
-    if new_othermodes_amplitudes is not None:
-        othermodes_amplitudes = list(new_othermodes_amplitudes)
+    def _recompute_dm(self):
+        """(Re)compute DM contribution and assemble the pupil."""
+        tt_matrix = np.diag(self.tt_amplitudes) @ KL2Act[0:2, :]
+        data_tt = (tt_matrix[0] + tt_matrix[1])
 
-    if new_tilt_amp_outer is not None:
-        tilt_amp_outer = new_tilt_amp_outer
+        othermodes_matrix = np.diag(self.othermodes_amplitudes) @ KL2Act[2:10, :]
+        data_othermodes = np.sum(othermodes_matrix, axis=0)
 
-    if new_tilt_amp_inner is not None:
-        tilt_amp_inner = new_tilt_amp_inner
+        self.data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
+        deformable_mirror.flatten()
+        deformable_mirror.actuators = data_tt + data_othermodes
+        self.data_dm[:, :] = deformable_mirror.opd.shaped / 2
 
-    # Recalculate pupil with updated values
-    data_pupil = create_slm_circular_pupil(tilt_amp_outer, tilt_amp_inner,
-                                           pupil_size, pupil_mask, slm)
+        self.data_pupil_outer = np.copy(self.data_pupil)
+        self.data_pupil_outer[pupil_mask] = 0
 
-    # Create a new Tip-Tilt (TT) matrix with the updated amplitudes
-    tt_matrix = np.diag(tt_amplitudes) @ KL2Act[0:2, :]  # Select modes 1 (tip) and 2 (tilt)
-    data_tt = (tt_matrix[0] + tt_matrix[1])
+        self.data_pupil_inner = np.copy(
+            self.data_pupil[offset_height:offset_height + npix_small_pupil_grid,
+                             offset_width:offset_width + npix_small_pupil_grid])
+        self.data_pupil_inner[~small_pupil_mask] = 0
 
-    # Recompute focus and higher-order terms
-    othermodes_matrix = np.diag(othermodes_amplitudes) @ KL2Act[2:10, :]
-    data_othermodes = np.sum(othermodes_matrix, axis=0)
-    #Put the modes on the dm
-    data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
-    deformable_mirror.flatten()
-    deformable_mirror.actuators = data_tt + data_othermodes  # Add TT and higher-order terms to pupil
-    data_dm[:, :] = deformable_mirror.opd.shaped/2
-    
-    # Recreate outer and inner pupil parts
-    data_pupil_outer = np.copy(data_pupil)
-    data_pupil_outer[pupil_mask] = 0
+        self.data_pupil_inner_new = self.data_pupil_inner + self.data_dm
+        self.data_slm = compute_data_slm(setup=self)
 
-    data_pupil_inner = np.copy(
-        data_pupil[offset_height:offset_height + npix_small_pupil_grid,
-                   offset_width:offset_width + npix_small_pupil_grid])
-    data_pupil_inner[~small_pupil_mask] = 0
+    def update_pupil(self, new_tt_amplitudes=None, new_othermodes_amplitudes=None,
+                     new_tilt_amp_outer=None, new_tilt_amp_inner=None):
+        if new_tt_amplitudes is not None:
+            self.tt_amplitudes = list(new_tt_amplitudes)
 
-    # Wrap and insert the DM pattern
-    data_pupil_inner_new = data_pupil_inner + data_dm
-    data_slm = compute_data_slm()
+        if new_othermodes_amplitudes is not None:
+            self.othermodes_amplitudes = list(new_othermodes_amplitudes)
 
-    return data_slm
+        if new_tilt_amp_outer is not None:
+            self.tilt_amp_outer = new_tilt_amp_outer
+
+        if new_tilt_amp_inner is not None:
+            self.tilt_amp_inner = new_tilt_amp_inner
+
+        self.data_pupil = create_slm_circular_pupil(
+            self.tilt_amp_outer, self.tilt_amp_inner, pupil_size, pupil_mask, slm
+        )
+        self._recompute_dm()
+        return self.data_slm
+
+
+pupil_setup = PupilSetup()
+
+
+def update_pupil(*args, **kwargs):
+    """Wrapper for backward compatibility."""
+    return pupil_setup.update_pupil(*args, **kwargs)
 
 

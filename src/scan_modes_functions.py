@@ -3,8 +3,7 @@ import numpy as np
 
 from src.dao_setup import (
     wait_time,
-    othermodes_amplitudes,
-    update_pupil,
+    pupil_setup,
     camera_fp,
     camera_wfs,
     slm,
@@ -32,19 +31,19 @@ def scan_othermode_amplitudes(test_values, mode_index, wait=wait_time,
         achieve the same maximum intensity, their mean value is stored.
     """
 
-    if mode_index < 0 or mode_index >= len(othermodes_amplitudes):
+    if mode_index < 0 or mode_index >= len(pupil_setup.othermodes_amplitudes):
         raise ValueError(
-            f"mode_index must be between 0 and {len(othermodes_amplitudes) - 1}"
+            f"mode_index must be between 0 and {len(pupil_setup.othermodes_amplitudes) - 1}"
         )
 
     best_amps = []
     best_intensity = -np.inf
 
     for amp in test_values:
-        new_amps = list(othermodes_amplitudes)
+        new_amps = list(pupil_setup.othermodes_amplitudes)
         new_amps[mode_index] = amp
 
-        slm_data = update_pupil(new_othermodes_amplitudes=new_amps)
+        slm_data = pupil_setup.update_pupil(new_othermodes_amplitudes=new_amps)
         slm.set_data(slm_data)
         time.sleep(wait)
 
@@ -110,19 +109,19 @@ def scan_othermode_amplitudes_wfs_std(test_values, mode_index, mask, wait=wait_t
         minimum standard deviation, their mean value is stored.
     """
 
-    if mode_index < 0 or mode_index >= len(othermodes_amplitudes):
+    if mode_index < 0 or mode_index >= len(pupil_setup.othermodes_amplitudes):
         raise ValueError(
-            f"mode_index must be between 0 and {len(othermodes_amplitudes) - 1}"
+            f"mode_index must be between 0 and {len(pupil_setup.othermodes_amplitudes) - 1}"
         )
 
     best_amps = []
     best_std = np.inf
 
     for amp in test_values:
-        new_amps = list(othermodes_amplitudes)
+        new_amps = list(pupil_setup.othermodes_amplitudes)
         new_amps[mode_index] = amp
 
-        slm_data = update_pupil(new_othermodes_amplitudes=new_amps)
+        slm_data = pupil_setup.update_pupil(new_othermodes_amplitudes=new_amps)
         slm.set_data(slm_data)
         time.sleep(wait)
 

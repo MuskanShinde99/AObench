@@ -16,7 +16,7 @@ import src.dao_setup as dao_setup
 
 # Add and wrap data within the pupil mask
 
-def compute_data_slm(data_dm=0, data_phase_screen=0, **kwargs):
+def compute_data_slm(data_dm=0, data_phase_screen=0, setup=None, **kwargs):
     """
     Computes the SLM data by combining phase screen and deformable mirror data
     with pupil-related masks and arrays.
@@ -34,10 +34,16 @@ def compute_data_slm(data_dm=0, data_phase_screen=0, **kwargs):
     - data_slm (ndarray): Resulting SLM data.
     """
     
-    data_pupil_inner = kwargs.get("data_pupil_inner", dao_setup.data_pupil_inner_new)
-    data_pupil_outer = kwargs.get("data_pupil_outer", dao_setup.data_pupil_outer)
-    pupil_mask = kwargs.get("pupil_mask", dao_setup.pupil_mask)
-    small_pupil_mask = kwargs.get("small_pupil_mask", dao_setup.small_pupil_mask)
+    if setup is None:
+        data_pupil_inner = kwargs.get("data_pupil_inner", dao_setup.data_pupil_inner_new)
+        data_pupil_outer = kwargs.get("data_pupil_outer", dao_setup.data_pupil_outer)
+        pupil_mask = kwargs.get("pupil_mask", dao_setup.pupil_mask)
+        small_pupil_mask = kwargs.get("small_pupil_mask", dao_setup.small_pupil_mask)
+    else:
+        data_pupil_inner = kwargs.get("data_pupil_inner", setup.data_pupil_inner_new)
+        data_pupil_outer = kwargs.get("data_pupil_outer", setup.data_pupil_outer)
+        pupil_mask = kwargs.get("pupil_mask", setup.pupil_mask)
+        small_pupil_mask = kwargs.get("small_pupil_mask", setup.small_pupil_mask)
 
     data_slm = data_pupil_outer.copy()
     data_inner = (((data_pupil_inner + data_dm + data_phase_screen) * 256) % 256)
