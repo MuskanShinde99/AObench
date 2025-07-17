@@ -19,13 +19,9 @@ from hcipy import *
 import dao
 import sys
 from pathlib import Path
+from src.config import config
 
-# Configure root paths without changing the working directory
-OPT_LAB_ROOT = Path(os.environ.get("OPT_LAB_ROOT", "/home/ristretto-dao/optlab-master"))
-PROJECT_ROOT = Path(os.environ.get("PROJECT_ROOT", OPT_LAB_ROOT / "PROJECTS_3/RISTRETTO/Banc AO"))
-sys.path.append(str(OPT_LAB_ROOT))
-sys.path.append(str(PROJECT_ROOT))
-ROOT_DIR = PROJECT_ROOT
+ROOT_DIR = config.root_dir
 from DEVICES_3.Basler_Pylon.test_pylon import *
 
 # Import Specific Modules
@@ -37,9 +33,9 @@ from src.dao_create_flux_filtering_mask import *
 from src.psf_centring_algorithm import *
 from src.create_transformation_matrices import *
 
-folder_calib = ROOT_DIR / 'outputs/Calibration_files'
-folder_pyr_mask = ROOT_DIR / 'outputs/3s_pyr_mask'
-folder_transformation_matrices = ROOT_DIR / 'outputs/Transformation_matrices'
+folder_calib = config.folder_calib
+folder_pyr_mask = config.folder_pyr_mask
+folder_transformation_matrices = config.folder_transformation_matrices
 
 
 #%% Accessing Devices
