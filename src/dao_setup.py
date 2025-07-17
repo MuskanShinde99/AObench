@@ -314,6 +314,8 @@ class DAOSetup:
     nmodes_dm: int
     nmodes_KL: int
     nmodes_Znk: int
+    small_pupil_mask: np.ndarray
+    pupil_mask: np.ndarray
 
 
 def init_setup() -> DAOSetup:
@@ -346,6 +348,8 @@ def init_setup() -> DAOSetup:
         nmodes_dm=nmodes_dm,
         nmodes_KL=nmodes_KL,
         nmodes_Znk=nmodes_Znk,
+        small_pupil_mask=small_pupil_mask,
+        pupil_mask=pupil_mask,
     )
 
 
