@@ -156,41 +156,9 @@ nmodes_dm = deformable_mirror.nmodes_dm
 nact_total = deformable_mirror.nact_total
 nact_valid = deformable_mirror.nact_valid
 
-
-# # Number of actuators
-# nact = 17
-
-# # Create influence functions for deformable mirror (DM)
-# t0 = time.time()
-# dm_modes_full = make_gaussian_influence_functions(small_pupil_grid, nact, pupil_size / (nact - 1), crosstalk=0.3)
-
-# # Resize the pupil mask to exactly nactxnact and compute the valid actuqator indices
-# valid_actuators_mask = resize(np.logical_not(small_pupil_mask), (nact, nact), order=0, anti_aliasing=False, preserve_range=True).astype(int)
-# valid_actuator_indices= np.column_stack(np.where(valid_actuators_mask))
-
-# # Compute valid actuator counts
-# nact_total = valid_actuators_mask.size
-# nact_outside = np.sum(valid_actuators_mask)
-# nact_valid = nact_total - nact_outside
-
-# #Put the dm modes outside the valid actuator indices to zero
-# dm_modes = np.asarray(dm_modes_full)
-
-# for x, y in valid_actuator_indices:
-#     dm_modes[x * nact + y] = 0  # Zero out the corresponding mode
-
-# dm_modes = ModeBasis(dm_modes.T, small_pupil_grid)
-
-# deformable_mirror = DeformableMirror(dm_modes_full)
-
-# nmodes_dm = deformable_mirror.num_actuators
-
-
-# print("Number of DM modes =", nmodes_dm)
-
 # Flatten the DM surface and set actuator values
-deformable_mirror.flatten()
-# deformable_mirror.actuators.fill(1)
+# deformable_mirror.flatten()
+# deformable_mirror.actuators = np.ones(nact**2)
 # plt.figure()
 # plt.imshow(deformable_mirror.opd.shaped)
 # plt.colorbar()
@@ -222,7 +190,7 @@ zernike_basis = np.asarray(zernike_basis)
 
 # [-1.6510890005150187, 0.14406016044318903]
 # Create a Tip-Tilt (TT) matrix with specified amplitudes as the diagonal elements
-tt_amplitudes = [-1.5378531372810451, 0.1563557189101643] # Tip and Tilt amplitudes
+tt_amplitudes = [-1.5358621425038728, 0.1704017035179386] # Tip and Tilt amplitudes
 tt_amplitude_matrix = np.diag(tt_amplitudes)
 tt_matrix = tt_amplitude_matrix @ KL2Act[0:2, :]  # Select modes 1 (tip) and 2 (tilt)
 
