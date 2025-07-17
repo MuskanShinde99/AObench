@@ -10,6 +10,7 @@ import numpy as np
 from pypylon import pylon
 from DEVICES_3.Basler_Pylon.test_pylon import *
 from hcipy import *
+from src.hardware import DeformableMirror
 import time
 from matplotlib import pyplot as plt
 from src.dao_setup import *  # Import all variables from setup

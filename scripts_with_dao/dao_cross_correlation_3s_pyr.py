@@ -14,6 +14,7 @@ from matplotlib import pyplot as plt
 from PIL import Image
 import numpy as np
 from hcipy import *
+from src.hardware import DeformableMirror
 import time
 from astropy.io import fits
 import os
