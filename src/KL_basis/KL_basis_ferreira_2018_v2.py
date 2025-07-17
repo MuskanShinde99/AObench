@@ -4,7 +4,12 @@
 # In[2]:
 
 
-from hcipy import *
+from hcipy import (
+    evaluate_supersampled,
+    make_gaussian_influence_functions,
+    make_obstructed_circular_aperture,
+    make_pupil_grid,
+)
 from src.hardware import DeformableMirror
 import numpy as np
 import matplotlib.pyplot as plt

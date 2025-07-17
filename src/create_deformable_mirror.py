@@ -6,7 +6,7 @@ Created on Wed Aug 21 15:05:07 2024
 """
 
 from matplotlib import pyplot as plt
-from hcipy import *
+from hcipy import make_gaussian_influence_functions
 from src.hardware import DeformableMirror
 from PIL import Image
 import numpy as np

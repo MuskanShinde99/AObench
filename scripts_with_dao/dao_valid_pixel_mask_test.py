@@ -15,7 +15,6 @@ import cv2
 from matplotlib import pyplot as plt
 from PIL import Image
 from astropy.io import fits
-from hcipy import *
 import dao
 import sys
 from pathlib import Path

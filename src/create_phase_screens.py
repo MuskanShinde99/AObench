@@ -6,7 +6,12 @@ Created on Mon Nov 4 15:22:51 2024
 """
 
 from matplotlib import pyplot as plt
-from hcipy import *
+from hcipy import (
+    Cn_squared_from_fried_parameter,
+    InfiniteAtmosphericLayer,
+    make_pupil_grid,
+    seeing_to_fried_parameter,
+)
 import numpy as np
 import os
 import sys

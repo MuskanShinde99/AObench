@@ -9,7 +9,6 @@ Created on Thu Jul 17 01:55:52 2025
 from matplotlib import pyplot as plt
 from PIL import Image
 import numpy as np
-from hcipy import *
 import time
 from astropy.io import fits
 import os
