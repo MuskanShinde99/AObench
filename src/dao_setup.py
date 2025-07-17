@@ -226,10 +226,10 @@ class PupilSetup:
         self.data_pupil_outer = data_pupil_outer
         self.data_pupil_inner = data_pupil_inner
         self.data_pupil_inner_new = data_pupil_inner_new
-        self.data_slm = compute_data_slm(setup=self)
         # Store masks for later use when recomputing the pupil
         self.pupil_mask = pupil_mask
         self.small_pupil_mask = small_pupil_mask
+        self.data_slm = compute_data_slm(setup=self)
 
     def _recompute_dm(self):
         """(Re)compute DM contribution and assemble the pupil."""
