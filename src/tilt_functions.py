@@ -9,8 +9,7 @@ Created on Fri Aug 16 16:40:08 2024
 
 import numpy as np
 from matplotlib import pyplot as plt
-from src.dao_setup import *  # Import all variables from setup
-#import src.dao_setup as dao_setup
+
 
 
 def apply_intensity_tilt(image, pupil_radius, tilt_angle):

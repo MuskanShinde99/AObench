@@ -1,10 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Mon Feb 17 13:56:42 2025
-
-@author: laboptic
-"""
+"""Module initializing AO bench hardware and pupil configuration."""
 
 # Import Libraries
 from hcipy import (
@@ -13,21 +9,10 @@ from hcipy import (
     make_pupil_grid,
     make_zernike_basis,
 )
-from matplotlib.colors import LogNorm
-import gc
-from tqdm import tqdm
-from pypylon import pylon
-from matplotlib import pyplot as plt
-from PIL import Image
 import numpy as np
-import time
 from astropy.io import fits
-import os
-import sys
-import scipy
-import matplotlib.animation as animation
-from pathlib import Path
-from skimage.transform import resize
+
+from dataclasses import dataclass
 
 from src.config import config
 from src.hardware import Camera, SLM, Laser, DM
@@ -35,15 +20,9 @@ from src.hardware import Camera, SLM, Laser, DM
 ROOT_DIR = config.root_dir
 
 # Import Specific Modules
-from DEVICES_3.Thorlabs.MCLS1 import mcls1
 import dao
-from src.utils import *
-from src.circular_pupil_functions import *
-from src.flux_filtering_mask_functions import *
-from src.tilt_functions import *
-from src.calibration_functions import *
-from src.kl_basis_eigenmodes_functions import computeEigenModes, computeEigenModes_notsquarepupil
-from src.transformation_matrices_functions import *
+from src.utils import compute_data_slm, set_default_setup
+from src.circular_pupil_functions import create_slm_circular_pupil
 
 
 folder_calib = config.folder_calib
@@ -180,8 +159,8 @@ nmodes_Znk = nact_valid
 #%% Load transformation matrices
 
 # From folder 
-KL2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Act_nkl_{nmodes_KL}_nact_{nact}.fits'))
-KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_{nmodes_KL}_npupil_{npix_small_pupil_grid}.fits'))
+KL2Act = fits.getdata(folder_transformation_matrices / f'KL2Act_nkl_{nmodes_KL}_nact_{nact}.fits')
+KL2Phs = fits.getdata(folder_transformation_matrices / f'KL2Phs_nkl_{nmodes_KL}_npupil_{npix_small_pupil_grid}.fits')
 
 
 #%%
@@ -232,7 +211,6 @@ data_pupil_inner[~small_pupil_mask] = 0  # Zero out region outside the mask
 
 # Wrap and insert DM data into the pupil
 data_pupil_inner_new = data_pupil_inner + data_dm
-data_slm = compute_data_slm()
 
 
 class PupilSetup:
@@ -248,7 +226,7 @@ class PupilSetup:
         self.data_pupil_outer = data_pupil_outer
         self.data_pupil_inner = data_pupil_inner
         self.data_pupil_inner_new = data_pupil_inner_new
-        self.data_slm = data_slm
+        self.data_slm = compute_data_slm(setup=self)
         # Store masks for later use when recomputing the pupil
         self.pupil_mask = pupil_mask
         self.small_pupil_mask = small_pupil_mask
@@ -299,10 +277,53 @@ class PupilSetup:
 
 
 pupil_setup = PupilSetup()
-
+set_default_setup(pupil_setup)
 
 def update_pupil(*args, **kwargs):
     """Wrapper for backward compatibility."""
     return pupil_setup.update_pupil(*args, **kwargs)
+
+
+@dataclass
+class DAOSetup:
+    """Bundled access to frequently used setup objects."""
+
+    camera_wfs: Camera
+    camera_fp: Camera
+    slm: SLM
+    deformable_mirror: DM
+    pupil_setup: PupilSetup
+    wait_time: float
+    dataWidth: int
+    dataHeight: int
+    npix_small_pupil_grid: int
+    folder_calib: str
+    folder_pyr_mask: str
+    folder_transformation_matrices: str
+    folder_closed_loop_tests: str
+    folder_turbulence: str
+    folder_gui: str
+
+
+def init_setup() -> DAOSetup:
+    """Return a :class:`DAOSetup` instance with initialized components."""
+
+    return DAOSetup(
+        camera_wfs=camera_wfs,
+        camera_fp=camera_fp,
+        slm=slm,
+        deformable_mirror=deformable_mirror,
+        pupil_setup=pupil_setup,
+        wait_time=wait_time,
+        dataWidth=dataWidth,
+        dataHeight=dataHeight,
+        npix_small_pupil_grid=npix_small_pupil_grid,
+        folder_calib=str(folder_calib),
+        folder_pyr_mask=str(folder_pyr_mask),
+        folder_transformation_matrices=str(folder_transformation_matrices),
+        folder_closed_loop_tests=str(folder_closed_loop_tests),
+        folder_turbulence=str(folder_turbulence),
+        folder_gui=str(folder_gui),
+    )
 
 

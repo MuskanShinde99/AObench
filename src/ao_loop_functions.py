@@ -15,8 +15,9 @@ from matplotlib.colors import LogNorm
 from src.utils import *
 from DEVICES_3.Basler_Pylon.test_pylon import *
 from collections import deque
-from src.dao_setup import *  # Import all variables from setup
-import src.dao_setup as dao_setup
+from src.dao_setup import init_setup
+
+setup = init_setup()
 from src.create_shared_memories import *
 
 
@@ -58,25 +59,25 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
     - aim_name: Name for the saved animation file
     - anim_title: Title of the animation
     """
-    from src.dao_setup import wait_time  # lazy import to avoid circular dependency
-    
+    wait_time = setup.wait_time
+
     # Load hardware and configuration parameters
-    deformable_mirror = kwargs.get("deformable_mirror", dao_setup.deformable_mirror)
-    slm = kwargs.get("slm", dao_setup.slm)
-    camera_wfs = kwargs.get("camera_wfs", dao_setup.camera_wfs)
-    camera_fp = kwargs.get("camera_fp", dao_setup.camera_fp)
-    npix_small_pupil_grid = kwargs.get("npix_small_pupil_grid", dao_setup.npix_small_pupil_grid)
-    data_pupil = kwargs.get("data_pupil", dao_setup.data_pupil)
-    data_pupil_outer = kwargs.get("data_pupil_outer", dao_setup.data_pupil_outer)
-    data_pupil_inner = kwargs.get("data_pupil_inner", dao_setup.data_pupil_inner)
-    pupil_mask = kwargs.get("pupil_mask", dao_setup.pupil_mask)
-    small_pupil_mask = kwargs.get("small_pupil_mask", dao_setup.small_pupil_mask)
+    deformable_mirror = kwargs.get("deformable_mirror", setup.deformable_mirror)
+    slm = kwargs.get("slm", setup.slm)
+    camera_wfs = kwargs.get("camera_wfs", setup.camera_wfs)
+    camera_fp = kwargs.get("camera_fp", setup.camera_fp)
+    npix_small_pupil_grid = kwargs.get("npix_small_pupil_grid", setup.npix_small_pupil_grid)
+    data_pupil = kwargs.get("data_pupil", setup.pupil_setup.data_pupil)
+    data_pupil_outer = kwargs.get("data_pupil_outer", setup.pupil_setup.data_pupil_outer)
+    data_pupil_inner = kwargs.get("data_pupil_inner", setup.pupil_setup.data_pupil_inner)
+    pupil_mask = kwargs.get("pupil_mask", setup.pupil_setup.pupil_mask)
+    small_pupil_mask = kwargs.get("small_pupil_mask", setup.pupil_setup.small_pupil_mask)
     
     # Load the folder
-    folder_gui = kwargs.get("folder_gui", dao_setup.folder_gui)
+    folder_gui = kwargs.get("folder_gui", setup.folder_gui)
     
     # Display Pupil Data on SLM
-    data_slm = compute_data_slm()
+    data_slm = compute_data_slm(setup=setup.pupil_setup)
     slm.set_data(data_slm)
     time.sleep(wait_time)  # Wait for stabilization of SLM
         
@@ -211,7 +212,7 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
         residual_modes_shm.set_data(residual_modes) # setting shared memory
 
         # Compute and  set SLM command
-        data_slm = compute_data_slm(data_dm=data_dm, data_phase_screen=phase_slice)
+        data_slm = compute_data_slm(data_dm=data_dm, data_phase_screen=phase_slice, setup=setup.pupil_setup)
         slm.set_data(data_slm) # setting shared memory
         time.sleep(wait_time)
 

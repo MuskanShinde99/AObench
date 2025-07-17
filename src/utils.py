@@ -10,8 +10,13 @@ import numpy as np
 from astropy.io import fits
 from scipy.ndimage import center_of_mass
 from scipy.interpolate import interp2d
-from src.dao_setup import *  # Import all variables from setup
-import src.dao_setup as dao_setup
+
+DEFAULT_SETUP = None
+
+def set_default_setup(setup):
+    """Register a default setup used when none is provided."""
+    global DEFAULT_SETUP
+    DEFAULT_SETUP = setup
 
 
 # Add and wrap data within the pupil mask
@@ -35,15 +40,14 @@ def compute_data_slm(data_dm=0, data_phase_screen=0, setup=None, **kwargs):
     """
     
     if setup is None:
-        data_pupil_inner = kwargs.get("data_pupil_inner", dao_setup.data_pupil_inner_new)
-        data_pupil_outer = kwargs.get("data_pupil_outer", dao_setup.data_pupil_outer)
-        pupil_mask = kwargs.get("pupil_mask", dao_setup.pupil_mask)
-        small_pupil_mask = kwargs.get("small_pupil_mask", dao_setup.small_pupil_mask)
-    else:
-        data_pupil_inner = kwargs.get("data_pupil_inner", setup.data_pupil_inner_new)
-        data_pupil_outer = kwargs.get("data_pupil_outer", setup.data_pupil_outer)
-        pupil_mask = kwargs.get("pupil_mask", setup.pupil_mask)
-        small_pupil_mask = kwargs.get("small_pupil_mask", setup.small_pupil_mask)
+        if DEFAULT_SETUP is None:
+            raise ValueError("No setup provided and no default registered.")
+        setup = DEFAULT_SETUP
+
+    data_pupil_inner = kwargs.get("data_pupil_inner", setup.data_pupil_inner_new)
+    data_pupil_outer = kwargs.get("data_pupil_outer", setup.data_pupil_outer)
+    pupil_mask = kwargs.get("pupil_mask", setup.pupil_mask)
+    small_pupil_mask = kwargs.get("small_pupil_mask", setup.small_pupil_mask)
 
     data_slm = data_pupil_outer.copy()
     data_inner = (((data_pupil_inner + data_dm + data_phase_screen) * 256) % 256)

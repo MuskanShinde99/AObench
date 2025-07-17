@@ -56,7 +56,8 @@ System Setup Procedure
 -------------------
 - Open scripts_with_dao/dao_calibrations_file.py
 - Run the following steps:
-  - Import libraries (especially: from src.dao_setup import *)
+  - Import libraries (especially: from src.dao_setup import init_setup
+setup = init_setup())
   - Take a bias frame
   - Turn on the laser
   - Create and set a circular pupil on the SLM

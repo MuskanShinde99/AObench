@@ -20,17 +20,36 @@ ROOT_DIR = config.root_dir
 
 # Import Specific Modules
 import dao
-from src.dao_setup import *  # Import all variables from setup
-from src.transformation_matrices_functions import * 
+from src.dao_setup import init_setup
+import src.dao_setup as dao_setup
+from src.transformation_matrices_functions import *
 from src.create_shared_memories import *
 
-Act2Phs, Phs2Act = compute_Act2Phs(nact, npix_small_pupil_grid, dm_modes_full, folder_transformation_matrices, verbose=True)
+setup = init_setup()
+
+Act2Phs, Phs2Act = compute_Act2Phs(
+    setup.nact,
+    setup.npix_small_pupil_grid,
+    dao_setup.dm_modes_full,
+    setup.folder_transformation_matrices,
+    verbose=True,
+)
 
 # Create KL modes
-nmodes_kl = nact_valid
+nmodes_kl = dao_setup.nact_valid
 # Act2KL, KL2Act = compute_KL2Act(nact, npix_small_pupil_grid, nmodes_kl, dm_modes_full, small_pupil_mask, folder_transformation_matrices, verbose=True)
 # KL2Phs, Phs2KL = compute_KL2Phs(nact, npix_small_pupil_grid, nmodes_kl, Act2Phs, Phs2Act, KL2Act, Act2KL, folder_transformation_matrices, verbose=True)
-KL2Act, KL2Phs = compute_KL(nact, npix_small_pupil_grid, nmodes_kl, dm_modes_full, Act2Phs, Phs2Act, small_pupil_mask, folder_transformation_matrices, verbose=False)
+KL2Act, KL2Phs = compute_KL(
+    setup.nact,
+    setup.npix_small_pupil_grid,
+    nmodes_kl,
+    dao_setup.dm_modes_full,
+    Act2Phs,
+    Phs2Act,
+    dao_setup.small_pupil_mask,
+    setup.folder_transformation_matrices,
+    verbose=False,
+)
 
 
 # set shared memories
@@ -45,7 +64,7 @@ fig, axes = plt.subplots(2, 5, figsize=(15, 6))
 axes_flat = axes.flatten()
 
 for i, mode in enumerate(range(10)):
-    im = axes_flat[i].imshow(KL2Act[mode].reshape(nact, nact), cmap='viridis')
+    im = axes_flat[i].imshow(KL2Act[mode].reshape(setup.nact, setup.nact), cmap='viridis')
     axes_flat[i].set_title(f' KL2Act {mode}')
     axes_flat[i].axis('off')
     fig.colorbar(im, ax=axes_flat[i], fraction=0.03, pad=0.04)
@@ -59,7 +78,7 @@ fig, axes = plt.subplots(2, 5, figsize=(15, 6))
 axes_flat = axes.flatten()
 
 for i, mode in enumerate(range(10)):
-    im = axes_flat[i].imshow(KL2Phs[mode].reshape(npix_small_pupil_grid, npix_small_pupil_grid), cmap='viridis')
+    im = axes_flat[i].imshow(KL2Phs[mode].reshape(setup.npix_small_pupil_grid, setup.npix_small_pupil_grid), cmap='viridis')
     axes_flat[i].set_title(f' KL2Phs {mode}')
     axes_flat[i].axis('off')
     fig.colorbar(im, ax=axes_flat[i], fraction=0.03, pad=0.04)
@@ -76,7 +95,11 @@ fig, axes = plt.subplots(2, 5, figsize=(15, 6))
 axes_flat = axes.flatten()
 
 for i, mode in enumerate(range(10)):
-    im = axes_flat[i].imshow(KL2Phs_new[mode].reshape(npix_small_pupil_grid, npix_small_pupil_grid)*small_pupil_mask, cmap='viridis')
+    im = axes_flat[i].imshow(
+        KL2Phs_new[mode].reshape(setup.npix_small_pupil_grid, setup.npix_small_pupil_grid)
+        * dao_setup.small_pupil_mask,
+        cmap='viridis',
+    )
     axes_flat[i].set_title(f' KL2Phs new {mode}')
     axes_flat[i].axis('off')
     fig.colorbar(im, ax=axes_flat[i], fraction=0.03, pad=0.04)
@@ -92,7 +115,7 @@ fig, axes = plt.subplots(2, 5, figsize=(15, 6))
 axes_flat = axes.flatten()
 
 for i, mode in enumerate(range(10)):
-    im = axes_flat[i].imshow(KL2Act_new[mode].reshape(nact, nact), cmap='viridis')
+    im = axes_flat[i].imshow(KL2Act_new[mode].reshape(setup.nact, setup.nact), cmap='viridis')
     axes_flat[i].set_title(f' KL2Act new {mode}')
     axes_flat[i].axis('off')
     fig.colorbar(im, ax=axes_flat[i], fraction=0.03, pad=0.04)

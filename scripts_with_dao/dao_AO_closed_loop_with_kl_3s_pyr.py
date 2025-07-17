@@ -27,7 +27,8 @@ ROOT_DIR = config.root_dir
 
 # Import Specific Modules
 import dao
-from src.dao_setup import *  # Import all variables from setup
+from src.dao_setup import init_setup
+setup = init_setup()  # Import all variables from setup
 from src.utils import *
 from src.circular_pupil_functions import *
 from src.flux_filtering_mask_functions import *

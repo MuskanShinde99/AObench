@@ -7,15 +7,15 @@ Created on Mon Feb 17 16:19:48 2025
 """
 
 import numpy as np
-from pypylon import pylon
-from DEVICES_3.Basler_Pylon.test_pylon import *
 import time
+import os
 from matplotlib import pyplot as plt
-from src.dao_setup import *  # Import all variables from setup
-import src.dao_setup as dao_setup
-from src.tilt_functions import *
-from src.utils import *
+from src.dao_setup import init_setup
+from src.tilt_functions import apply_intensity_tilt_kl
+from src.utils import compute_data_slm
 import matplotlib.colors as mcolors
+
+setup = init_setup()
 
 
 
@@ -40,20 +40,20 @@ def create_summed_image_for_mask(modulation_angles, modulation_amp, tiltx, tilty
     - summed_image: the summed image used for mask creation
     """
     
-    from src.dao_setup import wait_time
+    wait_time = setup.wait_time
 
-    # Use kwargs or default from dao_setup
-    camera = kwargs.get("camera", dao_setup.camera_wfs)
-    slm = kwargs.get("slm", dao_setup.slm)
-    deformable_mirror = kwargs.get("deformable_mirror",  dao_setup.deformable_mirror)
-    data_pupil = kwargs.get("data_pupil", dao_setup.data_pupil)
-    pupil_size = kwargs.get("pupil_size", dao_setup.pupil_size)
-    pixel_size = kwargs.get("pixel_size", dao_setup.pixel_size)
-    pupil_mask = kwargs.get("pupil_mask", dao_setup.pupil_mask)
-    small_pupil_mask = kwargs.get("small_pupil_mask", dao_setup.small_pupil_mask)
-    dataHeight = kwargs.get("dataHeight", dao_setup.dataHeight)
-    dataWidth = kwargs.get("dataWidth", dao_setup.dataWidth)
-    npix_small_pupil_grid = kwargs.get("npix_small_pupil_grid", dao_setup.npix_small_pupil_grid)
+    # Use kwargs or default from setup
+    camera = kwargs.get("camera", setup.camera_wfs)
+    slm = kwargs.get("slm", setup.slm)
+    deformable_mirror = kwargs.get("deformable_mirror", setup.deformable_mirror)
+    data_pupil = kwargs.get("data_pupil", setup.pupil_setup.data_pupil)
+    pupil_size = kwargs.get("pupil_size", setup.pupil_size)
+    pixel_size = kwargs.get("pixel_size", setup.pixel_size)
+    pupil_mask = kwargs.get("pupil_mask", setup.pupil_setup.pupil_mask)
+    small_pupil_mask = kwargs.get("small_pupil_mask", setup.pupil_setup.small_pupil_mask)
+    dataHeight = kwargs.get("dataHeight", setup.dataHeight)
+    dataWidth = kwargs.get("dataWidth", setup.dataWidth)
+    npix_small_pupil_grid = kwargs.get("npix_small_pupil_grid", setup.npix_small_pupil_grid)
 
     pixel_size_mm = pixel_size
     Npix = pupil_size / pixel_size_mm  # replaced npix_pupil with Npix
@@ -72,8 +72,8 @@ def create_summed_image_for_mask(modulation_angles, modulation_amp, tiltx, tilty
         data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
         deformable_mirror.flatten()
         deformable_mirror.actuators = data_modulation  
-        data_dm[:, :] = deformable_mirror.opd.shaped/2 
-        data_slm = compute_data_slm(data_dm=data_dm)
+        data_dm[:, :] = deformable_mirror.opd.shaped/2
+        data_slm = compute_data_slm(data_dm=data_dm, setup=setup.pupil_setup)
         slm.set_data(data_slm)
 
         time.sleep(wait_time)  # wait for SLM update
@@ -105,11 +105,11 @@ def create_summed_image_for_mask_dm_random(n_iter, verbose=False, **kwargs):
     - summed_image: result of push-pull image subtraction summed over all modes
     """
 
-    slm = kwargs.get("slm", dao_setup.slm)
-    camera = kwargs.get("camera", dao_setup.camera_wfs)
-    deformable_mirror = kwargs.get("deformable_mirror", dao_setup.deformable_mirror)
+    slm = kwargs.get("slm", setup.slm)
+    camera = kwargs.get("camera", setup.camera_wfs)
+    deformable_mirror = kwargs.get("deformable_mirror", setup.deformable_mirror)
     deformable_mirror = DeformableMirror(dm_modes_full)
-    npix_small_pupil_grid = kwargs.get("npix_small_pupil_grid", dao_setup.npix_small_pupil_grid)
+    npix_small_pupil_grid = kwargs.get("npix_small_pupil_grid", setup.npix_small_pupil_grid)
 
     nact_total = int(deformable_mirror.num_actuators)
     data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
@@ -125,7 +125,7 @@ def create_summed_image_for_mask_dm_random(n_iter, verbose=False, **kwargs):
         deformable_mirror.actuators = act_random
         data_dm[:, :] = deformable_mirror.opd.shaped/2
         
-        data_slm = compute_data_slm(data_dm=data_dm)
+        data_slm = compute_data_slm(data_dm=data_dm, setup=setup.pupil_setup)
         slm.set_data(data_slm)
         time.sleep(wait_time)
         
@@ -159,9 +159,9 @@ def create_flux_filtering_mask(method, flux_cutoff, tiltx, tilty,
     - mask (np.ndarray): Binary mask highlighting high-flux regions
     """
 
-    folder_pyr_mask = kwargs.get("folder_pyr_mask", dao_setup.folder_pyr_mask)
-    folder_calib = kwargs.get("folder_calib", dao_setup.folder_calib)
-    pupil_size = kwargs.get("pupil_size", dao_setup.pupil_size)
+    folder_pyr_mask = kwargs.get("folder_pyr_mask", setup.folder_pyr_mask)
+    folder_calib = kwargs.get("folder_calib", setup.folder_calib)
+    pupil_size = kwargs.get("pupil_size", setup.pupil_size)
 
     summed_img_path = os.path.join(folder_calib, f'binned_summed_pyr_images_pup_{pupil_size}mm_3s_pyr.fits')
 

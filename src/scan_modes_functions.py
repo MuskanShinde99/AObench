@@ -1,14 +1,14 @@
 import time
 import numpy as np
 
-from src.dao_setup import (
-    wait_time,
-    pupil_setup,
-    camera_fp,
-    camera_wfs,
-    slm,
-    ROOT_DIR,
-)
+from src.dao_setup import init_setup, ROOT_DIR
+
+setup = init_setup()
+wait_time = setup.wait_time
+pupil_setup = setup.pupil_setup
+camera_fp = setup.camera_fp
+camera_wfs = setup.camera_wfs
+slm = setup.slm
 from pathlib import Path
 import re
 

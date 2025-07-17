@@ -8,7 +8,8 @@ ROOT_DIR = config.root_dir
 
 # Import Specific Modules
 import dao
-from src.dao_setup import *  # Import all variables from setup
+from src.dao_setup import init_setup
+setup = init_setup()  # Import all variables from setup
 from src.utils import *
 
 # Flatten the DM surface and set actuator values

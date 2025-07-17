@@ -4,8 +4,9 @@ import dao
 import matplotlib.pyplot as plt
 from datetime import datetime
 from src.utils import *
-from src.dao_setup import *  # Import all variables from setup
-import src.dao_setup as dao_setup
+from src.dao_setup import init_setup
+
+setup = init_setup()
 
 
 def perform_push_pull_calibration_with_phase_basis(basis, phase_amp, ref_image, mask,
@@ -33,15 +34,15 @@ def perform_push_pull_calibration_with_phase_basis(basis, phase_amp, ref_image, 
     Returns:
     - pull_images, push_images, push_pull_images
     """
-    from src.dao_setup import wait_time  # lazy import to avoid circular dependency
+    wait_time = setup.wait_time
 
-    # Load devices and data from kwargs or fallback to dao_setup
-    camera = kwargs.get("camera", dao_setup.camera_wfs)
-    slm = kwargs.get("slm", dao_setup.slm)
-    pupil_mask = kwargs.get("pupil_mask", dao_setup.pupil_mask)
-    small_pupil_mask = kwargs.get("small_pupil_mask", dao_setup.small_pupil_mask)
-    deformable_mirror = kwargs.get("deformable_mirror", dao_setup.deformable_mirror)
-    nact = kwargs.get("nact", dao_setup.nact)
+    # Load devices and data from kwargs or fallback to setup
+    camera = kwargs.get("camera", setup.camera_wfs)
+    slm = kwargs.get("slm", setup.slm)
+    pupil_mask = kwargs.get("pupil_mask", setup.pupil_setup.pupil_mask)
+    small_pupil_mask = kwargs.get("small_pupil_mask", setup.pupil_setup.small_pupil_mask)
+    deformable_mirror = kwargs.get("deformable_mirror", setup.deformable_mirror)
+    nact = kwargs.get("nact", setup.nact)
 
     # Set dimensions equal to img_size
     height, width = ref_image.shape
@@ -113,7 +114,7 @@ def perform_push_pull_calibration_with_phase_basis(basis, phase_amp, ref_image, 
 
                 # Add and wrap data within the pupil mask
                 t4 = time.time()
-                data_slm = compute_data_slm(data_dm=data_dm)
+                data_slm = compute_data_slm(data_dm=data_dm, setup=setup.pupil_setup)
                 slm.set_data(data_slm)
                 time.sleep(wait_time)
                 t7 = time.time()
@@ -267,9 +268,9 @@ def create_response_matrix(
         Flattened 2D response matrix for all modes.
     """
     
-    pupil_size = kwargs.get("pupil_size", dao_setup.pupil_size)
-    nact = kwargs.get("nact", dao_setup.nact)
-    folder_calib = kwargs.get("folder_calib", dao_setup.folder_calib)
+    pupil_size = kwargs.get("pupil_size", setup.pupil_size)
+    nact = kwargs.get("nact", setup.nact)
+    folder_calib = kwargs.get("folder_calib", setup.folder_calib)
 
     # Run push-pull calibration
     n_runs = max(1, int(calibration_repetitions))
