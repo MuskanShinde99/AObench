@@ -156,7 +156,7 @@ RM_S2KL_new = np.linalg.pinv(IM_KL2S_new, rcond=0.10)
 # %% Loading turbulence
 plt.close('all')
 
-deformable_mirror.flatten() 
+setup.deformable_mirror.flatten() 
 
 # Load the FITS data
 seeing = 4.0# in arcsec
@@ -175,7 +175,7 @@ fits_data = hdu.data[0:501, :, :]
 
 # Initialize the phase screen array to hold all frames
 num_frames = fits_data.shape[0]
-data_phase_screen = np.zeros((num_frames, npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
+data_phase_screen = np.zeros((num_frames, setup.npix_small_pupil_grid, setup.npix_small_pupil_grid), dtype=np.float32)
 data_phase_screen = fits_data
 
 # scale the phase screen to given seeing and wavelength
@@ -245,7 +245,7 @@ plt.close('all')
 # Select KL mode and amplitude
 mode = 0
 amp = 1
-data_kl = KL2Phs_new[mode].reshape(npix_small_pupil_grid, npix_small_pupil_grid) * amp * small_pupil_mask
+data_kl = KL2Phs_new[mode].reshape(setup.npix_small_pupil_grid, setup.npix_small_pupil_grid) * amp * small_pupil_mask
 
 # Main loop parameters
 num_iterations = 1
