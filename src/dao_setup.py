@@ -288,6 +288,7 @@ def update_pupil(*args, **kwargs):
 class DAOSetup:
     """Bundled access to frequently used setup objects."""
 
+    las: Laser
     camera_wfs: Camera
     camera_fp: Camera
     slm: SLM
@@ -317,6 +318,7 @@ def init_setup() -> DAOSetup:
     """Return a :class:`DAOSetup` instance with initialized components."""
 
     return DAOSetup(
+        las=las,
         camera_wfs=camera_wfs,
         camera_fp=camera_fp,
         slm=slm,
