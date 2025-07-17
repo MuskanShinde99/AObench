@@ -261,7 +261,7 @@ plt.title('PSF radial profile')
 plt.show()
 
 #%%
-phase_amp = 1
+phase_amp = 0.1
 
 # Number of times to repeat the whole calibration
 calibration_repetitions = 1

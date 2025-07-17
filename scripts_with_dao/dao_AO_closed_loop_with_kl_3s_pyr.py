@@ -73,7 +73,7 @@ print(f"Mask dimensions: {mask.shape}")
 valid_pixels_indices = np.where(mask > 0)
 
 # Load the response matrix 
-IM_filename = f'binned_response_matrix_KL2S_filtered_pup_{setup.pupil_size}mm_nact_{setup.nact}_amp_0.01_3s_pyr.fits'
+IM_filename = f'binned_response_matrix_KL2S_filtered_pup_{setup.pupil_size}mm_nact_{setup.nact}_amp_0.1_3s_pyr.fits'
 IM_KL2S = fits.getdata(os.path.join(folder_calib, IM_filename))  # /0.1
 
 #SVD
@@ -179,7 +179,7 @@ data_phase_screen = np.zeros((num_frames, setup.npix_small_pupil_grid, setup.npi
 data_phase_screen = fits_data
 
 # scale the phase screen to given seeing and wavelength
-data_phase_screen = data_phase_screen*small_pupil_mask*(wl_ref/wl)*((seeing/seeing_ref)**(5/6)) #in radians
+data_phase_screen = data_phase_screen*setup.small_pupil_mask*(wl_ref/wl)*((seeing/seeing_ref)**(5/6)) #in radians
 data_phase_screen = data_phase_screen / (2*np.pi) # in Waves
 data_phase_screen = data_phase_screen.astype(np.float32)
 

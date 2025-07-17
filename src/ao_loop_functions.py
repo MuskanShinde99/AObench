@@ -178,7 +178,7 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
 
     start_time = time.time()
 
-    for i in tqdm(range(num_iterations)):
+    for i in tqdm.tqdm(range(num_iterations)):
         
         # Update deformable mirror surface
         data_dm[:, :] = deformable_mirror.opd.shaped
