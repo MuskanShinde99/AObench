@@ -11,20 +11,17 @@ from hcipy import (
 )
 import numpy as np
 from astropy.io import fits
-
 from dataclasses import dataclass
 
-from src.config import config
-from src.hardware import Camera, SLM, Laser, DM
-
-ROOT_DIR = config.root_dir
 
 # Import Specific Modules
+from src.config import config
+from src.hardware import Camera, SLM, Laser, DM
 import dao
 from src.utils import compute_data_slm, set_default_setup
 from src.circular_pupil_functions import create_slm_circular_pupil
 
-
+ROOT_DIR = config.root_dir
 folder_calib = config.folder_calib
 folder_pyr_mask = config.folder_pyr_mask
 folder_transformation_matrices = config.folder_transformation_matrices
@@ -122,7 +119,7 @@ small_pupil_mask = pupil_mask[offset_height:offset_height + npix_small_pupil_gri
 # plt.title('Small Pupil Mask')
 # plt.show()
 
-#%% Define deformable mirror
+#%% Configuration deformable mirror
 
 # Number of actuators
 nact = 17
