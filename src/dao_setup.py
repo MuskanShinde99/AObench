@@ -153,10 +153,38 @@ deformable_mirror = DM(
 dm_modes_full = deformable_mirror.dm_modes_full
 dm_modes = deformable_mirror.dm_modes
 nmodes_dm = deformable_mirror.nmodes_dm
-valid_actuator_indices = deformable_mirror.valid_actuator_indices
 nact_total = deformable_mirror.nact_total
-nact_outside = deformable_mirror.nact_outside
 nact_valid = deformable_mirror.nact_valid
+
+
+# # Number of actuators
+# nact = 17
+
+# # Create influence functions for deformable mirror (DM)
+# t0 = time.time()
+# dm_modes_full = make_gaussian_influence_functions(small_pupil_grid, nact, pupil_size / (nact - 1), crosstalk=0.3)
+
+# # Resize the pupil mask to exactly nactxnact and compute the valid actuqator indices
+# valid_actuators_mask = resize(np.logical_not(small_pupil_mask), (nact, nact), order=0, anti_aliasing=False, preserve_range=True).astype(int)
+# valid_actuator_indices= np.column_stack(np.where(valid_actuators_mask))
+
+# # Compute valid actuator counts
+# nact_total = valid_actuators_mask.size
+# nact_outside = np.sum(valid_actuators_mask)
+# nact_valid = nact_total - nact_outside
+
+# #Put the dm modes outside the valid actuator indices to zero
+# dm_modes = np.asarray(dm_modes_full)
+
+# for x, y in valid_actuator_indices:
+#     dm_modes[x * nact + y] = 0  # Zero out the corresponding mode
+
+# dm_modes = ModeBasis(dm_modes.T, small_pupil_grid)
+
+# deformable_mirror = DeformableMirror(dm_modes_full)
+
+# nmodes_dm = deformable_mirror.num_actuators
+
 
 # print("Number of DM modes =", nmodes_dm)
 
