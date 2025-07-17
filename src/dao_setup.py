@@ -261,6 +261,9 @@ class PupilSetup:
         self.data_pupil_inner = data_pupil_inner
         self.data_pupil_inner_new = data_pupil_inner_new
         self.data_slm = data_slm
+        # Store masks for later use when recomputing the pupil
+        self.pupil_mask = pupil_mask
+        self.small_pupil_mask = small_pupil_mask
 
     def _recompute_dm(self):
         """(Re)compute DM contribution and assemble the pupil."""
@@ -276,12 +279,12 @@ class PupilSetup:
         self.data_dm[:, :] = deformable_mirror.opd.shaped / 2
 
         self.data_pupil_outer = np.copy(self.data_pupil)
-        self.data_pupil_outer[pupil_mask] = 0
+        self.data_pupil_outer[self.pupil_mask] = 0
 
         self.data_pupil_inner = np.copy(
             self.data_pupil[offset_height:offset_height + npix_small_pupil_grid,
                              offset_width:offset_width + npix_small_pupil_grid])
-        self.data_pupil_inner[~small_pupil_mask] = 0
+        self.data_pupil_inner[~self.small_pupil_mask] = 0
 
         self.data_pupil_inner_new = self.data_pupil_inner + self.data_dm
         self.data_slm = compute_data_slm(setup=self)
@@ -301,7 +304,7 @@ class PupilSetup:
             self.tilt_amp_inner = new_tilt_amp_inner
 
         self.data_pupil = create_slm_circular_pupil(
-            self.tilt_amp_outer, self.tilt_amp_inner, pupil_size, pupil_mask, slm
+            self.tilt_amp_outer, self.tilt_amp_inner, pupil_size, self.pupil_mask, slm
         )
         self._recompute_dm()
         return self.data_slm
