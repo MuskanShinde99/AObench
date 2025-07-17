@@ -50,8 +50,8 @@ slm.set_data(data_slm)
 #%% Load transformation matrices
 
 # From folder 
-KL2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Act_nkl_{nmodes_kl}_nact_{nact}.fits'))
-KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_{nmodes_kl}_npupil_{npix_small_pupil_grid}.fits'))
+KL2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Act_nkl_{setup.nmodes_KL}_nact_{setup.nact}.fits'))
+KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_{setup.nmodes_KL}_npupil_{setup.npix_small_pupil_grid}.fits'))
 
 # From shared memories
 KL2Act = KL2Act_shm.get_data()
@@ -65,7 +65,7 @@ bias_image = fits.getdata(os.path.join(folder_calib, bias_filename))
 print(f"Bias image shape: {bias_image.shape}")
 
 # Load the calibration mask for processing images.
-mask_filename = f'binned_mask_pup_{pupil_size}mm_3s_pyr.fits'
+mask_filename = f'binned_mask_pup_{setup.pupil_size}mm_3s_pyr.fits'
 mask = fits.getdata(os.path.join(folder_calib, mask_filename))
 print(f"Mask dimensions: {mask.shape}")
 
@@ -73,7 +73,7 @@ print(f"Mask dimensions: {mask.shape}")
 valid_pixels_indices = np.where(mask > 0)
 
 # Load the response matrix 
-IM_filename = f'binned_response_matrix_KL2S_filtered_pup_{pupil_size}mm_nact_{nact}_amp_0.01_3s_pyr.fits'
+IM_filename = f'binned_response_matrix_KL2S_filtered_pup_{setup.pupil_size}mm_nact_{setup.nact}_amp_0.01_3s_pyr.fits'
 IM_KL2S = fits.getdata(os.path.join(folder_calib, IM_filename))  # /0.1
 
 #SVD
