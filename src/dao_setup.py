@@ -151,13 +151,12 @@ deformable_mirror = DM(
 )
 
 dm_modes_full = deformable_mirror.dm_modes_full
-valid_actuators_mask = deformable_mirror.valid_actuators_mask
+dm_modes = deformable_mirror.dm_modes
+nmodes_dm = deformable_mirror.nmodes_dm
 valid_actuator_indices = deformable_mirror.valid_actuator_indices
 nact_total = deformable_mirror.nact_total
 nact_outside = deformable_mirror.nact_outside
 nact_valid = deformable_mirror.nact_valid
-dm_modes = deformable_mirror.dm_modes
-nmodes_dm = deformable_mirror.nmodes_dm
 
 # print("Number of DM modes =", nmodes_dm)
 
