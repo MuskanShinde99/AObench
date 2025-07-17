@@ -25,7 +25,7 @@ from pathlib import Path
 from skimage.transform import resize
 
 from src.config import config
-from src.hardware import Camera, SLM, Laser
+from src.hardware import Camera, SLM, Laser, DeformableMirror
 
 ROOT_DIR = config.root_dir
 
