@@ -174,7 +174,7 @@ zernike_basis = np.asarray(zernike_basis)
 
 # [-1.6510890005150187, 0.14406016044318903]
 # Create a Tip-Tilt (TT) matrix with specified amplitudes as the diagonal elements
-tt_amplitudes = [-1.5358621425038728, 0.1704017035179386] # Tip and Tilt amplitudes
+tt_amplitudes = [-1.5233897455090157, 0.1692529611344442] # Tip and Tilt amplitudes
 tt_amplitude_matrix = np.diag(tt_amplitudes)
 tt_matrix = tt_amplitude_matrix @ KL2Act[0:2, :]  # Select modes 1 (tip) and 2 (tilt)
 
@@ -298,6 +298,8 @@ class DAOSetup:
     dataWidth: int
     dataHeight: int
     npix_small_pupil_grid: int
+    pupil_size: float
+    pixel_size: float
     folder_calib: str
     folder_pyr_mask: str
     folder_transformation_matrices: str
@@ -328,6 +330,8 @@ def init_setup() -> DAOSetup:
         dataWidth=dataWidth,
         dataHeight=dataHeight,
         npix_small_pupil_grid=npix_small_pupil_grid,
+        pupil_size=pupil_size,
+        pixel_size=pixel_size,
         folder_calib=str(folder_calib),
         folder_pyr_mask=str(folder_pyr_mask),
         folder_transformation_matrices=str(folder_transformation_matrices),

@@ -14,6 +14,7 @@ from src.dao_setup import init_setup
 from src.tilt_functions import apply_intensity_tilt_kl
 from src.utils import compute_data_slm
 import matplotlib.colors as mcolors
+from astropy.io import fits
 
 setup = init_setup()
 

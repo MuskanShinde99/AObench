@@ -145,8 +145,8 @@ plt.show()
 # KL2Phs = KL2Phs_shm.get_data()
 
 # From folder 
-KL2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Act_nkl_{nmodes_KL}_nact_{nact}.fits'))
-KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_{nmodes_KL}_npupil_{npix_small_pupil_grid}.fits'))
+KL2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Act_nkl_{setup.nmodes_KL}_nact_{setup.nact}.fits'))
+KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_{setup.nmodes_KL}_npupil_{setup.npix_small_pupil_grid}.fits'))
 
 
 # plt.figure()
@@ -186,10 +186,10 @@ print(f'Number of valid pixels = {npix_valid}')
 slm.set_data(data_slm)
 
 # Create shared memories that depends on number of valid pixels
-KL2PWFS_cube_shm = dao.shm('/tmp/KL2PWFS_cube.im.shm' , np.zeros((nmodes_KL, img_size_wfs_cam**2)).astype(np.float64)) 
+KL2PWFS_cube_shm = dao.shm('/tmp/KL2PWFS_cube.im.shm' , np.zeros((setup.nmodes_KL, setup.img_size_wfs_cam**2)).astype(np.float64)) 
 slopes_shm = dao.shm('/tmp/slopes.im.shm', np.zeros((npix_valid, 1)).astype(np.uint32)) 
-KL2S_shm = dao.shm('/tmp/KL2S.im.shm' , np.zeros((nmodes_KL, npix_valid)).astype(np.float64)) 
-S2KL_shm = dao.shm('/tmp/S2KL.im.shm' , np.zeros((npix_valid, nmodes_KL)).astype(np.float64)) 
+KL2S_shm = dao.shm('/tmp/KL2S.im.shm' , np.zeros((setup.nmodes_KL, npix_valid)).astype(np.float64)) 
+S2KL_shm = dao.shm('/tmp/S2KL.im.shm' , np.zeros((npix_valid, setup.nmodes_KL)).astype(np.float64)) 
 
 #%% Centering the PSF on the Pyramid Tip
 
@@ -201,7 +201,7 @@ center_psf_on_pyramid_tip(mask=mask, initial_tt_amplitudes=[-0.2, 0.1],
 
 #%% Scanning modes to find zero of the pyramid
 
-test_values = np.arange(-0.5, 0.5, 0.05)
+test_values = np.arange(-0.5, 0.7, 0.05)
 mode_index = 1 # 0 - focus, 1 - astimgatism, 2 -astigmatism 
 #scan_othermode_amplitudes(test_values, mode_index, update_setup_file=True)
 scan_othermode_amplitudes_wfs_std(test_values, mode_index, mask, update_setup_file=True)
