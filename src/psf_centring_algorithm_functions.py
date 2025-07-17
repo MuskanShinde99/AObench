@@ -19,8 +19,13 @@ sys.path.append(str(OPT_LAB_ROOT))
 sys.path.append(str(PROJECT_ROOT))
 ROOT_DIR = PROJECT_ROOT
 
-from src.dao_setup import *  # Import all variables from setup
-#import src.dao_setup as dao_setup
+from src.dao_setup import (
+    wait_time,
+    pupil_setup,
+    camera_wfs,
+    slm,
+    ROOT_DIR,
+)
 
 
 # Access the SLM and cameras
@@ -57,7 +62,7 @@ def cost_function(amplitudes, pupil_coords, radius, iteration, variance_threshol
     """
     global stop_optimization  #Flag to stop when pupil intensities are equal
 
-    data_slm = update_pupil(new_tt_amplitudes=amplitudes)
+    data_slm = pupil_setup.update_pupil(new_tt_amplitudes=amplitudes)
     slm.set_data(data_slm)  # Update SLM data
     time.sleep(wait_time)  # Wait for the update to take effect
 
