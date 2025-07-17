@@ -108,7 +108,7 @@ def perform_push_pull_calibration_with_phase_basis(basis, phase_amp, ref_image, 
                 t2 = time.time()
                 deformable_mirror.flatten()
                 deformable_mirror.actuators = amp * basis[mode].reshape(nact**2)
-                data_dm[:, :] = deformable_mirror.opd.shaped
+                data_dm[:, :] = deformable_mirror.opd.shaped/2
                 t3 = time.time()
 
                 # Add and wrap data within the pupil mask
