@@ -303,6 +303,14 @@ class DAOSetup:
     folder_closed_loop_tests: str
     folder_turbulence: str
     folder_gui: str
+    img_size_wfs_cam: int
+    img_size_fp_cam: int
+    nact: int
+    nact_valid: int
+    nact_total: int
+    nmodes_dm: int
+    nmodes_KL: int
+    nmodes_Znk: int
 
 
 def init_setup() -> DAOSetup:
@@ -324,6 +332,14 @@ def init_setup() -> DAOSetup:
         folder_closed_loop_tests=str(folder_closed_loop_tests),
         folder_turbulence=str(folder_turbulence),
         folder_gui=str(folder_gui),
+        img_size_wfs_cam=img_size_wfs_cam,
+        img_size_fp_cam=img_size_fp_cam,
+        nact=nact,
+        nact_valid=nact_valid,
+        nact_total=nact_total,
+        nmodes_dm=nmodes_dm,
+        nmodes_KL=nmodes_KL,
+        nmodes_Znk=nmodes_Znk,
     )
 
 
