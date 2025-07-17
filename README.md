@@ -3,9 +3,9 @@ The AO bench code to test the pyramid wavefront sensor
 
 ## Configuration
 
-The repository relies on `dao_setup.py` for initializing hardware and paths. By
-default paths are based on `/home/ristretto-dao/optlab-master`, but you can
-override them using environment variables:
+The repository relies on `src/config.py` and `dao_setup.py` for initializing
+hardware and paths. By default paths are based on `/home/ristretto-dao/optlab-master`,
+but you can override them using environment variables:
 
 ```
 export OPT_LAB_ROOT=/path/to/optlab-master

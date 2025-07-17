@@ -24,12 +24,10 @@ import matplotlib.animation as animation
 from pathlib import Path
 from skimage.transform import resize
 
-# Configure root paths without changing the working directory
-OPT_LAB_ROOT = Path(os.environ.get("OPT_LAB_ROOT", "/home/ristretto-dao/optlab-master"))
-PROJECT_ROOT = Path(os.environ.get("PROJECT_ROOT", OPT_LAB_ROOT / "PROJECTS_3/RISTRETTO/Banc AO"))
-sys.path.append(str(OPT_LAB_ROOT))
-sys.path.append(str(PROJECT_ROOT))
-ROOT_DIR = PROJECT_ROOT
+from src.config import config
+from src.hardware import Camera, SLM, Laser
+
+ROOT_DIR = config.root_dir
 
 # Import Specific Modules
 from DEVICES_3.Thorlabs.MCLS1 import mcls1
@@ -43,27 +41,26 @@ from src.kl_basis_eigenmodes_functions import computeEigenModes, computeEigenMod
 from src.transformation_matrices_functions import *
 
 
-folder_calib = ROOT_DIR / 'outputs/Calibration_files'
-folder_pyr_mask = ROOT_DIR / 'outputs/3s_pyr_mask'
-folder_transformation_matrices = ROOT_DIR / 'outputs/Transformation_matrices'
-folder_closed_loop_tests = ROOT_DIR / 'outputs/Closed_loop_tests'
-folder_turbulence = ROOT_DIR / 'outputs/Phase_screens'
-folder_gui = ROOT_DIR / 'outputs/GUI_tests'
+folder_calib = config.folder_calib
+folder_pyr_mask = config.folder_pyr_mask
+folder_transformation_matrices = config.folder_transformation_matrices
+folder_closed_loop_tests = config.folder_closed_loop_tests
+folder_turbulence = config.folder_turbulence
+folder_gui = config.folder_gui
 
 #%% Start the laser
 
 channel = 1
-las = mcls1("/dev/ttyUSB0")
-las.set_channel(channel)
-#las.enable(1) # 1 to turn on laser, 0 to turn off
-las.set_current(49) #55mA is a good value for pyramid images
+las = Laser("/dev/ttyUSB0", channel)
+# las.enable(1)  # 1 to turn on laser, 0 to turn off
+las.set_current(49)  # 55mA is a good value for pyramid images
 print('Laser is Accessible')
   
 #%% Configuration Camera
 
 # To set camera
-camera_wfs = dao.shm('/tmp/cam1.im.shm')
-camera_fp = dao.shm('/tmp/cam2.im.shm')
+camera_wfs = Camera('/tmp/cam1.im.shm')
+camera_fp = Camera('/tmp/cam2.im.shm')
 
 fps_wfs = dao.shm('/tmp/cam1Fps.im.shm')
 fps_wfs.set_data(fps_wfs.get_data()*0+300)
@@ -84,7 +81,7 @@ img_size_fp_cam = img_fp.shape[0]
 #%% Configuration SLM
 
 # Initializes the SLM library
-slm=dao.shm('/tmp/slm.im.shm')
+slm = SLM('/tmp/slm.im.shm')
 print('SLM is open')
 
 # Get SLM dimensions
