@@ -10,7 +10,6 @@ import numpy as np
 from pypylon import pylon
 from DEVICES_3.Basler_Pylon.test_pylon import *
 from hcipy import *
-from src.hardware import DeformableMirror
 import time
 from matplotlib import pyplot as plt
 from src.dao_setup import *  # Import all variables from setup
@@ -47,6 +46,7 @@ def create_summed_image_for_mask(modulation_angles, modulation_amp, tiltx, tilty
     # Use kwargs or default from dao_setup
     camera = kwargs.get("camera", dao_setup.camera_wfs)
     slm = kwargs.get("slm", dao_setup.slm)
+    deformable_mirror = kwargs.get("slm", deformable_mirror.slm)
     data_pupil = kwargs.get("data_pupil", dao_setup.data_pupil)
     pupil_size = kwargs.get("pupil_size", dao_setup.pupil_size)
     pixel_size = kwargs.get("pixel_size", dao_setup.pixel_size)
