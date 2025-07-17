@@ -24,7 +24,8 @@ ROOT_DIR = config.root_dir
 from DEVICES_3.Basler_Pylon.test_pylon import *
 
 # Import Specific Modules
-from src.dao_setup import *  # Import all variables from setup
+from src.dao_setup import init_setup
+setup = init_setup()  # Import all variables from setup
 from src.create_circular_pupil import *
 from src.tilt import *
 from src.utils import *
