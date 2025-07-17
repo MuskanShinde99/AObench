@@ -8,13 +8,10 @@ import os
 import sys
 from pathlib import Path
 
-# Configure root paths without changing the working directory
-OPT_LAB_ROOT = Path(os.environ.get("OPT_LAB_ROOT", "/home/ristretto-dao/optlab-master"))
-PROJECT_ROOT = Path(os.environ.get("PROJECT_ROOT", OPT_LAB_ROOT / "PROJECTS_3/RISTRETTO/Banc AO"))
-sys.path.append(str(OPT_LAB_ROOT))
-sys.path.append(str(PROJECT_ROOT))
-ROOT_DIR = PROJECT_ROOT
+from src.config import config
 from DEVICES_3.Thorlabs.MCLS1 import mcls1
+
+ROOT_DIR = config.root_dir
 
 channel = 1
 state = 0 # 0 to turn OFF, 1 to turn ON

@@ -32,12 +32,9 @@ import matplotlib.animation as animation
 from pathlib import Path
 from skimage.transform import resize
 
-# Configure root paths without changing the working directory
-OPT_LAB_ROOT = Path(os.environ.get("OPT_LAB_ROOT", "/home/ristretto-dao/optlab-master"))
-PROJECT_ROOT = Path(os.environ.get("PROJECT_ROOT", OPT_LAB_ROOT / "PROJECTS_3/RISTRETTO/Banc AO"))
-sys.path.append(str(OPT_LAB_ROOT))
-sys.path.append(str(PROJECT_ROOT))
-ROOT_DIR = PROJECT_ROOT
+from src.config import config
+
+ROOT_DIR = config.root_dir
 
 # Import Specific Modules
 from DEVICES_3.Thorlabs.MCLS1 import mcls1
@@ -51,12 +48,12 @@ from src.kl_basis_eigenmodes_functions import computeEigenModes, computeEigenMod
 from src.transformation_matrices_functions import *
 
 
-folder_calib = ROOT_DIR / 'outputs/Calibration_files'
-folder_pyr_mask = ROOT_DIR / 'outputs/3s_pyr_mask'
-folder_transformation_matrices = ROOT_DIR / 'outputs/Transformation_matrices'
-folder_closed_loop_tests = ROOT_DIR / 'outputs/Closed_loop_tests'
-folder_turbulence = ROOT_DIR / 'outputs/Phase_screens'
-folder_gui = ROOT_DIR / 'outputs/GUI_tests'
+folder_calib = config.folder_calib
+folder_pyr_mask = config.folder_pyr_mask
+folder_transformation_matrices = config.folder_transformation_matrices
+folder_closed_loop_tests = config.folder_closed_loop_tests
+folder_turbulence = config.folder_turbulence
+folder_gui = config.folder_gui
 
 #%% Start the laser
 
