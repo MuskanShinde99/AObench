@@ -20,7 +20,7 @@ import matplotlib.colors as mcolors
 
 
 
-def create_summed_image_for_mask(modulation_angles, modulation_amp, verbose=False, verbose_plot=False, **kwargs):
+def create_summed_image_for_mask(modulation_angles, modulation_amp, tiltx, tilty, verbose=False, **kwargs):
     """
     Create a mask based on the modulation angles and flux cutoff.
 
@@ -59,22 +59,20 @@ def create_summed_image_for_mask(modulation_angles, modulation_amp, verbose=Fals
 
     modulation_img_arr = []
 
-    # Setup dynamic plot if verbose_plot is True
-    if verbose_plot:
-        fig, ax = plt.subplots()
-        img_display = ax.imshow(np.zeros((dataHeight, dataWidth)), cmap='inferno', norm=mcolors.Normalize(vmin=0, vmax=1))
-        cbar = plt.colorbar(img_display, ax=ax)
-        ax.set_title("Captured Image at 0 Degrees")
-        plt.ion()
-        plt.show()
-
     for angle in modulation_angles:
         if verbose:
             print(f"Applying modulation angle: {angle}")
         
-        modulation_step = apply_intensity_tilt(small_pupil_mask, Npix / 2, tilt_angle=angle)
+        #modulation_step = apply_intensity_tilt(small_pupil_mask, Npix / 2, tilt_angle=angle)
+        modulation_step = apply_intensity_tilt_kl(tiltx, tilty, small_pupil_mask, tilt_angle=angle)
         data_modulation = modulation_amp * modulation_step
-        data_slm = compute_data_slm(data_dm=data_modulation)
+        
+        # Put on DM
+        data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
+        deformable_mirror.flatten()
+        deformable_mirror.actuators = data_modulation  
+        data_dm[:, :] = deformable_mirror.opd.shaped/2 
+        data_slm = compute_data_slm(data_dm=data_dm)
         slm.set_data(data_slm)
 
         time.sleep(wait_time)  # wait for SLM update
@@ -83,25 +81,12 @@ def create_summed_image_for_mask(modulation_angles, modulation_amp, verbose=Fals
         img = camera.get_data()
         modulation_img_arr.append(img)
 
-        if verbose_plot:
-            img_display.set_data(img)
-            img_display.set_clim(vmin=np.min(img), vmax=np.max(img))
-            cbar.update_normal(img_display)
-            ax.set_title(f'Captured Image at {angle} Degrees; max {np.max(img):.2f}')
-            fig.canvas.draw()
-            fig.canvas.flush_events()
-            plt.pause(0.01)
-
-    # Turn off interactive plotting after loop
-    if verbose_plot:
-        plt.ioff()
-
     summed_image = np.sum(np.asarray(modulation_img_arr), axis=0)
 
     return summed_image
 
 
-def create_summed_image_for_mask_dm_random(n_iter, verbose=False, verbose_plot=False, **kwargs):
+def create_summed_image_for_mask_dm_random(n_iter, verbose=False, **kwargs):
     """
     Run push-pull image acquisition using random DM actuator patterns.
 
@@ -130,13 +115,6 @@ def create_summed_image_for_mask_dm_random(n_iter, verbose=False, verbose_plot=F
 
     img_arr = []
 
-    if verbose_plot:
-        fig, ax = plt.subplots()
-        img_display = ax.imshow(np.zeros((dataHeight, dataWidth)))
-        cbar = plt.colorbar(img_display, ax=ax)
-        ax.set_title("Captured Image")
-        plt.ion()
-        plt.show()
 
     for i in range(n_iter):
         if verbose:
@@ -144,7 +122,7 @@ def create_summed_image_for_mask_dm_random(n_iter, verbose=False, verbose_plot=F
 
         act_random = np.random.choice([0, 1], size=nact_total)
         deformable_mirror.actuators = act_random
-        data_dm[:, :] = deformable_mirror.opd.shaped
+        data_dm[:, :] = deformable_mirror.opd.shaped/2
         
         data_slm = compute_data_slm(data_dm=data_dm)
         slm.set_data(data_slm)
@@ -153,21 +131,11 @@ def create_summed_image_for_mask_dm_random(n_iter, verbose=False, verbose_plot=F
         img = camera.get_data()
         img_arr.append(img)
 
-        if verbose_plot:
-            img_display.set_data(img)
-            img_display.set_clim(vmin=img.min(), vmax=img.max())
-            fig.canvas.draw()
-            fig.canvas.flush_events()
-            plt.pause(0.01)
-
-    if verbose_plot:
-        plt.ioff()
-
     summed_image = np.sum(np.asarray(img_arr), axis=0)
 
     return summed_image
 
-def create_flux_filtering_mask(method, flux_cutoff, 
+def create_flux_filtering_mask(method, flux_cutoff, tiltx, tilty,
                                modulation_angles=np.arange(0, 360, 10), modulation_amp=15, n_iter=200,
                                create_summed_image=True, verbose=False, verbose_plot=False, **kwargs):
     """
@@ -202,13 +170,13 @@ def create_flux_filtering_mask(method, flux_cutoff,
 
         if method == 'tip_tilt_modulation':
             summed_image = create_summed_image_for_mask(
-                modulation_angles, modulation_amp,
-                verbose=verbose, verbose_plot=verbose_plot, **kwargs
+                modulation_angles, modulation_amp, tiltx, tilty,
+                verbose=verbose, **kwargs
             )
         elif method == 'dm_random':
             summed_image = create_summed_image_for_mask_dm_random(
                 n_iter=n_iter,
-                verbose=verbose, verbose_plot=verbose_plot, **kwargs
+                verbose=verbose, **kwargs
             )
         else:
             raise ValueError("Invalid method. Use 'tip_tilt_modulation' or 'dm_random'.")

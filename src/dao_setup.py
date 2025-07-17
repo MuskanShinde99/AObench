@@ -1,14 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Mon Jul 14 22:25:26 2025
-
-@author: ristretto-dao
-"""
-
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
 Created on Mon Feb 17 13:56:42 2025
 
 @author: laboptic
@@ -221,7 +213,7 @@ tt_matrix = tt_amplitude_matrix @ KL2Act[0:2, :]  # Select modes 1 (tip) and 2 (
 
 data_tt = (tt_matrix[0] + tt_matrix[1]).reshape(nact**2)
 
-othermodes_amplitudes = [-0.0, 0.34999999999999987, -0.0, 0.0, 0.0, 0.0, 0.0, 0.0]  # Focus (mode 3) + modes 4 to 10
+othermodes_amplitudes = [-0.0, 0.0, -0.0, 0.0, 0.0, 0.0, 0.0, 0.0]  # Focus (mode 3) + modes 4 to 10
 othermodes_amplitude_matrix = np.diag(othermodes_amplitudes)
 othermodes_matrix = othermodes_amplitude_matrix @ KL2Act[2:10, :]  # Select modes 3 (focus) to 10
 
@@ -321,12 +313,3 @@ def update_pupil(new_tt_amplitudes=None, new_othermodes_amplitudes=None,
     return data_slm
 
 
-#%% Create outer and inner data slm
-# (handled above when computing ``data_slm``)
-
-
-# plt.figure()
-# plt.imshow(KL2Act[3,:].reshape(nact,nact))
-# plt.colorbar()
-# plt.title('KL mode')
-# plt.show()

@@ -97,6 +97,7 @@ print('Pupil created on the SLM.')
 # for a dm flat put 10% of the total DM unit
 # make setting the shared memory part of the DM function
 
+
 #%% Capturing an image to check
 
 # Display the Reference Image
@@ -152,11 +153,11 @@ KL2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Act_nkl_
 KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_{nmodes_KL}_npupil_{npix_small_pupil_grid}.fits'))
 
 
-plt.figure()
-plt.imshow(KL2Act[3,:].reshape(nact,nact))
-plt.colorbar()
-plt.title('KL mode')
-plt.show()
+# plt.figure()
+# plt.imshow(KL2Act[3,:].reshape(nact,nact))
+# plt.colorbar()
+# plt.title('KL mode')
+# plt.show()
 
 # plt.figure()
 # plt.imshow(small_pupil_mask*KL2Phs[0,:].reshape(npix_small_pupil_grid,npix_small_pupil_grid))
@@ -164,19 +165,44 @@ plt.show()
 # plt.title('KL mode')
 # plt.show()
 
+#%% testing tip tilt
+y0 = None  # Reference y-coordinate
+
+for amp in np.arange(0, -15, -1):
+    data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
+    deformable_mirror.flatten()
+    deformable_mirror.actuators = amp * KL2Act[1]
+    data_dm[:, :] = deformable_mirror.opd.shaped / 2
+
+    # Display DM Data on SLM
+    data_slm = compute_data_slm(data_dm=data_dm)
+    slm.set_data(data_slm)
+    time.sleep(wait_time)
+
+    img = camera_fp.get_data()
+
+    # Get coordinates of maximum
+    max_coords = np.unravel_index(np.argmax(img), img.shape)
+    y,x = max_coords
+
+    if y0 is None:
+        y0 = y  # Set reference y at amp = 0
+
+    dy = y - y0
+    print(f"amp: {amp}, 19*amp: {19 * amp}, difference from amp=0: {dy}")
 
 
 #%% Creating a Flux Filtering Mask
 
 method='tip_tilt_modulation'
 flux_cutoff = 0.4
-modulation_angles = np.arange(0, 360, 10)  # angles of modulation
+modulation_angles = np.arange(0, 360, 5)  # angles of modulation
 modulation_amp = 15 # in lamda/D
 n_iter=200 # number of iternations for dm random commands
 
-mask = create_flux_filtering_mask(method, flux_cutoff, 
+mask = create_flux_filtering_mask(method, flux_cutoff, KL2Act[0], KL2Act[1],
                                modulation_angles, modulation_amp, n_iter,
-                               create_summed_image=False, verbose=False, verbose_plot=True)
+                               create_summed_image=True, verbose=False, verbose_plot=True)
 
 valid_pixels_mask_shm.set_data(mask)
 
@@ -191,10 +217,10 @@ print(f'Number of valid pixels = {npix_valid}')
 slm.set_data(data_slm)
 
 # Create shared memories that depends on number of valid pixels
-KL2PWFS_cube_shm = dao.shm('/tmp/KL2PWFS_cube.im.shm' , np.zeros((nmodes_KL, img_size_wfs_cam**2)).astype(np.float32)) 
+KL2PWFS_cube_shm = dao.shm('/tmp/KL2PWFS_cube.im.shm' , np.zeros((nmodes_KL, img_size_wfs_cam**2)).astype(np.float64)) 
 slopes_shm = dao.shm('/tmp/slopes.im.shm', np.zeros((npix_valid, 1)).astype(np.uint32)) 
-KL2S_shm = dao.shm('/tmp/KL2S.im.shm' , np.zeros((nmodes_KL, npix_valid)).astype(np.float32)) 
-S2KL_shm = dao.shm('/tmp/S2KL.im.shm' , np.zeros((npix_valid, nmodes_KL)).astype(np.float32)) 
+KL2S_shm = dao.shm('/tmp/KL2S.im.shm' , np.zeros((nmodes_KL, npix_valid)).astype(np.float64)) 
+S2KL_shm = dao.shm('/tmp/S2KL.im.shm' , np.zeros((npix_valid, nmodes_KL)).astype(np.float64)) 
 
 #%% Centering the PSF on the Pyramid Tip
 

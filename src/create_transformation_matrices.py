@@ -103,3 +103,5 @@ for i, mode in enumerate(range(10)):
 
 plt.tight_layout()
 plt.show()
+
+plt.close('all')

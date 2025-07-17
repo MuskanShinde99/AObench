@@ -30,12 +30,12 @@ dm_act_shm           = dao.shm('/tmp/dm_act.im.shm',           np.zeros((npix_sm
 # slm_shm             = dao.shm('/tmp/slm.im.shm',              np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32))
 
 # Transformation Matrices
-# Act2Phs_shm        = dao.shm('/tmp/Act2Phs.im.shm',          np.zeros((nact**2, npix_small_pupil_grid**2), dtype=np.float32))
-# Phs2Act_shm        = dao.shm('/tmp/Phs2Act.im.shm',          np.zeros((npix_small_pupil_grid**2, nact**2), dtype=np.float32))
-KL2Act_shm           = dao.shm('/tmp/KL2Act.im.shm',           np.zeros((nmodes_KL, nact**2), dtype=np.float32))
-# Act2KL_shm         = dao.shm('/tmp/Act2KL.im.shm',           np.zeros((nact**2, nmodes_KL), dtype=np.float32))
-KL2Phs_shm           = dao.shm('/tmp/KL2Phs.im.shm',           np.zeros((nmodes_KL, npix_small_pupil_grid**2), dtype=np.float32))
-# Phs2KL_shm         = dao.shm('/tmp/Phs2KL.im.shm',           np.zeros((npix_small_pupil_grid**2, nmodes_KL), dtype=np.float32))
+# Act2Phs_shm        = dao.shm('/tmp/Act2Phs.im.shm',          np.zeros((nact**2, npix_small_pupil_grid**2), dtype=np.float64))
+# Phs2Act_shm        = dao.shm('/tmp/Phs2Act.im.shm',          np.zeros((npix_small_pupil_grid**2, nact**2), dtype=np.float64))
+KL2Act_shm           = dao.shm('/tmp/KL2Act.im.shm',           np.zeros((nmodes_KL, nact**2), dtype=np.float64))
+# Act2KL_shm         = dao.shm('/tmp/Act2KL.im.shm',           np.zeros((nact**2, nmodes_KL), dtype=np.float64))
+KL2Phs_shm           = dao.shm('/tmp/KL2Phs.im.shm',           np.zeros((nmodes_KL, npix_small_pupil_grid**2), dtype=np.float64))
+# Phs2KL_shm         = dao.shm('/tmp/Phs2KL.im.shm',           np.zeros((npix_small_pupil_grid**2, nmodes_KL), dtype=np.float64))
 
 # Zernike 
 # Znk2Act_shm        = dao.shm('/tmp/Znk2Act.im.shm',          np.zeros((nmode_Znk, nact**2), dtype=np.float32))
@@ -53,10 +53,10 @@ normalized_ref_image_shm     = dao.shm('/tmp/normalized_ref_image.im.shm',     n
 npix_valid_shm               = dao.shm('/tmp/npix_valid.im.shm',               np.zeros((1, 1), dtype=np.uint32))
 
 # KL ↔ Slopes
-# KL2PWFS_cube_shm           = dao.shm('/tmp/KL2PWFS_cube.im.shm',             np.zeros((nmodes_KL, img_size_wfs_cam**2), dtype=np.float32))
+# KL2PWFS_cube_shm           = dao.shm('/tmp/KL2PWFS_cube.im.shm',             np.zeros((nmodes_KL, img_size_wfs_cam**2), dtype=np.float64))
 # slopes_shm                 = dao.shm('/tmp/slopes.im.shm',                   np.zeros((npix_valid, 1), dtype=np.uint32))
-# KL2S_shm                   = dao.shm('/tmp/KL2S.im.shm',                     np.zeros((nmodes_KL, npix_valid), dtype=np.float32))
-# S2KL_shm                   = dao.shm('/tmp/S2KL.im.shm',                     np.zeros((npix_valid, nmodes_KL), dtype=np.float32))
+# KL2S_shm                   = dao.shm('/tmp/KL2S.im.shm',                     np.zeros((nmodes_KL, npix_valid), dtype=np.float64))
+# S2KL_shm                   = dao.shm('/tmp/S2KL.im.shm',                     np.zeros((npix_valid, nmodes_KL), dtype=np.float64))
 
 # Control Parameters
 delay_shm                    = dao.shm('/tmp/delay.im.shm',                   np.zeros((1, 1), dtype=np.uint32))

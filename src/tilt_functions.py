@@ -9,6 +9,9 @@ Created on Fri Aug 16 16:40:08 2024
 
 import numpy as np
 from matplotlib import pyplot as plt
+from src.dao_setup import *  # Import all variables from setup
+#import src.dao_setup as dao_setup
+
 
 def apply_intensity_tilt(image, pupil_radius, tilt_angle):
     """
@@ -56,7 +59,7 @@ def apply_intensity_tilt(image, pupil_radius, tilt_angle):
 
 
 
-def apply_intensity_tilt_kl(tiltx, tilty, tilt_angle, mask):
+def apply_intensity_tilt_kl(tiltx, tilty, mask, tilt_angle):
     """
     Apply an intensity tilt effect at a specific angle,
     with the tilt effect ranging from -1 to 1 within the pupil.
@@ -72,23 +75,12 @@ def apply_intensity_tilt_kl(tiltx, tilty, tilt_angle, mask):
     
     # Convert angle to radians
     tilt_angle_rad = np.deg2rad(tilt_angle)
-    
-    # Apply pupil mask to titx and titly
-    tiltx = tiltx[mask]
-    tilty = tilty[mask]
 
     # Tilt effect based on angle
     tilt_effect = (tiltx * np.cos(tilt_angle_rad) + 
                    tilty * np.sin(tilt_angle_rad))
     
-
-    # Scale the tilt effect to [-1, 1] within the mask
-    tilt_min = tilt_effect.min()
-    tilt_max = tilt_effect.max()
-    tilt_effect = 2 * (tilt_effect - tilt_min) / (tilt_max - tilt_min) - 1
-
-    
-    return tilt_effect/np.ptp(tilt_effect)
+    return tilt_effect
 
 def apply_intensity_tilt_DM(tiltx, tilty, tilt_angle):
     """
