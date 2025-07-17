@@ -115,7 +115,7 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
         
     # Initialize variables
     images = []
-    #deformable_mirror.flatten()
+    deformable_mirror.flatten()
     data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
     
     # Initialize arrays to store Strehl ratio and total residual phase

@@ -53,9 +53,9 @@ slm.set_data(data_slm)
 KL2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Act_nkl_{setup.nmodes_KL}_nact_{setup.nact}.fits'))
 KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_{setup.nmodes_KL}_npupil_{setup.npix_small_pupil_grid}.fits'))
 
-# From shared memories
-KL2Act = KL2Act_shm.get_data()
-KL2Phs = KL2Phs_shm.get_data()
+# # From shared memories
+# KL2Act = KL2Act_shm.get_data()
+# KL2Phs = KL2Phs_shm.get_data()
 
 #%% Load Bias Image, Calibration Mask and Interaction Matrix
 
