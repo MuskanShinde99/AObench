@@ -171,7 +171,7 @@ zernike_basis = np.asarray(zernike_basis)
 
 # [-1.6510890005150187, 0.14406016044318903]
 # Create a Tip-Tilt (TT) matrix with specified amplitudes as the diagonal elements
-tt_amplitudes = [-1.5233897455090157, 0.1692529611344442] # Tip and Tilt amplitudes
+tt_amplitudes = [-1.5597164876799352, 0.17105313454348403] # Tip and Tilt amplitudes
 tt_amplitude_matrix = np.diag(tt_amplitudes)
 tt_matrix = tt_amplitude_matrix @ KL2Act[0:2, :]  # Select modes 1 (tip) and 2 (tilt)
 
@@ -186,8 +186,8 @@ data_othermodes = np.sum(othermodes_matrix, axis=0)
 #Put the modes on the dm
 data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
 deformable_mirror.flatten()
-# deformable_mirror.actuators = data_tt + data_othermodes  # Add TT and higher-order terms to pupil
-set_dm_actuators(deformable_mirror, data_tt + data_othermodes)
+deformable_mirror.actuators = data_tt + data_othermodes  # Add TT and higher-order terms to pupil
+# set_dm_actuators(deformable_mirror, data_tt + data_othermodes, pupil_setup)
 data_dm[:, :] = deformable_mirror.opd.shaped/2 #divide by 2 is very important to get the proper phase. because for this phase to be applied the slm surface needs to half of it.
 
 # Combine the DM surface with the pupil
@@ -221,6 +221,7 @@ class PupilSetup:
         self.othermodes_amplitudes = list(othermodes_amplitudes)
         self.data_pupil = data_pupil
         self.data_dm = data_dm
+        self.nact = nact
         self.data_pupil_outer = data_pupil_outer
         self.data_pupil_inner = data_pupil_inner
         self.data_pupil_inner_new = data_pupil_inner_new
@@ -240,7 +241,7 @@ class PupilSetup:
         self.data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
         deformable_mirror.flatten()
         # deformable_mirror.actuators = data_tt + data_othermodes  # Add TT and higher-order terms to pupil
-        set_dm_actuators(deformable_mirror, data_tt + data_othermodes)
+        set_dm_actuators(deformable_mirror, data_tt + data_othermodes, setup=self)
         self.data_dm[:, :] = deformable_mirror.opd.shaped / 2
 
         self.data_pupil_outer = np.copy(self.data_pupil)

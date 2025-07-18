@@ -9,7 +9,7 @@ import numpy as np
 import time
 import os
 import matplotlib.pyplot as plt
-from tqdm import tqdm
+import tqdm
 from PIL import Image
 from matplotlib.colors import LogNorm
 from src.utils import *

@@ -30,7 +30,7 @@ def set_dm_actuators(dm, actuators, setup=None):
         setup = DEFAULT_SETUP
     dm_act_shm.set_data(
         np.asarray(dm.actuators).reshape(
-            setup.npix_small_pupil_grid, setup.npix_small_pupil_grid
+            setup.nact, setup.nact
         )
     )
 
