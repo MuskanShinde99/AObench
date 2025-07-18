@@ -19,7 +19,7 @@ pupil_mask_shm       = dao.shm('/tmp/pupil_mask.im.shm',       np.zeros((setup.d
 slopes_img_shm       = dao.shm('/tmp/slopes_img.im.shm',       np.zeros((setup.img_size_wfs_cam, setup.img_size_wfs_cam), dtype=np.uint32))
 
 # Deformable Mirror
-dm_act_shm           = dao.shm('/tmp/dm_act.im.shm',           np.zeros((setup.npix_small_pupil_grid, setup.npix_small_pupil_grid), dtype=np.float32))
+dm_act_shm           = dao.shm('/tmp/dm_act.im.shm',           np.zeros((setup.npix_small_pupil_grid, setup.npix_small_pupil_grid), dtype=np.float64))
 
 # SLM
 # slm_shm             = dao.shm('/tmp/slm.im.shm',              np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32))
