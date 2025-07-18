@@ -252,6 +252,7 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
         delayed_act_pos = act_pos_queue[-(max_buffer)]  
         
         # Apply delayed actuator command
+        # deformable_mirror.actuators = (1 - leakage) * deformable_mirror.actuators - gain * delayed_act_pos
         set_dm_actuators(
             deformable_mirror,
             (1 - leakage) * deformable_mirror.actuators - gain * delayed_act_pos,
