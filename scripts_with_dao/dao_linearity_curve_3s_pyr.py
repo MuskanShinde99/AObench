@@ -116,7 +116,12 @@ for mode in range(num_modes):
 
         # Put the KL mode on the DM
         deformable_mirror.flatten()
-        deformable_mirror.actuators = amp * KL2Act[mode]
+        kl_mode = amp * KL2Act[mode]
+        set_dm_actuators(
+            deformable_mirror,
+            kl_mode,
+            setup=setup,
+        )
 
         # Create and update SLM data with current phase settings
         data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)

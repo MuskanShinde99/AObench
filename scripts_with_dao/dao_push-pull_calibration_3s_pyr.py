@@ -101,6 +101,7 @@ print(f"Time to create DM: {t1 - t0:.4f} s")
 # Flatten the deformable mirror surface
 deformable_mirror.flatten()
 deformable_mirror.actuators[10] = 1  # Set actuator 10 to 1
+set_dm_actuators(deformable_mirror, deformable_mirror.actuators, setup=setup)
 plt.figure()
 plt.imshow(deformable_mirror.surface.shaped)
 plt.colorbar()

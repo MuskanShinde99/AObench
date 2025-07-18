@@ -19,6 +19,22 @@ def set_default_setup(setup):
     DEFAULT_SETUP = setup
 
 
+def set_dm_actuators(dm, actuators, setup=None):
+    """Set DM actuators and update the shared memory grid."""
+    from src.create_shared_memories import dm_act_shm
+
+    dm.actuators = actuators
+    if setup is None:
+        if DEFAULT_SETUP is None:
+            raise ValueError("No setup provided and no default registered.")
+        setup = DEFAULT_SETUP
+    dm_act_shm.set_data(
+        np.asarray(dm.actuators).reshape(
+            setup.npix_small_pupil_grid, setup.npix_small_pupil_grid
+        )
+    )
+
+
 # Add and wrap data within the pupil mask
 
 def compute_data_slm(data_dm=0, data_phase_screen=0, setup=None, **kwargs):
