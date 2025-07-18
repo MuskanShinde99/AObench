@@ -6,22 +6,16 @@ Created on Mon Feb 17 14:49:20 2025
 @author: laboptic
 """
 
-# Import Libraries
-from matplotlib.colors import LogNorm
-import gc
-from tqdm import tqdm
-from pypylon import pylon
-from matplotlib import pyplot as plt
-from PIL import Image
-import numpy as np
-import time
-from astropy.io import fits
+# Standard library
 import os
-import sys
-import scipy
-import matplotlib.animation as animation
-from pathlib import Path
+import time
 from datetime import datetime
+
+# Third-party libraries
+import numpy as np
+from astropy.io import fits
+from matplotlib import pyplot as plt
+
 from src.config import config
 
 ROOT_DIR = config.root_dir
