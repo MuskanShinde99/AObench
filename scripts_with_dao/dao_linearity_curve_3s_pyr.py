@@ -116,9 +116,10 @@ for mode in range(num_modes):
 
         # Put the KL mode on the DM
         deformable_mirror.flatten()
+        kl_mode = amp * KL2Act[mode]
         set_dm_actuators(
             deformable_mirror,
-            amp * KL2Act[mode],
+            kl_mode,
             setup=setup,
         )
 
