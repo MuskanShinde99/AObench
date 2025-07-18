@@ -37,7 +37,7 @@ from src.kl_basis_eigenmodes_functions import computeEigenModes, computeEigenMod
 from src.transformation_matrices_functions import *
 from src.psf_centring_algorithm_functions import *
 from src.create_shared_memories import *
-from src.scan_modes_functions import scan_othermode_amplitudes
+from src.scan_modes_functions import *
 from src.ao_loop_functions import *
 
 # Initialize the default setup for convenience
