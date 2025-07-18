@@ -192,10 +192,16 @@ leakage = 0
 delay= 0
 
 # setting shared memories
-num_iterations_shm.set_data(num_iterations)
-gain_shm.set_data(gain)
-leakage_shm.set_data(leakage)
-delay_shm.set_data(delay)
+num_iterations_shm.set_data(np.array([[num_iterations]]))
+gain_shm.set_data(np.array([[gain]]))
+leakage_shm.set_data(np.array([[leakage]]))
+delay_shm.set_data(np.array([[delay_shm]]))
+
+# # loading from shared memory
+num_iterations = int(num_iterations_shm.get_data()[0][0])
+gain = gain_shm.get_data()[0][0]
+leakage = leakage_shm.get_data()[0][0]
+delay = int(leakage_shm.get_data()[0][0])
 
 # defining path for saving plots
 anim_path = folder_closed_loop_tests / 'Papyrus'
