@@ -201,11 +201,11 @@ def get_slopes_image(mask, bias_image, normalized_reference_image, pyr_img=None,
     """
 
     from src.create_shared_memories import slopes_img_shm
-    
+
     if setup is None:
-    if DEFAULT_SETUP is None:
-        raise ValueError("No setup provided and no default registered.")
-    setup = DEFAULT_SETUP
+        if DEFAULT_SETUP is None:
+            raise ValueError("No setup provided and no default registered.")
+        setup = DEFAULT_SETUP
     
     camera_wfs = kwargs.get("camera_wfs", setup.camera_wfs)
 

@@ -216,9 +216,13 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
         time.sleep(wait_time)
 
         # Capture and process WFS image
-        pyr_img = camera_wfs.get_data()
-        normalized_pyr_img = normalize_image(pyr_img, mask, bias_image)
-        slopes_image = compute_pyr_slopes(normalized_pyr_img, normalized_reference_image)
+        slopes_image = get_slopes_image(
+            mask,
+            bias_image,
+            normalized_reference_image,
+            setup=setup,
+            camera_wfs=camera_wfs,
+        )
         slopes = slopes_image[valid_pixels_indices].flatten()
         slopes_image_shm.set_data(slopes_image)
         #fits.writeto(os.path.join(folder_gui, f'slopes_image.fits'), slopes_image, overwrite=True)

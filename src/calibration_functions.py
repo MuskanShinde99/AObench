@@ -125,16 +125,18 @@ def perform_push_pull_calibration_with_phase_basis(basis, phase_amp, ref_image, 
                 time.sleep(wait_time)
                 t7 = time.time()
 
-                # Allow SLM to settle and capture the image
+                # Capture the image and compute slopes
                 t8 = time.time()
-                pyr_img = camera.get_data()
+                slopes_image = get_slopes_image(
+                    mask,
+                    np.zeros_like(ref_image),
+                    normalized_reference_image,
+                    setup=setup,
+                    camera_wfs=camera,
+                )
                 t9 = time.time()
-
-                # Compute slopes
-                t10 = time.time()
-                normalized_pyr_img = normalize_image(pyr_img, mask, bias_img=np.zeros_like(pyr_img))
-                slopes_image = compute_pyr_slopes(normalized_pyr_img, normalized_reference_image)
-                t11 = time.time()
+                t10 = t9
+                t11 = t9
 
                 # Store images for push & pull
                 t12 = time.time()
