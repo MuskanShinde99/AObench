@@ -72,7 +72,11 @@ print("Number of DM modes =", nmodes_dm)
 
 # Flatten the DM surface and set actuator values
 deformable_mirror.flatten()
-deformable_mirror.actuators.fill(1)
+set_dm_actuators(
+    deformable_mirror,
+    np.ones(deformable_mirror.num_actuators),
+    setup=setup,
+)
 plt.figure()
 plt.imshow(deformable_mirror.surface.shaped)
 plt.colorbar()

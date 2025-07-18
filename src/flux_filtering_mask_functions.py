@@ -12,7 +12,7 @@ import os
 from matplotlib import pyplot as plt
 from src.dao_setup import init_setup
 from src.tilt_functions import apply_intensity_tilt_kl
-from src.utils import compute_data_slm
+from src.utils import compute_data_slm, set_dm_actuators
 import matplotlib.colors as mcolors
 from astropy.io import fits
 
@@ -72,7 +72,7 @@ def create_summed_image_for_mask(modulation_angles, modulation_amp, tiltx, tilty
         # Put on DM
         data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
         deformable_mirror.flatten()
-        deformable_mirror.actuators = data_modulation  
+        set_dm_actuators(deformable_mirror, data_modulation, setup=setup)
         data_dm[:, :] = deformable_mirror.opd.shaped/2
         data_slm = compute_data_slm(data_dm=data_dm, setup=setup.pupil_setup)
         slm.set_data(data_slm)
@@ -123,7 +123,7 @@ def create_summed_image_for_mask_dm_random(n_iter, verbose=False, **kwargs):
             print(f"Iteration {i + 1}")
 
         act_random = np.random.choice([0, 1], size=nact_total)
-        deformable_mirror.actuators = act_random
+        set_dm_actuators(deformable_mirror, act_random, setup=setup)
         data_dm[:, :] = deformable_mirror.opd.shaped/2
         
         data_slm = compute_data_slm(data_dm=data_dm, setup=setup.pupil_setup)

@@ -73,7 +73,11 @@ y0 = None  # Reference y-coordinate
 for amp in np.arange(0, 15, 1):
     data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
     deformable_mirror.flatten()
-    deformable_mirror.actuators = amp * KL2Act[1]
+    set_dm_actuators(
+        deformable_mirror,
+        amp * KL2Act[1],
+        setup=setup,
+    )
     data_dm[:, :] = deformable_mirror.opd.shaped / 2
 
     # Display DM Data on SLM

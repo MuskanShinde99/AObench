@@ -4,6 +4,7 @@ import dao
 import matplotlib.pyplot as plt
 from datetime import datetime
 from src.utils import *
+from src.utils import set_dm_actuators
 from src.dao_setup import init_setup
 
 setup = init_setup()
@@ -108,7 +109,11 @@ def perform_push_pull_calibration_with_phase_basis(basis, phase_amp, ref_image, 
                 # Compute Zernike phase pattern
                 t2 = time.time()
                 deformable_mirror.flatten()
-                deformable_mirror.actuators = amp * basis[mode].reshape(nact**2)
+                set_dm_actuators(
+                    deformable_mirror,
+                    amp * basis[mode].reshape(nact**2),
+                    setup=setup,
+                )
                 data_dm[:, :] = deformable_mirror.opd.shaped/2
                 t3 = time.time()
 
