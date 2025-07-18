@@ -27,3 +27,15 @@ You can also execute a script from the project root using the module syntax:
 ```bash
 python -m scripts_with_dao.<script_name>
 ```
+
+## Common Imports
+
+Most scripts share a long list of imports. These have been grouped into
+`src/common_imports.py` so they can be included with a single statement:
+
+```python
+from src.common_imports import *
+```
+
+This initializes the standard hardware setup and exposes all commonly used
+helper functions.
