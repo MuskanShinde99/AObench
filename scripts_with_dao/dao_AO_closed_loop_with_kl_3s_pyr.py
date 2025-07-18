@@ -238,7 +238,7 @@ plt.close('all')
 # Select KL mode and amplitude
 mode = 0
 amp = 1
-data_kl = KL2Phs_new[mode].reshape(setup.npix_small_pupil_grid, setup.npix_small_pupil_grid) * amp * small_pupil_mask
+data_kl = KL2Phs_new[mode].reshape(setup.npix_small_pupil_grid, setup.npix_small_pupil_grid) * amp * setup.small_pupil_mask
 
 # Main loop parameters
 num_iterations = 1
