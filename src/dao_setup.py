@@ -190,7 +190,7 @@ data_othermodes = np.sum(othermodes_matrix, axis=0)
 data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
 deformable_mirror.flatten()
 # deformable_mirror.actuators = data_tt + data_othermodes  # Add TT and higher-order terms to pupil
-deformable_mirror.actuators = data_tt + data_othermodes
+set_dm_actuators(deformable_mirror, data_tt + data_othermodes)
 data_dm[:, :] = deformable_mirror.opd.shaped/2 #divide by 2 is very important to get the proper phase. because for this phase to be applied the slm surface needs to half of it.
 
 # Combine the DM surface with the pupil
@@ -243,7 +243,7 @@ class PupilSetup:
         self.data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
         deformable_mirror.flatten()
         # deformable_mirror.actuators = data_tt + data_othermodes  # Add TT and higher-order terms to pupil
-        set_dm_actuators(deformable_mirror, data_tt + data_othermodes, setup=setup)
+        set_dm_actuators(deformable_mirror, data_tt + data_othermodes)
         self.data_dm[:, :] = deformable_mirror.opd.shaped / 2
 
         self.data_pupil_outer = np.copy(self.data_pupil)
