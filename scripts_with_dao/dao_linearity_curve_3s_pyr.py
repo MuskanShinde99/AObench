@@ -132,12 +132,14 @@ for mode in range(num_modes):
         slm.set_data(data_slm)
         time.sleep(wait_time)
 
-        # Capture image
-        pyr_img = camera_wfs.get_data()
-
-        # Process the Pyramid image
-        normalized_pyr_img = normalize_image(pyr_img, mask, bias_image)
-        slopes_image = compute_pyr_slopes(normalized_pyr_img, normalized_reference_image)
+        # Capture image and compute slopes
+        slopes_image = get_slopes_image(
+            mask,
+            bias_image,
+            normalized_reference_image,
+            setup=setup,
+            camera_wfs=camera_wfs,
+        )
         slopes = slopes_image[valid_pixels_indices].flatten()
 
         # Compute modes using the response matrix
@@ -189,12 +191,14 @@ for mode in range(num_modes):
         slm.set_data(data_slm)
         time.sleep(wait_time)
 
-        # Capture image
-        pyr_img = camera_wfs.get_data()
-
-       # Process the Pyramid image
-        normalized_pyr_img = normalize_image(pyr_img, mask, bias_image)
-        slopes_image = compute_pyr_slopes(normalized_pyr_img, normalized_reference_image)
+        # Capture image and compute slopes
+        slopes_image = get_slopes_image(
+            mask,
+            bias_image,
+            normalized_reference_image,
+            setup=setup,
+            camera_wfs=camera_wfs,
+        )
         slopes = slopes_image[valid_pixels_indices].flatten()
 
         # Compute modes using the response matrix
