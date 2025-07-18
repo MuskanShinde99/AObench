@@ -171,8 +171,44 @@ def normalize_image(image, mask, bias_img=None):
     
     # Normalize the masked image by dividing by the absolute sum of the masked image
     normalized_image = masked_image / np.abs(np.sum(masked_image))
-    
+
     return normalized_image
+
+
+def get_slopes_image(camera_wfs, mask, bias_image, normalized_reference_image, pyr_img=None):
+    """Capture a PyWFS frame and compute its slope image.
+
+    The resulting slopes image is always written to the global
+    ``slopes_img_shm`` shared memory.
+
+    Parameters
+    ----------
+    camera_wfs : object
+        Camera used to grab a new frame when ``pyr_img`` is ``None``.
+    mask : numpy.ndarray
+        Processing mask applied to the raw WFS image.
+    bias_image : numpy.ndarray
+        Bias image subtracted from the captured frame.
+    normalized_reference_image : numpy.ndarray
+        Normalized reference image used for slope computation.
+    pyr_img : numpy.ndarray, optional
+        Pre-acquired pyramid image. If provided, ``camera_wfs`` is not queried.
+
+    Returns
+    -------
+    numpy.ndarray
+        The computed slopes image.
+    """
+
+    from src.create_shared_memories import slopes_img_shm
+
+    if pyr_img is None:
+        pyr_img = camera_wfs.get_data()
+
+    normalized_pyr_img = normalize_image(pyr_img, mask, bias_image)
+    slopes_image = compute_pyr_slopes(normalized_pyr_img, normalized_reference_image)
+    slopes_img_shm.set_data(slopes_image)
+    return slopes_image
 
 
 def compute_pyr_slopes(normalized_pyr_img, normalized_ref_img):
