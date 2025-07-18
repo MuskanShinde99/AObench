@@ -14,11 +14,11 @@ import time
 from astropy.io import fits
 import os
 import scipy
-from src.config import config
 
-ROOT_DIR = config.root_dir
 
 # Import Specific Modules
+from src.config import config
+ROOT_DIR = config.root_dir
 import dao
 from src.dao_setup import init_setup
 setup = init_setup()  # Import all variables from setup

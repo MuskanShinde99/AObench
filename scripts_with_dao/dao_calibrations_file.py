@@ -10,17 +10,13 @@ Created on Mon Feb 17 14:49:20 2025
 import os
 import time
 from datetime import datetime
-
-# Third-party libraries
 import numpy as np
 from astropy.io import fits
 from matplotlib import pyplot as plt
 
-from src.config import config
-
-ROOT_DIR = config.root_dir
-
 # Import Specific Modules
+from src.config import config
+ROOT_DIR = config.root_dir
 import dao
 from src.dao_setup import init_setup, las
 setup = init_setup()  # Import all variables from setup
