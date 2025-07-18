@@ -1,4 +1,6 @@
+import os
 import numpy as np
+from astropy.io import fits
 import time
 import dao
 import matplotlib.pyplot as plt
@@ -44,15 +46,13 @@ def perform_push_pull_calibration_with_phase_basis(basis, phase_amp, ref_image, 
     small_pupil_mask = kwargs.get("small_pupil_mask", setup.pupil_setup.small_pupil_mask)
     deformable_mirror = kwargs.get("deformable_mirror", setup.deformable_mirror)
     nact = kwargs.get("nact", setup.nact)
-
+    npix_small_pupil_grid = kwargs.get("npix_small_pupil_grid", setup.npix_small_pupil_grid)
+    
     # Set dimensions equal to img_size
     height, width = ref_image.shape
 
     # Number of phase modes
     nmodes_basis = basis.shape[0]
-    
-    # Compute size of the small pupil mask
-    npix_small_pupil_grid = small_pupil_mask.shape[0]
 
     # Normalize reference image with explicit bias_img set to zero
     normalized_reference_image = normalize_image(ref_image, mask, bias_img=np.zeros_like(ref_image))
@@ -132,11 +132,8 @@ def perform_push_pull_calibration_with_phase_basis(basis, phase_amp, ref_image, 
                     np.zeros_like(ref_image),
                     normalized_reference_image,
                     setup=setup,
-                    camera_wfs=camera,
                 )
                 t9 = time.time()
-                t10 = t9
-                t11 = t9
 
                 # Store images for push & pull
                 t12 = time.time()
@@ -179,8 +176,7 @@ def perform_push_pull_calibration_with_phase_basis(basis, phase_amp, ref_image, 
             print(f"Time to initialize arrays: {t1 - t0:.4f} s")
             print(f"Time to initialize phase mode: {t3 - t2:.4f} s")
             print(f"Time to send data to SLM: {t7 - t4:.4f} s")
-            print(f"Time to capture image: {t9 - t8:.4f} s")
-            print(f"Time to compute slopes: {t11 - t10:.4f} s")
+            print(f"Time to capture image and compute slopes: {t9 - t8:.4f} s")
             print(f"Time to store and combine images: {t13 - t12:.4f} s")
             print("")
 
@@ -218,11 +214,6 @@ def compute_response_matrix(images, mask=None):
         response_matrix = np.array([img.ravel() for img in images])
     return response_matrix
 
-
-
-import os
-import numpy as np
-from astropy.io import fits
 
 def create_response_matrix(
     KL2Act,

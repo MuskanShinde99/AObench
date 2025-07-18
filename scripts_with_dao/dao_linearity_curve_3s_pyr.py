@@ -138,7 +138,6 @@ for mode in range(num_modes):
             bias_image,
             normalized_reference_image,
             setup=setup,
-            camera_wfs=camera_wfs,
         )
         slopes = slopes_image[valid_pixels_indices].flatten()
 

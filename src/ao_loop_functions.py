@@ -221,7 +221,6 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
             bias_image,
             normalized_reference_image,
             setup=setup,
-            camera_wfs=camera_wfs,
         )
         slopes = slopes_image[valid_pixels_indices].flatten()
         slopes_image_shm.set_data(slopes_image)
