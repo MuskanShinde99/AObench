@@ -13,7 +13,6 @@ from tqdm import tqdm
 from PIL import Image
 from matplotlib.colors import LogNorm
 from src.utils import *
-from DEVICES_3.Basler_Pylon.test_pylon import *
 from collections import deque
 from src.dao_setup import init_setup
 
