@@ -51,10 +51,12 @@ KL2Act, KL2Phs = compute_KL(
     verbose=False,
 )
 
+print('KL2Act', KL2Act.dtype)
+
 
 # set shared memories
-KL2Act_shm.set_data(KL2Act)
-KL2Phs_shm.set_data(KL2Phs)
+KL2Act_shm.set_data(np.asarray(KL2Act))
+KL2Phs_shm.set_data(np.asarray(KL2Phs))
 
 
 # Plot KL projected| on actuators
@@ -83,6 +85,21 @@ for i, mode in enumerate(range(10)):
     fig.colorbar(im, ax=axes_flat[i], fraction=0.03, pad=0.04)
 
 plt.tight_layout()
+plt.show()
+
+KL2Act = KL2Act_shm.get_data()
+KL2Phs = KL2Phs_shm.get_data()
+
+plt.figure()
+plt.imshow(KL2Act[0,:].reshape(setup.nact,setup.nact))
+plt.colorbar()
+plt.title('KL mode')
+plt.show()
+
+plt.figure()
+plt.imshow(setup.small_pupil_mask*KL2Phs[0,:].reshape(setup.npix_small_pupil_grid,setup.npix_small_pupil_grid))
+plt.colorbar()
+plt.title('KL mode')
 plt.show()
 
 
