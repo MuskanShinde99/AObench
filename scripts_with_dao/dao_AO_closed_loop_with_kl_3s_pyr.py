@@ -191,11 +191,11 @@ gain = 1
 leakage = 0
 delay= 0
 
-#setting shared memories
-#num_iterations_shm.set_data(num_iterations)
-#gain_shm.set_data(gain)
-#leakage_shm.set_data(leakage)
-#delay_shm.set_data(delay)
+# setting shared memories
+num_iterations_shm.set_data(num_iterations)
+gain_shm.set_data(gain)
+leakage_shm.set_data(leakage)
+delay_shm.set_data(delay)
 
 # defining path for saving plots
 anim_path = folder_closed_loop_tests / 'Papyrus'
