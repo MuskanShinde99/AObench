@@ -175,7 +175,7 @@ def normalize_image(image, mask, bias_img=None):
     return normalized_image
 
 
-def get_slopes_image(camera_wfs, mask, bias_image, normalized_reference_image, pyr_img=None):
+def get_slopes_image(mask, bias_image, normalized_reference_image, pyr_img=None, setup=None, **kwargs):
     """Capture a PyWFS frame and compute its slope image.
 
     The resulting slopes image is always written to the global
@@ -201,6 +201,13 @@ def get_slopes_image(camera_wfs, mask, bias_image, normalized_reference_image, p
     """
 
     from src.create_shared_memories import slopes_img_shm
+    
+    if setup is None:
+    if DEFAULT_SETUP is None:
+        raise ValueError("No setup provided and no default registered.")
+    setup = DEFAULT_SETUP
+    
+    camera_wfs = kwargs.get("camera_wfs", setup.camera_wfs)
 
     if pyr_img is None:
         pyr_img = camera_wfs.get_data()
