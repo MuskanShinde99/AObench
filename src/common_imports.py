@@ -22,8 +22,9 @@ from matplotlib import pyplot as plt
 from matplotlib.colors import LogNorm
 import matplotlib.animation as animation
 from PIL import Image
-from tqdm import tqdm
-from pypylon import pylon
+import tqdm
+from datetime import datetime
+import dao
 
 # AO bench modules
 from src.config import config
@@ -40,7 +41,7 @@ from src.create_shared_memories import *
 from src.scan_modes_functions import *
 from src.ao_loop_functions import *
 
-# Initialize the default setup for convenience
+# Initialize the default setup 
 setup = init_setup()
 
 # Export all loaded names except for private ones
