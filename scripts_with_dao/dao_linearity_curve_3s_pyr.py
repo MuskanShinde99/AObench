@@ -7,21 +7,12 @@ Created on Wed Feb 26 13:11:37 2025
 """
 
 # Import Libraries
-import gc
-from tqdm import tqdm
-from pypylon import pylon
 from matplotlib import pyplot as plt
-from PIL import Image
 import numpy as np
 import time
 from astropy.io import fits
 import os
-import sys
-import scipy
-from DEVICES_3.Basler_Pylon.test_pylon import *
 import dao
-from matplotlib.colors import LogNorm
-from pathlib import Path
 from src.config import config
 
 ROOT_DIR = config.root_dir
