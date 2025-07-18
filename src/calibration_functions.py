@@ -109,9 +109,10 @@ def perform_push_pull_calibration_with_phase_basis(basis, phase_amp, ref_image, 
                 # Compute Zernike phase pattern
                 t2 = time.time()
                 deformable_mirror.flatten()
+                kl_mode = amp * basis[mode].reshape(nact**2)
                 set_dm_actuators(
                     deformable_mirror,
-                    amp * basis[mode].reshape(nact**2),
+                    kl_mode,
                     setup=setup,
                 )
                 data_dm[:, :] = deformable_mirror.opd.shaped/2
