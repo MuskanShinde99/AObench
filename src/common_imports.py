@@ -27,7 +27,7 @@ from pypylon import pylon
 
 # AO bench modules
 from src.config import config
-from src.dao_setup import init_setup
+from src.dao_setup import init_setup, las
 from src.utils import *
 from src.circular_pupil_functions import *
 from src.flux_filtering_mask_functions import *
