@@ -214,21 +214,37 @@ data_pupil_inner_new = data_pupil_inner + data_dm
 class PupilSetup:
     """Encapsulate pupil parameters and provide update utilities."""
 
-    def __init__(self):
+    def __init__(self, slm, pupil_size, pupil_mask, offset_height,
+                 offset_width, small_pupil_mask=small_pupil_mask):
+        # Store passed arguments
+        self.slm = slm
+        self.pupil_size = pupil_size
+        self.pupil_mask = pupil_mask
+        self.small_pupil_mask = small_pupil_mask
+        self.offset_height = offset_height
+        self.offset_width = offset_width
+
+        # Derived quantities
+        self.npix_small_pupil_grid = self.small_pupil_mask.shape[0]
+
+        # Initial parameters
         self.tilt_amp_outer = tilt_amp_outer
         self.tilt_amp_inner = tilt_amp_inner
         self.tt_amplitudes = list(tt_amplitudes)
         self.othermodes_amplitudes = list(othermodes_amplitudes)
-        self.data_pupil = data_pupil
-        self.data_dm = data_dm
         self.nact = nact
-        self.data_pupil_outer = data_pupil_outer
-        self.data_pupil_inner = data_pupil_inner
-        self.data_pupil_inner_new = data_pupil_inner_new
-        # Store masks for later use when recomputing the pupil
-        self.pupil_mask = pupil_mask
-        self.small_pupil_mask = small_pupil_mask
-        self.data_slm = compute_data_slm(setup=self)
+
+        # Compute pupil related arrays
+        self.data_pupil = create_slm_circular_pupil(
+            self.tilt_amp_outer,
+            self.tilt_amp_inner,
+            self.pupil_size,
+            self.pupil_mask,
+            self.slm,
+        )
+
+        # Initialize DM related arrays and assemble full pupil
+        self._recompute_dm()
 
     def _recompute_dm(self):
         """(Re)compute DM contribution and assemble the pupil."""
@@ -238,7 +254,7 @@ class PupilSetup:
         othermodes_matrix = np.diag(self.othermodes_amplitudes) @ KL2Act[2:10, :]
         data_othermodes = np.sum(othermodes_matrix, axis=0)
 
-        self.data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
+        self.data_dm = np.zeros((self.npix_small_pupil_grid, self.npix_small_pupil_grid), dtype=np.float32)
         deformable_mirror.flatten()
         # deformable_mirror.actuators = data_tt + data_othermodes  # Add TT and higher-order terms to pupil
         set_dm_actuators(deformable_mirror, data_tt + data_othermodes, setup=self)
@@ -248,8 +264,8 @@ class PupilSetup:
         self.data_pupil_outer[self.pupil_mask] = 0
 
         self.data_pupil_inner = np.copy(
-            self.data_pupil[offset_height:offset_height + npix_small_pupil_grid,
-                             offset_width:offset_width + npix_small_pupil_grid])
+            self.data_pupil[self.offset_height:self.offset_height + self.npix_small_pupil_grid,
+                             self.offset_width:self.offset_width + self.npix_small_pupil_grid])
         self.data_pupil_inner[~self.small_pupil_mask] = 0
 
         self.data_pupil_inner_new = self.data_pupil_inner + self.data_dm
@@ -270,13 +286,24 @@ class PupilSetup:
             self.tilt_amp_inner = new_tilt_amp_inner
 
         self.data_pupil = create_slm_circular_pupil(
-            self.tilt_amp_outer, self.tilt_amp_inner, pupil_size, self.pupil_mask, slm
+            self.tilt_amp_outer,
+            self.tilt_amp_inner,
+            self.pupil_size,
+            self.pupil_mask,
+            self.slm,
         )
         self._recompute_dm()
         return self.data_slm
 
 
-pupil_setup = PupilSetup()
+pupil_setup = PupilSetup(
+    slm=slm,
+    pupil_size=pupil_size,
+    pupil_mask=pupil_mask,
+    offset_height=offset_height,
+    offset_width=offset_width,
+    small_pupil_mask=small_pupil_mask,
+)
 set_default_setup(pupil_setup)
 
 def update_pupil(*args, **kwargs):
