@@ -22,6 +22,9 @@ from src.utils import compute_data_slm, set_default_setup, set_dm_actuators
 from src.circular_pupil_functions import create_slm_circular_pupil
 
 ROOT_DIR = config.root_dir
+
+# Will be populated when ``init_setup`` is called
+setup = None
 folder_calib = config.folder_calib
 folder_pyr_mask = config.folder_pyr_mask
 folder_transformation_matrices = config.folder_transformation_matrices
@@ -319,8 +322,9 @@ class DAOSetup:
 
 def init_setup() -> DAOSetup:
     """Return a :class:`DAOSetup` instance with initialized components."""
+    global setup
 
-    return DAOSetup(
+    setup = DAOSetup(
         las=las,
         camera_wfs=camera_wfs,
         camera_fp=camera_fp,
@@ -351,4 +355,9 @@ def init_setup() -> DAOSetup:
         pupil_mask=pupil_mask,
     )
 
+    from src import create_shared_memories
+    create_shared_memories.init_shared_memories(setup)
+    set_dm_actuators(deformable_mirror, data_tt + data_othermodes, setup=setup)
+
+    return setup
 
