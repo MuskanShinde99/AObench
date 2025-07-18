@@ -8,19 +8,12 @@ Created on Wed Mar 12 15:41:03 2025
 
 # Import Libraries
 from matplotlib.colors import LogNorm
-import gc
-from tqdm import tqdm
-from pypylon import pylon
 from matplotlib import pyplot as plt
-from PIL import Image
 import numpy as np
 import time
 from astropy.io import fits
 import os
-import sys
 import scipy
-import matplotlib.animation as animation
-from pathlib import Path
 from src.config import config
 
 ROOT_DIR = config.root_dir
