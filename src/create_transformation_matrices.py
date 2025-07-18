@@ -56,7 +56,6 @@ KL2Act, KL2Phs = compute_KL(
 KL2Act_shm.set_data(KL2Act)
 KL2Phs_shm.set_data(KL2Phs)
 
-plt.close('all')
 
 # Plot KL projected| on actuators
 fig, axes = plt.subplots(2, 5, figsize=(15, 6))
@@ -87,40 +86,39 @@ plt.tight_layout()
 plt.show()
 
 
-KL2Phs_new = KL2Act @  Act2Phs
+# KL2Phs_new = KL2Act @  Act2Phs
 
-# Plot KL 
-fig, axes = plt.subplots(2, 5, figsize=(15, 6))
-# Flatten the axes array for easier indexing
-axes_flat = axes.flatten()
+# # Plot KL 
+# fig, axes = plt.subplots(2, 5, figsize=(15, 6))
+# # Flatten the axes array for easier indexing
+# axes_flat = axes.flatten()
 
-for i, mode in enumerate(range(10)):
-    im = axes_flat[i].imshow(
-        KL2Phs_new[mode].reshape(setup.npix_small_pupil_grid, setup.npix_small_pupil_grid)
-        * dao_setup.small_pupil_mask,
-        cmap='viridis',
-    )
-    axes_flat[i].set_title(f' KL2Phs new {mode}')
-    axes_flat[i].axis('off')
-    fig.colorbar(im, ax=axes_flat[i], fraction=0.03, pad=0.04)
+# for i, mode in enumerate(range(10)):
+#     im = axes_flat[i].imshow(
+#         KL2Phs_new[mode].reshape(setup.npix_small_pupil_grid, setup.npix_small_pupil_grid)
+#         * dao_setup.small_pupil_mask,
+#         cmap='viridis',
+#     )
+#     axes_flat[i].set_title(f' KL2Phs new {mode}')
+#     axes_flat[i].axis('off')
+#     fig.colorbar(im, ax=axes_flat[i], fraction=0.03, pad=0.04)
 
-plt.tight_layout()
-plt.show()
+# plt.tight_layout()
+# plt.show()
 
-KL2Act_new = KL2Phs @  Phs2Act
+# KL2Act_new = KL2Phs @  Phs2Act
 
-# Plot KL projected| on actuators
-fig, axes = plt.subplots(2, 5, figsize=(15, 6))
-# Flatten the axes array for easier indexing
-axes_flat = axes.flatten()
+# # Plot KL projected| on actuators
+# fig, axes = plt.subplots(2, 5, figsize=(15, 6))
+# # Flatten the axes array for easier indexing
+# axes_flat = axes.flatten()
 
-for i, mode in enumerate(range(10)):
-    im = axes_flat[i].imshow(KL2Act_new[mode].reshape(setup.nact, setup.nact), cmap='viridis')
-    axes_flat[i].set_title(f' KL2Act new {mode}')
-    axes_flat[i].axis('off')
-    fig.colorbar(im, ax=axes_flat[i], fraction=0.03, pad=0.04)
+# for i, mode in enumerate(range(10)):
+#     im = axes_flat[i].imshow(KL2Act_new[mode].reshape(setup.nact, setup.nact), cmap='viridis')
+#     axes_flat[i].set_title(f' KL2Act new {mode}')
+#     axes_flat[i].axis('off')
+#     fig.colorbar(im, ax=axes_flat[i], fraction=0.03, pad=0.04)
 
-plt.tight_layout()
-plt.show()
+# plt.tight_layout()
+# plt.show()
 
-plt.close('all')

@@ -132,25 +132,25 @@ plt.show()
 #%% Load transformation matrices
 
 # # Load transformation matrices from shared memories
-# KL2Act = KL2Act_shm.get_data()
-# KL2Phs = KL2Phs_shm.get_data()
+KL2Act = KL2Act_shm.get_data()
+KL2Phs = KL2Phs_shm.get_data()
 
 # From folder 
-KL2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Act_nkl_{setup.nmodes_KL}_nact_{setup.nact}.fits'))
-KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_{setup.nmodes_KL}_npupil_{setup.npix_small_pupil_grid}.fits'))
+# KL2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Act_nkl_{setup.nmodes_KL}_nact_{setup.nact}.fits'))
+# KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_{setup.nmodes_KL}_npupil_{setup.npix_small_pupil_grid}.fits'))
 
 
-# plt.figure()
-# plt.imshow(KL2Act[3,:].reshape(nact,nact))
-# plt.colorbar()
-# plt.title('KL mode')
-# plt.show()
+plt.figure()
+plt.imshow(KL2Act[0,:].reshape(setup.nact,setup.nact))
+plt.colorbar()
+plt.title('KL mode')
+plt.show()
 
-# plt.figure()
-# plt.imshow(small_pupil_mask*KL2Phs[0,:].reshape(npix_small_pupil_grid,npix_small_pupil_grid))
-# plt.colorbar()
-# plt.title('KL mode')
-# plt.show()
+plt.figure()
+plt.imshow(setup.small_pupil_mask*KL2Phs[0,:].reshape(setup.npix_small_pupil_grid,setup.npix_small_pupil_grid))
+plt.colorbar()
+plt.title('KL mode')
+plt.show()
 
 #%% Creating a Flux Filtering Mask
 
