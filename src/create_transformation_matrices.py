@@ -51,13 +51,6 @@ KL2Act, KL2Phs = compute_KL(
     verbose=False,
 )
 
-print('KL2Act', KL2Act.dtype)
-
-
-# set shared memories
-KL2Act_shm.set_data(np.asarray(KL2Act))
-KL2Phs_shm.set_data(np.asarray(KL2Phs))
-
 
 # Plot KL projected| on actuators
 fig, axes = plt.subplots(2, 5, figsize=(15, 6))
@@ -87,6 +80,13 @@ for i, mode in enumerate(range(10)):
 plt.tight_layout()
 plt.show()
 
+print('KL2Act', KL2Act.dtype)
+
+# set shared memories
+KL2Act_shm.set_data(np.asarray(KL2Act))
+KL2Phs_shm.set_data(np.asarray(KL2Phs))
+
+# get data
 KL2Act = KL2Act_shm.get_data()
 KL2Phs = KL2Phs_shm.get_data()
 
