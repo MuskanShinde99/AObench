@@ -136,12 +136,9 @@ def perform_push_pull_calibration_with_phase_basis(
                     kl_mode = amp * basis[mode].reshape(nact**2)
                     t3 = time.time()
 
-                    # Send DM data to the SLM
+                    # Send DM data of kl mode to the SLM
                     t4 = time.time()
-                    data_dm, data_slm = set_data_dm(
-                        kl_mode,
-                        setup=setup,
-                    )
+                    set_data_dm(kl_mode, setup=setup,)
                     t7 = time.time()
 
                     # Capture the image and compute slopes
@@ -152,7 +149,7 @@ def perform_push_pull_calibration_with_phase_basis(
                         normalized_reference_image,
                         setup=setup,
                     )
-                    slopes_image_shm.set_data(slopes_image)
+                    slopes_image_shm.set_data(slopes_image) # setting the shared memory separately because setting inside the function is not working
 
                     t9 = time.time()
 
