@@ -223,7 +223,7 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
             setup=setup,
         )
         slopes = slopes_image[valid_pixels_indices].flatten()
-        # slopes_image_shm.set_data(slopes_image)
+        slopes_image_shm.set_data(slopes_image)
         #fits.writeto(os.path.join(folder_gui, f'slopes_image.fits'), slopes_image, overwrite=True)
 
         # Capture PSF

@@ -8,6 +8,7 @@ from datetime import datetime
 from src.utils import *
 from src.utils import set_dm_actuators
 from src.dao_setup import init_setup
+from src.create_shared_memories import *
 
 setup = init_setup()
 
@@ -133,6 +134,8 @@ def perform_push_pull_calibration_with_phase_basis(basis, phase_amp, ref_image, 
                     normalized_reference_image,
                     setup=setup,
                 )
+                slopes_image_shm.set_data(slopes_image)
+                
                 t9 = time.time()
 
                 # Store images for push & pull
