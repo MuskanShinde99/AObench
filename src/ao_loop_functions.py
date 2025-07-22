@@ -189,7 +189,7 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
     for i in tqdm.tqdm(range(num_iterations)):
         
         # Update deformable mirror surface
-        data_dm[:, :] = deformable_mirror.opd.shaped
+        data_dm[:, :] = deformable_mirror.opd.shaped/2
         data_dm = data_dm * small_pupil_mask
         dm_phase_shm.set_data(data_dm.astype(np.float32))  # setting shared memory
         fits.writeto(os.path.join(folder_gui, f'dm_phase.fits'), data_dm.astype(np.float32), overwrite=True)
@@ -231,8 +231,8 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
             normalized_reference_image,
             setup=setup,
         )
-        slopes = slopes_image[valid_pixels_indices].flatten()
         slopes_image_shm.set_data(slopes_image)
+        slopes = slopes_image[valid_pixels_indices].flatten()
         #fits.writeto(os.path.join(folder_gui, f'slopes_image.fits'), slopes_image, overwrite=True)
 
         # Capture PSF
@@ -265,12 +265,12 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
         
         # Apply delayed actuator command
         # deformable_mirror.actuators = (1 - leakage) * deformable_mirror.actuators - gain * delayed_act_pos
+        new_act_pos = (1 - leakage) * deformable_mirror.actuators - gain * delayed_act_pos
         set_dm_actuators(
             deformable_mirror,
-            (1 - leakage) * deformable_mirror.actuators - gain * delayed_act_pos,
+            new_act_pos,
             setup=setup,
         )
-        #deformable_mirror.actuators = (1-leakage) * deformable_mirror.actuators - gain * act_pos
         
         # KL modes corresponding the total actuator postion or the DM shape
         modes_act_pos_tot = deformable_mirror.actuators @ Act2KL

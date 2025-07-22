@@ -41,8 +41,8 @@ slm.set_data(data_slm)
 
 #%% Load Transformation matrices
 
-Act2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'Act2Phs_nact_{nact}_npupil_{npix_small_pupil_grid}.fits'))
-Phs2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'Phs2Act_npupil_{npix_small_pupil_grid}_nact_{nact}.fits'))
+Act2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'Act2Phs_nact_{setup.nact}_npupil_{setup.npix_small_pupil_grid}.fits'))
+Phs2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'Phs2Act_npupil_{setup.npix_small_pupil_grid}_nact_{setup.nact}.fits'))
 
 # Znk2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'Znk2Phs_nzernike_{nmodes_Znk}_npupil_{npix_small_pupil_grid}.fits'))
 # Phs2Znk = fits.getdata(os.path.join(folder_transformation_matrices, f'Phs2Znk_npupil_{npix_small_pupil_grid}_nzernike_{nmodes_Znk}.fits'))
@@ -50,11 +50,11 @@ Phs2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'Phs2Act_np
 # Znk2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'Znk2Act_nzernike_{nmodes_Znk}_nact_{nact}.fits'))
 # Act2Znk = fits.getdata(os.path.join(folder_transformation_matrices, f'Act2Znk_nact_{nact}_nzernike_{nmodes_Znk}.fits'))
 
-KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_{nmodes_KL}_npupil_{npix_small_pupil_grid}.fits'))
-Phs2KL = fits.getdata(os.path.join(folder_transformation_matrices, f'Phs2KL_npupil_{npix_small_pupil_grid}_nkl_{nmodes_KL}.fits'))
+KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_{setup.nmodes_KL}_npupil_{setup.npix_small_pupil_grid}.fits'))
+#Phs2KL = fits.getdata(os.path.join(folder_transformation_matrices, f'Phs2KL_npupil_{setup.npix_small_pupil_grid}_nkl_{setup.nmodes_KL}.fits'))
 
-KL2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Act_nkl_{nmodes_KL}_nact_{nact}.fits'))
-Act2KL = fits.getdata(os.path.join(folder_transformation_matrices, f'Act2KL_nact_{nact}_nkl_{nmodes_KL}.fits'))
+KL2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Act_nkl_{setup.nmodes_KL}_nact_{setup.nact}.fits'))
+#Act2KL = fits.getdata(os.path.join(folder_transformation_matrices, f'Act2KL_nact_{setup.nact}_nkl_{setup.nmodes_KL}.fits'))
 
 
 #%% Load Bias Image, Calibration Mask and Interaction Matrix
@@ -65,7 +65,7 @@ bias_image = fits.getdata(os.path.join(folder_calib, bias_filename))
 print(f"Bias image shape: {bias_image.shape}")
 
 # Load the calibration mask for processing images.
-mask_filename = f'binned_mask_pup_{pupil_size}mm_3s_pyr.fits'
+mask_filename = f'binned_mask_pup_{setup.pupil_size}mm_3s_pyr.fits'
 mask = fits.getdata(os.path.join(folder_calib, mask_filename))
 print(f"Mask dimensions: {mask.shape}")
 
@@ -73,7 +73,7 @@ print(f"Mask dimensions: {mask.shape}")
 valid_pixels_indices = np.where(mask > 0)
 
 # Load the response matrix 
-IM_filename = f'binned_response_matrix_KL2S_filtered_pup_{pupil_size}mm_nact_{nact}_amp_0.1_3s_pyr.fits'
+IM_filename = f'binned_response_matrix_KL2S_filtered_pup_{setup.pupil_size}mm_nact_{setup.nact}_amp_0.1_3s_pyr.fits'
 IM_KL2S = fits.getdata(os.path.join(folder_calib, IM_filename))  # /0.1
 
 RM_S2KL = np.linalg.pinv(IM_KL2S, rcond=0.10)
@@ -102,8 +102,8 @@ RM_S2KL = np.linalg.pinv(IM_KL2S, rcond=0.10)
 print(f"Shape of the response matrix: {RM_S2KL.shape}")
 
 # Number of KL modes to plot
-num_modes = 2
-applied_phase_amp = np.arange(-0.5, 0.51, 0.02) # 
+num_modes = 5
+applied_phase_amp = np.arange(-2, 2, 0.1) # 
 computed_phase_amp = np.zeros((num_modes, len(applied_phase_amp)))
 
 # Loop through each Zernike mode
@@ -129,7 +129,7 @@ for mode in range(num_modes):
         slopes = slopes_image[valid_pixels_indices].flatten()
 
         # Compute modes using the response matrix
-        computed_modes = slopes @ RM_S2KL / 2 # why this fac tor of 2???
+        computed_modes = slopes @ RM_S2KL 
 
         # Store computed modes for this mode
         computed_phase_amp[mode, i] = computed_modes[mode]
@@ -145,7 +145,7 @@ for mode in range(num_modes):
     axes[mode].set_ylabel('Reconstructed Phase Amplitude [λ]')
     axes[mode].set_title(f'KL mode {mode}')
     axes[mode].legend()
-    axes[mode].set_ylim(-0.35, 0.35)
+    #axes[mode].set_ylim(-0.35, 0.35)
     axes[mode].grid(True)
 
 plt.tight_layout()

@@ -36,6 +36,7 @@ def set_dm_actuators(dm, actuators, setup=None):
             setup.nact, setup.nact
         )
     )
+    
 
 
 # Add and wrap data within the pupil mask
