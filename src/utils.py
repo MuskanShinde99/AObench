@@ -40,7 +40,7 @@ def set_dm_actuators(dm, actuators, setup=None):
 
 # Add and wrap data within the pupil mask
 
-def compute_data_slm(data_dm=0, data_phase_screen=0, setup=None, **kwargs):
+def compute_data_slm(data_dm=0, data_phase_screen=0, data_dm_flat=0, setup=None, **kwargs):
     """
     Computes the SLM data by combining phase screen and deformable mirror data
     with pupil-related masks and arrays.
