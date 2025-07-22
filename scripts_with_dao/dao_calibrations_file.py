@@ -149,7 +149,7 @@ n_iter=200 # number of iternations for dm random commands
 
 mask = create_flux_filtering_mask(method, flux_cutoff, KL2Act[0], KL2Act[1],
                                modulation_angles, modulation_amp, n_iter,
-                               create_summed_image=False, verbose=False, verbose_plot=True)
+                               create_summed_image=True, verbose=False, verbose_plot=True)
 
 valid_pixels_mask_shm.set_data(mask)
 
@@ -179,7 +179,7 @@ center_psf_on_pyramid_tip(mask=mask, initial_tt_amplitudes=[-0.2, 0.1],
 
 #%% Scanning modes to find zero of the pyramid
 
-test_values = np.arange(-0.5, 1, 0.05)
+test_values = np.arange(-0.5, 0.01, 0.05)
 mode_index = 1 # 0 - focus, 1 - astimgatism, 2 -astigmatism 
 #scan_othermode_amplitudes(test_values, mode_index, update_setup_file=True)
 scan_othermode_amplitudes_wfs_std(test_values, mode_index, mask, 
@@ -263,7 +263,7 @@ response_matrix_full, response_matrix_filtered = create_response_matrix(
     calibration_repetitions=calibration_repetitions,
     mode_repetitions=mode_repetitions,
     push_pull=True,
-    pull_push=True
+    pull_push=False
 )
 
 #Reset the DM to flat
