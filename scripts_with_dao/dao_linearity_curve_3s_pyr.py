@@ -27,9 +27,8 @@ from src.flux_filtering_mask_functions import *
 from src.tilt_functions import *
 from src.calibration_functions import *
 from src.kl_basis_eigenmodes_functions import computeEigenModes, computeEigenModes_notsquarepupil
-from src.transformation_matrices_functions import * 
+from src.transformation_matrices_functions import *
 from src.psf_centring_algorithm_functions import *
-from src.create_shared_memories import *
 from src.scan_modes_functions import scan_othermode_amplitudes
 from src.ao_loop_functions import *
 

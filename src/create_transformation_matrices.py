@@ -23,7 +23,10 @@ import dao
 from src.dao_setup import init_setup
 import src.dao_setup as dao_setup
 from src.transformation_matrices_functions import *
-from src.create_shared_memories import *
+from .shm_loader import shm
+
+KL2Act_shm = shm.KL2Act_shm
+KL2Phs_shm = shm.KL2Phs_shm
 
 setup = init_setup()
 

@@ -28,7 +28,17 @@ from src.calibration_functions import *
 from src.kl_basis_eigenmodes_functions import computeEigenModes, computeEigenModes_notsquarepupil
 from src.transformation_matrices_functions import * 
 from src.psf_centring_algorithm_functions import *
-from src.create_shared_memories import *
+from src.shm_loader import shm
+bias_image_shm = shm.bias_image_shm
+valid_pixels_mask_shm = shm.valid_pixels_mask_shm
+npix_valid_shm = shm.npix_valid_shm
+KL2PWFS_cube_shm = shm.KL2PWFS_cube_shm
+slopes_shm = shm.slopes_shm
+KL2S_shm = shm.KL2S_shm
+S2KL_shm = shm.S2KL_shm
+reference_image_shm = shm.reference_image_shm
+normalized_ref_image_shm = shm.normalized_ref_image_shm
+reference_psf_shm = shm.reference_psf_shm
 from src.scan_modes_functions import *
 from src.ao_loop_functions import *
 
