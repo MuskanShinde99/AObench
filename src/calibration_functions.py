@@ -13,8 +13,18 @@ from src.create_shared_memories import *
 setup = init_setup()
 
 
-def perform_push_pull_calibration_with_phase_basis(basis, phase_amp, ref_image, mask,
-    verbose=False, verbose_plot=False, mode_repetitions=None, **kwargs):
+def perform_push_pull_calibration_with_phase_basis(
+    basis,
+    phase_amp,
+    ref_image,
+    mask,
+    verbose=False,
+    verbose_plot=False,
+    mode_repetitions=None,
+    push_pull=False,
+    pull_push=True,
+    **kwargs,
+):
     """
     Perform push-pull calibration using a phase basis.
 
@@ -27,6 +37,8 @@ def perform_push_pull_calibration_with_phase_basis(basis, phase_amp, ref_image, 
     - verbose_plot: Live plot during calibration.
     - mode_repetitions: Sequence or dict specifying how many times each mode is
       repeated and averaged. Modes with unspecified counts default to 1.
+    - push_pull: If True, perform a push followed by a pull ([-phase_amp, phase_amp]).
+    - pull_push: If True, perform a pull followed by a push ([phase_amp, -phase_amp]).
     - kwargs:
         - slm
         - camera
@@ -48,6 +60,9 @@ def perform_push_pull_calibration_with_phase_basis(basis, phase_amp, ref_image, 
     deformable_mirror = kwargs.get("deformable_mirror", setup.deformable_mirror)
     nact = kwargs.get("nact", setup.nact)
     npix_small_pupil_grid = kwargs.get("npix_small_pupil_grid", setup.npix_small_pupil_grid)
+
+    if not (push_pull or pull_push):
+        raise ValueError("Either push_pull or pull_push must be True")
     
     # Set dimensions equal to img_size
     height, width = ref_image.shape
@@ -78,6 +93,12 @@ def perform_push_pull_calibration_with_phase_basis(basis, phase_amp, ref_image, 
         elif mode_repetitions.size > nmodes_basis:
             mode_repetitions = mode_repetitions[:nmodes_basis]
 
+    orders = []
+    if push_pull:
+        orders.append([-phase_amp, phase_amp])
+    if pull_push:
+        orders.append([phase_amp, -phase_amp])
+
     # Pre-allocate arrays
     pull_images = np.zeros((nmodes_basis, height, width), dtype=np.float32)
     push_images = np.zeros((nmodes_basis, height, width), dtype=np.float32)
@@ -104,58 +125,60 @@ def perform_push_pull_calibration_with_phase_basis(basis, phase_amp, ref_image, 
         t1 = time.time()
 
         for i in range(rep_count):
-            push_pull_img = np.zeros((height, width), dtype=np.float32)
+            for order in orders:
+                push_pull_img = np.zeros((height, width), dtype=np.float32)
 
-            for amp in [-phase_amp, phase_amp]:
-                # Compute Zernike phase pattern
-                t2 = time.time()
-                deformable_mirror.flatten()
-                kl_mode = amp * basis[mode].reshape(nact**2)
-                set_dm_actuators(
-                    deformable_mirror,
-                    kl_mode,
-                    setup=setup,
-                )
-                data_dm[:, :] = deformable_mirror.opd.shaped/2
-                t3 = time.time()
+                for amp in order:
+                    # Compute Zernike phase pattern
+                    t2 = time.time()
+                    deformable_mirror.flatten()
+                    kl_mode = amp * basis[mode].reshape(nact**2)
+                    set_dm_actuators(
+                        deformable_mirror,
+                        kl_mode,
+                        setup=setup,
+                    )
+                    data_dm[:, :] = deformable_mirror.opd.shaped/2
+                    t3 = time.time()
 
-                # Add and wrap data within the pupil mask
-                t4 = time.time()
-                data_slm = compute_data_slm(data_dm=data_dm, setup=setup.pupil_setup)
-                slm.set_data(data_slm)
-                time.sleep(wait_time)
-                t7 = time.time()
+                    # Add and wrap data within the pupil mask
+                    t4 = time.time()
+                    data_slm = compute_data_slm(data_dm=data_dm, setup=setup.pupil_setup)
+                    slm.set_data(data_slm)
+                    time.sleep(wait_time)
+                    t7 = time.time()
 
-                # Capture the image and compute slopes
-                t8 = time.time()
-                slopes_image = get_slopes_image(
-                    mask,
-                    np.zeros_like(ref_image),
-                    normalized_reference_image,
-                    setup=setup,
-                )
-                slopes_image_shm.set_data(slopes_image)
-                
-                t9 = time.time()
+                    # Capture the image and compute slopes
+                    t8 = time.time()
+                    slopes_image = get_slopes_image(
+                        mask,
+                        np.zeros_like(ref_image),
+                        normalized_reference_image,
+                        setup=setup,
+                    )
+                    slopes_image_shm.set_data(slopes_image)
 
-                # Store images for push & pull
-                t12 = time.time()
-                if amp > 0:
-                    pull_acc += slopes_image / abs(amp)
-                else:
-                    push_acc += slopes_image / abs(amp)
+                    t9 = time.time()
 
-                # Combine push-pull intensity
-                push_pull_img += slopes_image / (2 * amp)
-                t13 = time.time()
+                    # Store images for push & pull
+                    t12 = time.time()
+                    if amp > 0:
+                        pull_acc += slopes_image / abs(amp)
+                    else:
+                        push_acc += slopes_image / abs(amp)
 
-            # Save the combined response for this repetition
-            pp_acc += push_pull_img
+                    # Combine push-pull intensity
+                    push_pull_img += slopes_image / (2 * amp)
+                    t13 = time.time()
 
-        # Average over repetitions
-        pull_images[mode, :, :] = pull_acc / rep_count
-        push_images[mode, :, :] = push_acc / rep_count
-        push_pull_images[mode, :, :] = pp_acc / rep_count
+                # Save the combined response for this order
+                pp_acc += push_pull_img
+
+        divisor = rep_count * len(orders)
+        # Average over repetitions and orders
+        pull_images[mode, :, :] = pull_acc / divisor
+        push_images[mode, :, :] = push_acc / divisor
+        push_pull_images[mode, :, :] = pp_acc / divisor
         
         # Live display of images
         if verbose_plot:
