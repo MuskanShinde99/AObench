@@ -37,7 +37,11 @@ from src.calibration_functions import *
 from src.kl_basis_eigenmodes_functions import computeEigenModes, computeEigenModes_notsquarepupil
 from src.transformation_matrices_functions import *
 from src.psf_centring_algorithm_functions import *
-from src.create_shared_memories import *
+from .shm_loader import shm
+
+for name, handle in vars(shm).items():
+    if name.endswith('_shm'):
+        globals()[name] = handle
 from src.scan_modes_functions import *
 from src.ao_loop_functions import *
 

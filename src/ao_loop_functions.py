@@ -15,9 +15,18 @@ from matplotlib.colors import LogNorm
 from src.utils import *
 from collections import deque
 from src.dao_setup import init_setup
+from .shm_loader import shm
 
 setup = init_setup()
-from src.create_shared_memories import *
+dm_phase_shm = shm.dm_phase_shm
+phase_screen_shm = shm.phase_screen_shm
+phase_residuals_shm = shm.phase_residuals_shm
+residual_modes_shm = shm.residual_modes_shm
+slopes_image_shm = shm.slopes_image_shm
+normalized_psf_shm = shm.normalized_psf_shm
+computed_modes_shm = shm.computed_modes_shm
+commands_shm = shm.commands_shm
+dm_kl_modes_shm = shm.dm_kl_modes_shm
 
 
 def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, anim_path, aim_name, anim_title,
