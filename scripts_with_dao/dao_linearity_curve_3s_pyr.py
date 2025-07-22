@@ -114,12 +114,11 @@ for mode in range(num_modes):
     
     for i, amp in enumerate(applied_phase_amp):
 
-        # Put the KL mode on the DM
+        # Compute the KL mode actuator positions
         kl_mode = amp * KL2Act[mode]
-        data_dm, data_slm = set_data_dm(
-            kl_mode,
-            setup=setup,
-        )
+
+        # Put KL mode on the DM
+        set_data_dm(kl_mode, setup=setup,)
 
         # Capture image and compute slopes
         slopes_image = get_slopes_image(
