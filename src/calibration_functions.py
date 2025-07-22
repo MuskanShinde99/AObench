@@ -251,6 +251,8 @@ def create_response_matrix(
     verbose_plot=False,
     mode_repetitions=None,
     calibration_repetitions=1,
+    push_pull=False,
+    pull_push=True,
     **kwargs,
 ):
     """
@@ -282,6 +284,10 @@ def create_response_matrix(
     calibration_repetitions : int
         Number of times to repeat the whole calibration process. The returned
         response matrices are the average over these runs.
+    push_pull : bool
+        If True, perform a push followed by a pull ([-phase_amp, phase_amp]).
+    pull_push : bool
+        If True, perform a pull followed by a push ([phase_amp, -phase_amp]).
     kwargs:
         - pupil_size
         - nact
@@ -313,6 +319,9 @@ def create_response_matrix(
             verbose=verbose,
             verbose_plot=verbose_plot,
             mode_repetitions=mode_repetitions,
+            push_pull=push_pull,
+            pull_push=pull_push,
+            **kwargs,
         )
 
         # Initialize accumulators using first run dimensions
