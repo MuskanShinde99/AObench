@@ -6,6 +6,7 @@ Created on Mon Sep  2 16:57:48 2024
 """
 
 import os
+import time
 import numpy as np
 from astropy.io import fits
 from scipy.ndimage import center_of_mass
@@ -71,6 +72,69 @@ def compute_data_slm(data_dm=0, data_phase_screen=0, setup=None, **kwargs):
 
     return data_slm.astype(np.uint8)
 
+# ---------------------------------------------------------------------------
+def set_data_dm(actuators, *, dm=None, setup=None, slm=None,
+                npix_small_pupil_grid=None, wait_time=None):
+    """Flatten the DM, apply ``actuators`` and show the resulting phase on the SLM.
+
+    Parameters
+    ----------
+    actuators : array_like
+        Actuator values to apply.
+    dm : object, optional
+        Deformable mirror instance. Defaults to ``setup.deformable_mirror``.
+    setup : object, optional
+        DAO setup providing defaults such as ``slm`` and ``npix_small_pupil_grid``.
+    slm : object, optional
+        SLM instance. Defaults to ``setup.slm`` if available.
+    npix_small_pupil_grid : int, optional
+        Size of the DM grid. Defaults to ``setup.npix_small_pupil_grid``.
+    wait_time : float, optional
+        Delay after sending the data. Defaults to ``setup.wait_time`` or ``0``.
+
+    Returns
+    -------
+    tuple of ndarray
+        ``(data_dm, data_slm)`` arrays that were sent to the SLM.
+    """
+
+    if setup is None:
+        if DEFAULT_SETUP is None:
+            raise ValueError("No setup provided and no default registered.")
+        setup = DEFAULT_SETUP
+
+    if slm is None:
+        slm = getattr(setup, "slm", None)
+    if slm is None:
+        raise ValueError("SLM instance must be provided")
+
+    if npix_small_pupil_grid is None:
+        npix_small_pupil_grid = getattr(setup, "npix_small_pupil_grid", None)
+    if npix_small_pupil_grid is None:
+        raise ValueError("npix_small_pupil_grid must be provided")
+
+    if wait_time is None:
+        wait_time = getattr(setup, "wait_time", 0)
+
+    if dm is None:
+        dm = getattr(setup, "deformable_mirror", None)
+    if dm is None:
+        raise ValueError("Deformable mirror instance must be provided")
+
+    dm.flatten()
+    set_dm_actuators(dm, actuators, setup=setup)
+
+    data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
+    data_dm[:, :] = dm.opd.shaped / 2
+
+    pupil_setup = getattr(setup, "pupil_setup", setup)
+    data_slm = compute_data_slm(data_dm=data_dm, setup=pupil_setup)
+    slm.set_data(data_slm)
+    time.sleep(wait_time)
+
+    return data_dm, data_slm
+
+# ---------------------------------------------------------------------------
 # data_slm = data_pupil_outer.copy()
 # data_inner = ((data_pupil_inner + (data_dm)) * 256) % 256
 # data_slm[pupil_mask] = data_inner[small_pupil_mask]

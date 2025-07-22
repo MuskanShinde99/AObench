@@ -6,7 +6,7 @@ import dao
 import matplotlib.pyplot as plt
 from datetime import datetime
 from src.utils import *
-from src.utils import set_dm_actuators
+from src.utils import set_data_dm
 from src.dao_setup import init_setup
 from src.create_shared_memories import *
 
@@ -131,21 +131,15 @@ def perform_push_pull_calibration_with_phase_basis(
                 for amp in order:
                     # Compute Zernike phase pattern
                     t2 = time.time()
-                    deformable_mirror.flatten()
                     kl_mode = amp * basis[mode].reshape(nact**2)
-                    set_dm_actuators(
-                        deformable_mirror,
+                    t3 = time.time()
+
+                    # Send DM data to the SLM
+                    t4 = time.time()
+                    data_dm, data_slm = set_data_dm(
                         kl_mode,
                         setup=setup,
                     )
-                    data_dm[:, :] = deformable_mirror.opd.shaped/2
-                    t3 = time.time()
-
-                    # Add and wrap data within the pupil mask
-                    t4 = time.time()
-                    data_slm = compute_data_slm(data_dm=data_dm, setup=setup.pupil_setup)
-                    slm.set_data(data_slm)
-                    time.sleep(wait_time)
                     t7 = time.time()
 
                     # Capture the image and compute slopes

@@ -71,20 +71,11 @@ KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_
 y0 = None  # Reference y-coordinate
 
 for amp in np.arange(0, 15, 1):
-    data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
-    deformable_mirror.flatten()
     kl_mode = amp * KL2Act[1]
-    set_dm_actuators(
-        deformable_mirror,
+    data_dm, data_slm = set_data_dm(
         kl_mode,
         setup=setup,
     )
-    data_dm[:, :] = deformable_mirror.opd.shaped / 2
-
-    # Display DM Data on SLM
-    data_slm = compute_data_slm(data_dm=data_dm)
-    slm.set_data(data_slm)
-    time.sleep(wait_time)
 
     img = camera_fp.get_data()
 

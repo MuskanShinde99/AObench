@@ -114,23 +114,11 @@ for mode in range(num_modes):
     
     for i, amp in enumerate(applied_phase_amp):
 
-        # Put the KL mode on the DM
-        deformable_mirror.flatten()
+        # Compute the KL mode actuator positions
         kl_mode = amp * KL2Act[mode]
-        set_dm_actuators(
-            deformable_mirror,
-            kl_mode,
-            setup=setup,
-        )
 
-        # Create and update SLM data with current phase settings
-        data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
-        data_dm[:, :] = deformable_mirror.opd.shaped
-
-        # Put data_dm on the SLM
-        data_slm = compute_data_slm(data_dm=data_dm)
-        slm.set_data(data_slm)
-        time.sleep(wait_time)
+        # Put KL mode on the DM
+        set_data_dm(kl_mode, setup=setup,)
 
         # Capture image and compute slopes
         slopes_image = get_slopes_image(
