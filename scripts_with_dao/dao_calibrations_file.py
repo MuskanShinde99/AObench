@@ -149,7 +149,7 @@ n_iter=200 # number of iternations for dm random commands
 
 mask = create_flux_filtering_mask(method, flux_cutoff, KL2Act[0], KL2Act[1],
                                modulation_angles, modulation_amp, n_iter,
-                               create_summed_image=False, verbose=False, verbose_plot=True)
+                               create_summed_image=True, verbose=False, verbose_plot=True)
 
 valid_pixels_mask_shm.set_data(mask)
 
@@ -261,7 +261,9 @@ response_matrix_full, response_matrix_filtered = create_response_matrix(
     verbose=True,
     verbose_plot=False,
     calibration_repetitions=calibration_repetitions,
-    mode_repetitions=mode_repetitions  
+    mode_repetitions=mode_repetitions,
+    push_pull=False,
+    pull_push=False
 )
 
 #Reset the DM to flat

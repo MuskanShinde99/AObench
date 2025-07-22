@@ -81,10 +81,11 @@ plt.tight_layout()
 plt.show()
 
 print('KL2Act', KL2Act.dtype)
+print('KL2Act', KL2Act.shape)
 
 # set shared memories
-KL2Act_shm.set_data(np.asarray(KL2Act))
-KL2Phs_shm.set_data(np.asarray(KL2Phs))
+KL2Act_shm.set_data(KL2Act.astype(np.float64))
+KL2Phs_shm.set_data(KL2Phs.astype(np.float64))
 
 # get data
 KL2Act = KL2Act_shm.get_data()
