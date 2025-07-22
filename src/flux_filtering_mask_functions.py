@@ -70,12 +70,7 @@ def create_summed_image_for_mask(modulation_angles, modulation_amp, tiltx, tilty
         data_modulation = modulation_amp * modulation_step
         
         # Put on DM
-        data_dm, data_slm = set_data_dm(
-            data_modulation,
-            setup=setup,
-        )
-
-        time.sleep(wait_time)  # wait for SLM update
+        set_data_dm(data_modulation, setup=setup,)
 
         # Capture image using pylon SDK wrapper function
         img = camera.get_data()
