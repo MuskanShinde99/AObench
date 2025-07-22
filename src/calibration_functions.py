@@ -8,7 +8,9 @@ from datetime import datetime
 from src.utils import *
 from src.utils import set_data_dm
 from src.dao_setup import init_setup
-from src.create_shared_memories import *
+from .shm_loader import shm
+
+slopes_image_shm = shm.slopes_image_shm
 
 setup = init_setup()
 

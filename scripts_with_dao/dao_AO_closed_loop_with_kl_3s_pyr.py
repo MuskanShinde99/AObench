@@ -30,7 +30,11 @@ from src.calibration_functions import *
 from src.kl_basis_eigenmodes_functions import computeEigenModes, computeEigenModes_notsquarepupil
 from src.transformation_matrices_functions import * 
 from src.psf_centring_algorithm_functions import *
-from src.create_shared_memories import *
+from src.shm_loader import shm
+num_iterations_shm = shm.num_iterations_shm
+gain_shm = shm.gain_shm
+leakage_shm = shm.leakage_shm
+delay_shm = shm.delay_shm
 from src.scan_modes_functions import scan_othermode_amplitudes
 from src.ao_loop_functions import *
 

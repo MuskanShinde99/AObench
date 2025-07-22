@@ -12,6 +12,8 @@ from astropy.io import fits
 from scipy.ndimage import center_of_mass
 from scipy.interpolate import interp2d
 
+from .shm_loader import shm
+
 DEFAULT_SETUP = None
 
 def set_default_setup(setup):
@@ -22,7 +24,7 @@ def set_default_setup(setup):
 
 def set_dm_actuators(dm, actuators, setup=None):
     """Set DM actuators and update the shared memory grid."""
-    from src.create_shared_memories import dm_act_shm
+    dm_act_shm = shm.dm_act_shm
 
     dm.actuators = actuators
     if setup is None:
@@ -260,7 +262,7 @@ def get_slopes_image(mask, bias_image, normalized_reference_image, pyr_img=None,
         The computed slopes image.
     """
 
-    from src.create_shared_memories import slopes_img_shm
+    slopes_img_shm = shm.slopes_img_shm
 
     if setup is None:
         if DEFAULT_SETUP is None:
