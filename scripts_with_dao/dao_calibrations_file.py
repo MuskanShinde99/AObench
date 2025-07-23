@@ -80,9 +80,12 @@ time.sleep(5)
 #%% Creating and Displaying a Circular Pupil on the SLM
 
 # Compute and display Pupil Data on SLM
-data_slm = compute_data_slm()
-slm.set_data(data_slm)
-time.sleep(wait_time)
+# data_slm = compute_data_slm()
+# slm.set_data(data_slm)
+# time.sleep(wait_time)
+
+actuators = 1*np.zeros(setup.nact**2)
+set_data_dm(actuators=actuators, setup=setup)
 
 print('Pupil created on the SLM.')
 
@@ -201,9 +204,8 @@ scan_othermode_amplitudes_wfs_std(test_values, mode_index, mask,
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
 # Compute and display Pupil Data on SLM
-data_slm = compute_data_slm()
-slm.set_data(data_slm)
-time.sleep(wait_time)  # Allow the system to stabilize
+actuators = np.zeros(setup.nact**2)
+set_data_dm(actuators=actuators, setup=setup)
 
 # Capure the Reference Image
 n_frames=20
@@ -269,11 +271,11 @@ response_matrix_full, response_matrix_filtered = create_response_matrix(
     calibration_repetitions=calibration_repetitions,
     mode_repetitions=mode_repetitions,
     push_pull=True,
-    pull_push=False
+    pull_push=True
 )
 
 #Reset the DM to flat
-slm.set_data(data_slm)
+#slm.set_data(data_slm)
 
 #response_matrix_filtered = response_matrix_full[:, mask.ravel() > 0]
 

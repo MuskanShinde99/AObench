@@ -69,3 +69,4 @@ commands_shm                 = dao.shm('/tmp/commands.im.shm',                np
 residual_modes_shm           = dao.shm('/tmp/residual_modes.im.shm',          np.zeros((setup.nmodes_KL, 1), dtype=np.float32))
 computed_modes_shm           = dao.shm('/tmp/computed_modes.im.shm',          np.zeros((setup.nmodes_KL, 1), dtype=np.float32))
 dm_kl_modes_shm              = dao.shm('/tmp/dm_kl_modes.im.shm',             np.zeros((setup.nmodes_KL, 1), dtype=np.float32))
+norm_flux_pyr_img_shm        = dao.shm('/tmp/norm_flux_pyr_img.im.shm',       np.zeros((1, 1), dtype=np.float32))

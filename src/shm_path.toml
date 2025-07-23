@@ -7,6 +7,8 @@ commands                = '/tmp/commands.im.shm'
 residual_modes          = '/tmp/residual_modes.im.shm'
 computed_modes           = '/tmp/computed_modes.im.shm'
 dm_kl_modes              = '/tmp/dm_kl_modes.im.shm'
+norm_flux_pyr_img        = '/tmp/norm_flux_pyr_img.im.shm'
+
 
 small_pupil_mask        = '/tmp/small_pupil_mask.im.shm'
 pupil_mask              = '/tmp/pupil_mask.im.shm'
