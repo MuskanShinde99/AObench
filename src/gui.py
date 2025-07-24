@@ -325,6 +325,7 @@ class MainWindow(QMainWindow):
         self.init_images()
         self.init_vector_plots()
         self.init_shm()
+        self.init_process()
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_images)
         self.timer.start(100) # ms 
@@ -343,7 +344,13 @@ class MainWindow(QMainWindow):
         self.leakage_spinbox.valueChanged.connect(self.leakage_changed)
         self.leakage_changed(self.leakage_spinbox.value())
 
-
+    def init_process(self):
+        self.bias_process = ProcessManager("calibration_bias.py",self.start_bias_button, self.stop_bias_button, self.bias_output)
+        self.valid_pixels_process = ProcessManager("calibration_bias.py",self.start_valid_pixels_button, self.stop_valid_pixels_button, self.valid_pixels_output)
+        self.ref_images_process = ProcessManager("calibration_bias.py",self.start_ref_images_button, self.stop_ref_images_button, self.ref_images_output)
+        self.psf_center_process = ProcessManager("calibration_bias.py",self.start_psf_center_button, self.stop_psf_center_button, self.psf_center_output)
+        self.scan_modes_process = ProcessManager("calibration_bias.py",self.start_scan_modes_button, self.stop_scan_modes_button, self.scan_modes_output)
+        self.im_process = ProcessManager("calibration_bias.py",self.start_im_button, self.stop_im_button, self.im_output)
     def init_shm(self):
         with open('shm_path.toml', 'r') as f:
             shm_path = toml.load(f)
@@ -498,6 +505,13 @@ class MainWindow(QMainWindow):
         self.leakage_shm.set_data(np.array([[value]],np.float32))
 
     def closeEvent(self, event):
+        self.bias_process.stop()
+        self.valid_pixels_process.stop()
+        self.ref_images_process.stop()
+        self.psf_center_process.stop()
+        self.scan_modes_process.stop()
+        self.im_process.stop()
+        self.timer.stop()
         print("All processes and timers stopped")
         event.accept()
 
@@ -508,7 +522,7 @@ def handle_sigint(signum, frame):
 
 if __name__ == "__main__":
 
-    subprocess.run(["python", "setup.py"])
+    # subprocess.run(["python", "setup.py"])
 
     # Launch the GUI
     app = QApplication(sys.argv)
