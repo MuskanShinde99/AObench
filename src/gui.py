@@ -21,6 +21,27 @@ import ctypes
 daoLogLevel = ctypes.c_int.in_dll(dao.daoLib, "daoLogLevel")
 daoLogLevel.value=0
 
+def update_histogram_axis_to_log(view: pg.ImageView, original_data: np.ndarray, eps: float):
+    hist_widget = view.getHistogramWidget()
+
+    # Ensure the color gradient is visible
+    hist_widget.show()
+
+    # Manually set log ticks
+    ticks = []
+    log_min = np.log10(np.maximum(original_data.min(), eps))
+    log_max = np.log10(np.maximum(original_data.max(), eps))
+
+    # Choose positions and labels
+    exponents = np.arange(np.floor(log_min), np.ceil(log_max) + 1)
+    for exp in exponents:
+        pos = exp  # this is in log10 scale
+        label = f"1e{int(exp)}"
+        ticks.append((pos, label))
+
+    # Set ticks on the gradient's axis
+    hist_widget.axis.setTicks([ticks])
+
 # ps -fA | grep python
 # /usr/lib/qt5/bin/designer
 
@@ -306,7 +327,7 @@ class MainWindow(QMainWindow):
         self.init_shm()
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_images)
-        self.timer.start(100)
+        self.timer.start(100) # ms 
         self.sem_nb = 9
 
     def init_spinboxes(self):
@@ -341,6 +362,7 @@ class MainWindow(QMainWindow):
         self.num_iterations_shm           = dao.shm(shm_path['num_iterations'])
         self.cam1_shm                     = dao.shm(shm_path['cam1'])             
         self.cam2_shm                     = dao.shm(shm_path['cam2'])
+        self.dm_act_shm                     = dao.shm(shm_path['dm_act'])
 
     def init_vector_plots(self):
         self.computed_KL_modes_view = CustomChartView(self.computed_KL_modes_widget,"mode","amplitude", n_lines = 2)
@@ -376,6 +398,7 @@ class MainWindow(QMainWindow):
             "normalized_psf_widget": "normalized_psf_view",
             "cam1_widget": "cam1_view",
             "cam2_widget": "cam2_view",
+            "dm_act_widget": "dm_act_view",
         }
 
         for placeholder_name, attr_name in placeholders.items():
@@ -391,14 +414,42 @@ class MainWindow(QMainWindow):
         self.normalized_psf_view.setImage(self.normalized_psf_shm.get_data(check=False,semNb=self.sem_nb), autoLevels=(self.autoscale_normalized_psf_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
         self.cam1_view.setImage(self.cam1_shm.get_data(check=False,semNb=self.sem_nb), autoLevels=(self.autoscale_cam1_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
         self.cam2_view.setImage(self.cam2_shm.get_data(check=False,semNb=self.sem_nb), autoLevels=(self.autoscale_cam2_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
+        self.dm_act_view.setImage(self.dm_act_shm.get_data(check=False,semNb=self.sem_nb), autoLevels=(self.autoscale_dm_act_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
+
+        eps = 1e-3
+        
+        normalized_psf = self.normalized_psf_shm.get_data(check=False,semNb=self.sem_nb)
+        normalized_psf_log = np.log10(np.maximum(normalized_psf, eps))  
+        self.normalized_psf_view.setImage(normalized_psf_log, autoLevels=(self.autoscale_normalized_psf_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
+        update_histogram_axis_to_log(self.normalized_psf_view, normalized_psf, eps)
+
+        cam2 = self.cam2_shm.get_data(check=False,semNb=self.sem_nb)
+        cam2_log = np.log10(np.maximum(cam2, eps))  
+        self.cam2_view.setImage(cam2_log, autoLevels=(self.autoscale_normalized_psf_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
+        update_histogram_axis_to_log(self.cam2_view, cam2, eps)
+
 
         # self.slopes_image_view.setImage(fits.getdata("../outputs/GUI_tests/slopes_image.fits"), autoLevels=(self.autoscale_slopes_image_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
         # self.phase_screen_view.setImage(fits.getdata("../outputs/GUI_tests/phase_screen.fits"), autoLevels=(self.autoscale_phase_screen_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
-        # self.dm_phase_view.setImage(fits.getdata("../outputs/GUI_tests/dm_phase.fits"), autoLevels=(self.autoscale_dm_phase_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
+        # self.dm_phase_view.setImage(fits.getdata("../outputs/GUI_tests/phase_screen.fits"), autoLevels=(self.autoscale_dm_phase_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
         # self.phase_residuals_view.setImage(fits.getdata("../outputs/GUI_tests/phase_residuals.fits"),autoLevels=(self.autoscale_phase_residuals_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
-        # self.normalized_psf_view.setImage(fits.getdata("../outputs/GUI_tests/normalized_psf.fits"), autoLevels=(self.autoscale_normalized_psf_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
+        # # self.normalized_psf_view.setImage(fits.getdata("../outputs/GUI_tests/normalized_psf.fits"), autoLevels=(self.autoscale_normalized_psf_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
         # self.cam1_view.setImage(fits.getdata("../outputs/GUI_tests/normalized_psf.fits"), autoLevels=(self.autoscale_cam1_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
-        # self.cam2_view.setImage(fits.getdata("../outputs/GUI_tests/normalized_psf.fits"), autoLevels=(self.autoscale_cam2_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
+        
+        # eps = 1e-3
+
+        # normalized_psf = fits.getdata("../outputs/GUI_tests/normalized_psf.fits")
+        # normalized_psf_log = np.log10(np.maximum(normalized_psf, eps))  
+        # self.normalized_psf_view.setImage(normalized_psf_log, autoLevels=(self.autoscale_normalized_psf_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
+        # update_histogram_axis_to_log(self.normalized_psf_view, normalized_psf, eps)
+
+        # cam2 = fits.getdata("../outputs/GUI_tests/normalized_psf.fits")
+        # cam2_log = np.log10(np.maximum(cam2, eps))  
+        # self.cam2_view.setImage(cam2_log, autoLevels=(self.autoscale_normalized_psf_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
+        # update_histogram_axis_to_log(self.cam2_view, cam2, eps)
+
+
+
 
         # data2 = np.random.rand(100)-0.5
         # if(self.square_computed_KL_modes_checkbox.checkState()==Qt.CheckState.Checked):

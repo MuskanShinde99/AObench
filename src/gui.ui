@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1654</width>
-    <height>1031</height>
+    <width>2542</width>
+    <height>1803</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,14 +17,14 @@
    <widget class="QTabWidget" name="main_tab">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>10</y>
-      <width>1621</width>
-      <height>971</height>
+      <x>30</x>
+      <y>20</y>
+      <width>2501</width>
+      <height>1641</height>
      </rect>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>0</number>
     </property>
     <widget class="QWidget" name="Images">
      <attribute name="title">
@@ -85,7 +85,7 @@
      <widget class="QLabel" name="label_9">
       <property name="geometry">
        <rect>
-        <x>230</x>
+        <x>210</x>
         <y>480</y>
         <width>151</width>
         <height>20</height>
@@ -218,8 +218,8 @@
      <widget class="QWidget" name="phase_residuals_widget" native="true">
       <property name="geometry">
        <rect>
-        <x>580</x>
-        <y>520</y>
+        <x>550</x>
+        <y>530</y>
         <width>471</width>
         <height>351</height>
        </rect>
@@ -235,7 +235,7 @@
        </rect>
       </property>
       <property name="text">
-       <string>2pi rad = λ</string>
+       <string>scale λ</string>
       </property>
      </widget>
      <widget class="QLabel" name="label_17">
@@ -248,7 +248,7 @@
        </rect>
       </property>
       <property name="text">
-       <string>2pi rad = λ</string>
+       <string>scale λ</string>
       </property>
      </widget>
      <widget class="QLabel" name="label_18">
@@ -261,7 +261,7 @@
        </rect>
       </property>
       <property name="text">
-       <string>2pi rad = λ</string>
+       <string>scale λ</string>
       </property>
      </widget>
      <widget class="QLabel" name="label_19">
@@ -274,7 +274,7 @@
        </rect>
       </property>
       <property name="text">
-       <string>2pi rad = λ</string>
+       <string>scale λ</string>
       </property>
      </widget>
      <widget class="QLabel" name="label_20">
@@ -287,18 +287,130 @@
        </rect>
       </property>
       <property name="text">
-       <string>2pi rad = λ</string>
+       <string>scale λ</string>
       </property>
      </widget>
-    </widget>
-    <widget class="QWidget" name="cam">
-     <attribute name="title">
-      <string>Cam</string>
-     </attribute>
+     <widget class="QLabel" name="label_21">
+      <property name="geometry">
+       <rect>
+        <x>1210</x>
+        <y>530</y>
+        <width>151</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>scale λ</string>
+      </property>
+     </widget>
+     <widget class="QWidget" name="dm_command_widget" native="true">
+      <property name="geometry">
+       <rect>
+        <x>1060</x>
+        <y>550</y>
+        <width>471</width>
+        <height>351</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="autoscale_dm_command_checkbox">
+      <property name="geometry">
+       <rect>
+        <x>1200</x>
+        <y>900</y>
+        <width>121</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>autoscale</string>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_23">
+      <property name="geometry">
+       <rect>
+        <x>1200</x>
+        <y>500</y>
+        <width>151</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>dm command</string>
+      </property>
+     </widget>
+     <widget class="QWidget" name="cam2_widget" native="true">
+      <property name="geometry">
+       <rect>
+        <x>1550</x>
+        <y>550</y>
+        <width>471</width>
+        <height>351</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="autoscale_cam1_checkbox">
+      <property name="geometry">
+       <rect>
+        <x>1740</x>
+        <y>460</y>
+        <width>121</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>autoscale</string>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QWidget" name="cam1_widget" native="true">
+      <property name="geometry">
+       <rect>
+        <x>1580</x>
+        <y>100</y>
+        <width>471</width>
+        <height>351</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_24">
+      <property name="geometry">
+       <rect>
+        <x>1730</x>
+        <y>500</y>
+        <width>151</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>cam 2</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="autoscale_cam2_checkbox">
+      <property name="geometry">
+       <rect>
+        <x>1710</x>
+        <y>930</y>
+        <width>121</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>autoscale</string>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
+      </property>
+     </widget>
      <widget class="QLabel" name="label_22">
       <property name="geometry">
        <rect>
-        <x>210</x>
+        <x>1760</x>
         <y>30</y>
         <width>151</width>
         <height>20</height>
@@ -308,202 +420,47 @@
        <string>cam 1</string>
       </property>
      </widget>
-     <widget class="QWidget" name="cam1_widget" native="true">
+     <widget class="QPushButton" name="reset_computed_KL_modes_view_button">
       <property name="geometry">
        <rect>
-        <x>30</x>
-        <y>80</y>
-        <width>471</width>
-        <height>351</height>
-       </rect>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="autoscale_cam1_checkbox">
-      <property name="geometry">
-       <rect>
-        <x>190</x>
-        <y>460</y>
-        <width>121</width>
-        <height>24</height>
+        <x>250</x>
+        <y>1430</y>
+        <width>89</width>
+        <height>25</height>
        </rect>
       </property>
       <property name="text">
-       <string>autoscale</string>
-      </property>
-      <property name="checked">
-       <bool>true</bool>
-      </property>
-     </widget>
-     <widget class="QLabel" name="label_24">
-      <property name="geometry">
-       <rect>
-        <x>720</x>
-        <y>30</y>
-        <width>151</width>
-        <height>20</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>cam 2</string>
-      </property>
-     </widget>
-     <widget class="QWidget" name="cam2_widget" native="true">
-      <property name="geometry">
-       <rect>
-        <x>540</x>
-        <y>80</y>
-        <width>471</width>
-        <height>351</height>
-       </rect>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="autoscale_cam2_checkbox">
-      <property name="geometry">
-       <rect>
-        <x>700</x>
-        <y>460</y>
-        <width>121</width>
-        <height>24</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>autoscale</string>
-      </property>
-      <property name="checked">
-       <bool>true</bool>
-      </property>
-     </widget>
-    </widget>
-    <widget class="QWidget" name="Vector">
-     <attribute name="title">
-      <string>Vector</string>
-     </attribute>
-     <widget class="QWidget" name="computed_act_pos_widget" native="true">
-      <property name="geometry">
-       <rect>
-        <x>60</x>
-        <y>40</y>
-        <width>601</width>
-        <height>371</height>
-       </rect>
+       <string>Reset View</string>
       </property>
      </widget>
      <widget class="QWidget" name="computed_KL_modes_widget" native="true">
       <property name="geometry">
        <rect>
-        <x>740</x>
-        <y>40</y>
+        <x>40</x>
+        <y>1030</y>
         <width>601</width>
         <height>371</height>
        </rect>
       </property>
      </widget>
-     <widget class="QWidget" name="commands_widget" native="true">
-      <property name="geometry">
-       <rect>
-        <x>60</x>
-        <y>510</y>
-        <width>601</width>
-        <height>361</height>
-       </rect>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="square_computed_act_pos_checkbox">
-      <property name="geometry">
-       <rect>
-        <x>370</x>
-        <y>430</y>
-        <width>121</width>
-        <height>24</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>square</string>
-      </property>
-     </widget>
-     <widget class="QPushButton" name="reset_computed_act_pos_view_button">
-      <property name="geometry">
-       <rect>
-        <x>240</x>
-        <y>430</y>
-        <width>89</width>
-        <height>25</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Reset View</string>
-      </property>
-     </widget>
      <widget class="QCheckBox" name="square_computed_KL_modes_checkbox">
       <property name="geometry">
        <rect>
-        <x>1070</x>
-        <y>440</y>
+        <x>370</x>
+        <y>1430</y>
         <width>121</width>
         <height>24</height>
        </rect>
       </property>
       <property name="text">
        <string>square</string>
-      </property>
-     </widget>
-     <widget class="QPushButton" name="reset_computed_KL_modes_view_button">
-      <property name="geometry">
-       <rect>
-        <x>950</x>
-        <y>440</y>
-        <width>89</width>
-        <height>25</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Reset View</string>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="square_commands_checkbox">
-      <property name="geometry">
-       <rect>
-        <x>350</x>
-        <y>880</y>
-        <width>121</width>
-        <height>24</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>square</string>
-      </property>
-     </widget>
-     <widget class="QPushButton" name="reset_commands_view_button">
-      <property name="geometry">
-       <rect>
-        <x>230</x>
-        <y>880</y>
-        <width>89</width>
-        <height>25</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Reset View</string>
-      </property>
-     </widget>
-     <widget class="QLabel" name="label_10">
-      <property name="geometry">
-       <rect>
-        <x>160</x>
-        <y>20</y>
-        <width>361</width>
-        <height>20</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Computed Actuator Positions Projected on KL Modes</string>
       </property>
      </widget>
      <widget class="QLabel" name="label_11">
       <property name="geometry">
        <rect>
-        <x>980</x>
-        <y>10</y>
+        <x>280</x>
+        <y>1000</y>
         <width>151</width>
         <height>20</height>
        </rect>
@@ -515,8 +472,8 @@
      <widget class="QLabel" name="label_12">
       <property name="geometry">
        <rect>
-        <x>340</x>
-        <y>460</y>
+        <x>950</x>
+        <y>990</y>
         <width>91</width>
         <height>20</height>
        </rect>
@@ -525,6 +482,140 @@
        <string>Commands</string>
       </property>
      </widget>
+     <widget class="QPushButton" name="reset_commands_view_button">
+      <property name="geometry">
+       <rect>
+        <x>840</x>
+        <y>1410</y>
+        <width>89</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Reset View</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="square_commands_checkbox">
+      <property name="geometry">
+       <rect>
+        <x>960</x>
+        <y>1410</y>
+        <width>121</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>square</string>
+      </property>
+     </widget>
+     <widget class="QWidget" name="commands_widget" native="true">
+      <property name="geometry">
+       <rect>
+        <x>670</x>
+        <y>1040</y>
+        <width>601</width>
+        <height>361</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QWidget" name="computed_act_pos_widget" native="true">
+      <property name="geometry">
+       <rect>
+        <x>1310</x>
+        <y>1050</y>
+        <width>601</width>
+        <height>371</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="square_computed_act_pos_checkbox">
+      <property name="geometry">
+       <rect>
+        <x>1620</x>
+        <y>1440</y>
+        <width>121</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>square</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_10">
+      <property name="geometry">
+       <rect>
+        <x>1410</x>
+        <y>1030</y>
+        <width>361</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Computed Actuator Positions Projected on KL Modes</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="reset_computed_act_pos_view_button">
+      <property name="geometry">
+       <rect>
+        <x>1490</x>
+        <y>1440</y>
+        <width>89</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Reset View</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="autoscale_dm_act_checkbox">
+      <property name="geometry">
+       <rect>
+        <x>2110</x>
+        <y>1460</y>
+        <width>121</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>autoscale</string>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_25">
+      <property name="geometry">
+       <rect>
+        <x>2130</x>
+        <y>1030</y>
+        <width>151</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>DM act pos</string>
+      </property>
+     </widget>
+     <widget class="QWidget" name="dm_act_pos_widget" native="true">
+      <property name="geometry">
+       <rect>
+        <x>1950</x>
+        <y>1080</y>
+        <width>471</width>
+        <height>351</height>
+       </rect>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="cam">
+     <attribute name="title">
+      <string>Cam</string>
+     </attribute>
+    </widget>
+    <widget class="QWidget" name="Vector">
+     <attribute name="title">
+      <string>Vector</string>
+     </attribute>
     </widget>
     <widget class="QWidget" name="main">
      <attribute name="title">
@@ -837,7 +928,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1654</width>
+     <width>2542</width>
      <height>27</height>
     </rect>
    </property>
