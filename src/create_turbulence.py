@@ -10,7 +10,14 @@ import os
 import time
 from astropy.io import fits
 from matplotlib import pyplot as plt
-from hcipy import *
+from hcipy import (
+    Cn_squared_from_fried_parameter,
+    InfiniteAtmosphericLayer,
+    evaluate_supersampled,
+    make_obstructed_circular_aperture,
+    make_pupil_grid,
+    seeing_to_fried_parameter,
+)
 
 #%% Setup pupil on the SLM
 

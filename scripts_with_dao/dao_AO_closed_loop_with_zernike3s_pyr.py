@@ -14,7 +14,8 @@ from pypylon import pylon
 from matplotlib import pyplot as plt
 from PIL import Image
 import numpy as np
-from hcipy import *
+from hcipy import make_gaussian_influence_functions
+from src.hardware import DeformableMirror
 import time
 from astropy.io import fits
 import os
@@ -24,20 +25,9 @@ from DEVICES_3.Basler_Pylon.test_pylon import *
 import dao
 import matplotlib.animation as animation
 from pathlib import Path
+from src.config import config
 
-# Configure root paths without changing the working directory
-OPT_LAB_ROOT = Path(os.environ.get("OPT_LAB_ROOT", "/home/ristretto-dao/optlab-master"))
-PROJECT_ROOT = Path(os.environ.get("PROJECT_ROOT", OPT_LAB_ROOT / "PROJECTS_3/RISTRETTO/Banc AO"))
-sys.path.append(str(OPT_LAB_ROOT))
-sys.path.append(str(PROJECT_ROOT))
-ROOT_DIR = PROJECT_ROOT
-
-# Output folders
-folder_calib = ROOT_DIR / 'outputs/Calibration_files'
-folder_pyr_mask = ROOT_DIR / 'outputs/3s_pyr_mask'
-folder_transformation_matrices = ROOT_DIR / 'outputs/Transformation_matrices'
-folder_closed_loop_tests = ROOT_DIR / 'outputs/Closed_loop_tests'
-folder_turbulence = ROOT_DIR / 'outputs/Phase_screens'
+ROOT_DIR = config.root_dir
 
 # Import Specific Modules
 from src.create_circular_pupil import *
@@ -46,7 +36,8 @@ from src.utils import *
 from src.dao_create_flux_filtering_mask import *
 from src.psf_centring_algorithm import *
 from src.calibration_functions import *
-from src.dao_setup import *  # Import all variables from setup
+from src.dao_setup import init_setup
+setup = init_setup()  # Import all variables from setup
 from src.kl_basis_eigenmodes import computeEigenModes, computeEigenModes_notsquarepupil
 from src.create_transformation_matrices import *
 from src.ao_loop import *
@@ -86,7 +77,11 @@ print("Number of DM modes =", nmodes_dm)
 
 # Flatten the DM surface and set actuator values
 deformable_mirror.flatten()
-deformable_mirror.actuators.fill(1)
+set_dm_actuators(
+    deformable_mirror,
+    np.ones(deformable_mirror.num_actuators),
+    setup=setup,
+)
 plt.figure()
 plt.imshow(deformable_mirror.surface.shaped)
 plt.colorbar()

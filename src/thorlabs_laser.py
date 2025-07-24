@@ -4,16 +4,7 @@ Created on Thu Oct 17 15:56:47 2024
 
 @author: RISTRETTO
 """
-import os
-import sys
-from pathlib import Path
 
-# Configure root paths without changing the working directory
-OPT_LAB_ROOT = Path(os.environ.get("OPT_LAB_ROOT", "/home/ristretto-dao/optlab-master"))
-PROJECT_ROOT = Path(os.environ.get("PROJECT_ROOT", OPT_LAB_ROOT / "PROJECTS_3/RISTRETTO/Banc AO"))
-sys.path.append(str(OPT_LAB_ROOT))
-sys.path.append(str(PROJECT_ROOT))
-ROOT_DIR = PROJECT_ROOT
 from DEVICES_3.Thorlabs.MCLS1 import mcls1
 
 channel = 1

@@ -4,9 +4,16 @@
 # In[2]:
 
 
-from hcipy import *
+from hcipy import (
+    evaluate_supersampled,
+    make_gaussian_influence_functions,
+    make_obstructed_circular_aperture,
+    make_pupil_grid,
+)
+from src.hardware import DeformableMirror
 import numpy as np
 import matplotlib.pyplot as plt
+from src.utils import set_dm_actuators
 get_ipython().run_line_magic('matplotlib', 'inline')
 from holoeye import detect_heds_module_path  # Move all the example files into the holoeye folder in Lib/site-packages 
 from holoeye import slmdisplaysdk
@@ -68,7 +75,8 @@ deformable_mirror = DeformableMirror(dm_modes)
 nmodes_dm = deformable_mirror.num_actuators
 print("number of modes =", nmodes_dm)
 
-deformable_mirror.actuators = np.ones((nact, nact)).flatten()
+initial_act = np.ones((nact, nact)).flatten()
+set_dm_actuators(deformable_mirror, initial_act)
 plt.imshow(deformable_mirror.surface.shaped)
 
 deformable_mirror.flatten()

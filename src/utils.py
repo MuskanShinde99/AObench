@@ -6,17 +6,42 @@ Created on Mon Sep  2 16:57:48 2024
 """
 
 import os
+import time
 import numpy as np
 from astropy.io import fits
 from scipy.ndimage import center_of_mass
 from scipy.interpolate import interp2d
-from src.dao_setup import *  # Import all variables from setup
-import src.dao_setup as dao_setup
+
+from .shm_loader import shm
+
+DEFAULT_SETUP = None
+
+def set_default_setup(setup):
+    """Register a default setup used when none is provided."""
+    global DEFAULT_SETUP
+    DEFAULT_SETUP = setup
+
+
+def set_dm_actuators(dm, actuators, setup=None):
+    """Set DM actuators and update the shared memory grid."""
+    dm_act_shm = shm.dm_act_shm
+
+    dm.actuators = actuators
+    if setup is None:
+        if DEFAULT_SETUP is None:
+            raise ValueError("No setup provided and no default registered.")
+        setup = DEFAULT_SETUP
+    dm_act_shm.set_data(
+        np.asarray(dm.actuators).reshape(
+            setup.nact, setup.nact
+        )
+    )
+    
 
 
 # Add and wrap data within the pupil mask
 
-def compute_data_slm(data_dm=0, data_phase_screen=0, **kwargs):
+def compute_data_slm(data_dm=0, data_phase_screen=0, data_dm_flat=0, setup=None, **kwargs):
     """
     Computes the SLM data by combining phase screen and deformable mirror data
     with pupil-related masks and arrays.
@@ -34,10 +59,15 @@ def compute_data_slm(data_dm=0, data_phase_screen=0, **kwargs):
     - data_slm (ndarray): Resulting SLM data.
     """
     
-    data_pupil_inner = kwargs.get("data_pupil_inner", dao_setup.data_pupil_inner)
-    data_pupil_outer = kwargs.get("data_pupil_outer", dao_setup.data_pupil_outer)
-    pupil_mask = kwargs.get("pupil_mask", dao_setup.pupil_mask)
-    small_pupil_mask = kwargs.get("small_pupil_mask", dao_setup.small_pupil_mask)
+    if setup is None:
+        if DEFAULT_SETUP is None:
+            raise ValueError("No setup provided and no default registered.")
+        setup = DEFAULT_SETUP
+
+    data_pupil_inner = kwargs.get("data_pupil_inner", setup.data_pupil_inner_new)
+    data_pupil_outer = kwargs.get("data_pupil_outer", setup.data_pupil_outer)
+    pupil_mask = kwargs.get("pupil_mask", setup.pupil_mask)
+    small_pupil_mask = kwargs.get("small_pupil_mask", setup.small_pupil_mask)
 
     data_slm = data_pupil_outer.copy()
     data_inner = (((data_pupil_inner + data_dm + data_phase_screen) * 256) % 256)
@@ -45,6 +75,65 @@ def compute_data_slm(data_dm=0, data_phase_screen=0, **kwargs):
 
     return data_slm.astype(np.uint8)
 
+# ---------------------------------------------------------------------------
+def set_data_dm(actuators, *, setup=None, **kwargs):
+    """Flatten the DM, apply ``actuators`` and show the resulting phase on the SLM.
+
+    Parameters
+    ----------
+    actuators : array_like
+        Actuator values to apply.
+    setup : object, optional
+        DAO setup providing defaults for devices and dimensions.
+    kwargs : optional
+        ``dm``                 – DM instance. Defaults to ``setup.deformable_mirror``.
+        ``slm``                – SLM instance. Defaults to ``setup.slm``.
+        ``npix_small_pupil_grid`` – DM grid size. Defaults to ``setup.npix_small_pupil_grid``.
+        ``pupil_setup``        – Setup for ``compute_data_slm``. Defaults to ``setup.pupil_setup``.
+        ``wait_time``          – Delay after sending data. Defaults to ``setup.wait_time`` or ``0``.
+
+    Returns
+    -------
+    tuple of ndarray
+        ``(data_dm, data_slm)`` arrays that were sent to the SLM.
+    """
+
+    if setup is None:
+        if DEFAULT_SETUP is None:
+            raise ValueError("No setup provided and no default registered.")
+        setup = DEFAULT_SETUP
+
+    slm = kwargs.get("slm", getattr(setup, "slm", None))
+    if slm is None:
+        raise ValueError("SLM instance must be provided")
+
+    npix_small_pupil_grid = kwargs.get(
+        "npix_small_pupil_grid",
+        getattr(setup, "npix_small_pupil_grid", None),
+    )
+    if npix_small_pupil_grid is None:
+        raise ValueError("npix_small_pupil_grid must be provided")
+
+    wait_time = kwargs.get("wait_time", getattr(setup, "wait_time", 0))
+
+    dm = kwargs.get("dm", getattr(setup, "deformable_mirror", None))
+    if dm is None:
+        raise ValueError("Deformable mirror instance must be provided")
+
+    dm.flatten()
+    set_dm_actuators(dm, actuators, setup=setup)
+
+    data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
+    data_dm[:, :] = dm.opd.shaped / 2
+
+    pupil_setup = kwargs.get("pupil_setup", getattr(setup, "pupil_setup", setup))
+    data_slm = compute_data_slm(data_dm=data_dm, setup=pupil_setup)
+    slm.set_data(data_slm)
+    time.sleep(wait_time)
+
+    return data_dm, data_slm
+
+# ---------------------------------------------------------------------------
 # data_slm = data_pupil_outer.copy()
 # data_inner = ((data_pupil_inner + (data_dm)) * 256) % 256
 # data_slm[pupil_mask] = data_inner[small_pupil_mask]
@@ -145,8 +234,53 @@ def normalize_image(image, mask, bias_img=None):
     
     # Normalize the masked image by dividing by the absolute sum of the masked image
     normalized_image = masked_image / np.abs(np.sum(masked_image))
-    
+
     return normalized_image
+
+
+def get_slopes_image(mask, bias_image, normalized_reference_image, pyr_img=None, setup=None, **kwargs):
+    """Capture a PyWFS frame and compute its slope image.
+
+    The resulting slopes image is always written to the global
+    ``slopes_img_shm`` shared memory.
+
+    Parameters
+    ----------
+    camera_wfs : object
+        Camera used to grab a new frame when ``pyr_img`` is ``None``.
+    mask : numpy.ndarray
+        Processing mask applied to the raw WFS image.
+    bias_image : numpy.ndarray
+        Bias image subtracted from the captured frame.
+    normalized_reference_image : numpy.ndarray
+        Normalized reference image used for slope computation.
+    pyr_img : numpy.ndarray, optional
+        Pre-acquired pyramid image. If provided, ``camera_wfs`` is not queried.
+
+    Returns
+    -------
+    numpy.ndarray
+        The computed slopes image.
+    """
+
+    slopes_img_shm = shm.slopes_img_shm
+
+    if setup is None:
+        if DEFAULT_SETUP is None:
+            raise ValueError("No setup provided and no default registered.")
+        setup = DEFAULT_SETUP
+    
+    camera_wfs = kwargs.get("camera_wfs", setup.camera_wfs)
+
+    if pyr_img is None:
+        pyr_img = camera_wfs.get_data()
+
+    normalized_pyr_img = normalize_image(pyr_img, mask, bias_image)
+    slopes_image = compute_pyr_slopes(normalized_pyr_img, normalized_reference_image)
+    # print('slopes_image data type', slopes_image.dtype)
+    # print('slopes_image shape', slopes_image.shape)
+    slopes_img_shm.set_data(slopes_image)
+    return slopes_image
 
 
 def compute_pyr_slopes(normalized_pyr_img, normalized_ref_img):

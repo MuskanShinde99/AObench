@@ -7,20 +7,20 @@ Created on Mon Feb 17 16:19:48 2025
 """
 
 import numpy as np
-from pypylon import pylon
-from DEVICES_3.Basler_Pylon.test_pylon import *
-from hcipy import *
 import time
+import os
 from matplotlib import pyplot as plt
-from src.dao_setup import *  # Import all variables from setup
-import src.dao_setup as dao_setup
-from src.tilt import *
-from src.utils import *
+from src.dao_setup import init_setup
+from src.tilt_functions import apply_intensity_tilt_kl
+from src.utils import set_data_dm
 import matplotlib.colors as mcolors
+from astropy.io import fits
+
+setup = init_setup()
 
 
 
-def create_summed_image_for_mask(modulation_angles, modulation_amp, verbose=False, verbose_plot=False, **kwargs):
+def create_summed_image_for_mask(modulation_angles, modulation_amp, tiltx, tilty, verbose=False, **kwargs):
     """
     Create a mask based on the modulation angles and flux cutoff.
 
@@ -41,67 +41,47 @@ def create_summed_image_for_mask(modulation_angles, modulation_amp, verbose=Fals
     - summed_image: the summed image used for mask creation
     """
     
-    from src.dao_setup import wait_time
+    wait_time = setup.wait_time
 
-    # Use kwargs or default from dao_setup
-    camera = kwargs.get("camera", dao_setup.camera_wfs)
-    slm = kwargs.get("slm", dao_setup.slm)
-    data_pupil = kwargs.get("data_pupil", dao_setup.data_pupil)
-    pupil_size = kwargs.get("pupil_size", dao_setup.pupil_size)
-    pixel_size = kwargs.get("pixel_size", dao_setup.pixel_size)
-    pupil_mask = kwargs.get("pupil_mask", dao_setup.pupil_mask)
-    small_pupil_mask = kwargs.get("small_pupil_mask", dao_setup.small_pupil_mask)
-    dataHeight = kwargs.get("dataHeight", dao_setup.dataHeight)
-    dataWidth = kwargs.get("dataWidth", dao_setup.dataWidth)
+    # Use kwargs or default from setup
+    camera = kwargs.get("camera", setup.camera_wfs)
+    slm = kwargs.get("slm", setup.slm)
+    deformable_mirror = kwargs.get("deformable_mirror", setup.deformable_mirror)
+    data_pupil = kwargs.get("data_pupil", setup.pupil_setup.data_pupil)
+    pupil_size = kwargs.get("pupil_size", setup.pupil_size)
+    pixel_size = kwargs.get("pixel_size", setup.pixel_size)
+    pupil_mask = kwargs.get("pupil_mask", setup.pupil_setup.pupil_mask)
+    small_pupil_mask = kwargs.get("small_pupil_mask", setup.pupil_setup.small_pupil_mask)
+    dataHeight = kwargs.get("dataHeight", setup.dataHeight)
+    dataWidth = kwargs.get("dataWidth", setup.dataWidth)
+    npix_small_pupil_grid = kwargs.get("npix_small_pupil_grid", setup.npix_small_pupil_grid)
 
     pixel_size_mm = pixel_size
     Npix = pupil_size / pixel_size_mm  # replaced npix_pupil with Npix
 
     modulation_img_arr = []
 
-    # Setup dynamic plot if verbose_plot is True
-    if verbose_plot:
-        fig, ax = plt.subplots()
-        img_display = ax.imshow(np.zeros((dataHeight, dataWidth)), cmap='inferno', norm=mcolors.Normalize(vmin=0, vmax=1))
-        cbar = plt.colorbar(img_display, ax=ax)
-        ax.set_title("Captured Image at 0 Degrees")
-        plt.ion()
-        plt.show()
-
     for angle in modulation_angles:
         if verbose:
             print(f"Applying modulation angle: {angle}")
         
-        modulation_step = apply_intensity_tilt(small_pupil_mask, Npix / 2, tilt_angle=angle)
+        #modulation_step = apply_intensity_tilt(small_pupil_mask, Npix / 2, tilt_angle=angle)
+        modulation_step = apply_intensity_tilt_kl(tiltx, tilty, small_pupil_mask, tilt_angle=angle)
         data_modulation = modulation_amp * modulation_step
-        data_slm = compute_data_slm(data_dm=data_modulation)
-        slm.set_data(data_slm)
-
-        time.sleep(wait_time)  # wait for SLM update
+        
+        # Put on DM
+        set_data_dm(data_modulation, setup=setup,)
 
         # Capture image using pylon SDK wrapper function
         img = camera.get_data()
         modulation_img_arr.append(img)
-
-        if verbose_plot:
-            img_display.set_data(img)
-            img_display.set_clim(vmin=np.min(img), vmax=np.max(img))
-            cbar.update_normal(img_display)
-            ax.set_title(f'Captured Image at {angle} Degrees; max {np.max(img):.2f}')
-            fig.canvas.draw()
-            fig.canvas.flush_events()
-            plt.pause(0.01)
-
-    # Turn off interactive plotting after loop
-    if verbose_plot:
-        plt.ioff()
 
     summed_image = np.sum(np.asarray(modulation_img_arr), axis=0)
 
     return summed_image
 
 
-def create_summed_image_for_mask_dm_random(n_iter, verbose=False, verbose_plot=False, **kwargs):
+def create_summed_image_for_mask_dm_random(n_iter, verbose=False, **kwargs):
     """
     Run push-pull image acquisition using random DM actuator patterns.
 
@@ -119,55 +99,37 @@ def create_summed_image_for_mask_dm_random(n_iter, verbose=False, verbose_plot=F
     - summed_image: result of push-pull image subtraction summed over all modes
     """
 
-    slm = kwargs.get("slm", dao_setup.slm)
-    camera = kwargs.get("camera", dao_setup.camera_wfs)
-    deformable_mirror = kwargs.get("deformable_mirror", dao_setup.deformable_mirror)
+    slm = kwargs.get("slm", setup.slm)
+    camera = kwargs.get("camera", setup.camera_wfs)
+    deformable_mirror = kwargs.get("deformable_mirror", setup.deformable_mirror)
     deformable_mirror = DeformableMirror(dm_modes_full)
-    npix_small_pupil_grid = kwargs.get("npix_small_pupil_grid", dao_setup.npix_small_pupil_grid)
+    npix_small_pupil_grid = kwargs.get("npix_small_pupil_grid", setup.npix_small_pupil_grid)
 
     nact_total = int(deformable_mirror.num_actuators)
     data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
 
     img_arr = []
 
-    if verbose_plot:
-        fig, ax = plt.subplots()
-        img_display = ax.imshow(np.zeros((dataHeight, dataWidth)))
-        cbar = plt.colorbar(img_display, ax=ax)
-        ax.set_title("Captured Image")
-        plt.ion()
-        plt.show()
 
     for i in range(n_iter):
         if verbose:
             print(f"Iteration {i + 1}")
 
         act_random = np.random.choice([0, 1], size=nact_total)
-        deformable_mirror.actuators = act_random
-        data_dm[:, :] = deformable_mirror.opd.shaped
-        
-        data_slm = compute_data_slm(data_dm=data_dm)
-        slm.set_data(data_slm)
+        data_dm, data_slm = set_data_dm(
+            act_random,
+            setup=setup,
+        )
         time.sleep(wait_time)
         
         img = camera.get_data()
         img_arr.append(img)
 
-        if verbose_plot:
-            img_display.set_data(img)
-            img_display.set_clim(vmin=img.min(), vmax=img.max())
-            fig.canvas.draw()
-            fig.canvas.flush_events()
-            plt.pause(0.01)
-
-    if verbose_plot:
-        plt.ioff()
-
     summed_image = np.sum(np.asarray(img_arr), axis=0)
 
     return summed_image
 
-def create_flux_filtering_mask(method, flux_cutoff, 
+def create_flux_filtering_mask(method, flux_cutoff, tiltx, tilty,
                                modulation_angles=np.arange(0, 360, 10), modulation_amp=15, n_iter=200,
                                create_summed_image=True, verbose=False, verbose_plot=False, **kwargs):
     """
@@ -190,9 +152,9 @@ def create_flux_filtering_mask(method, flux_cutoff,
     - mask (np.ndarray): Binary mask highlighting high-flux regions
     """
 
-    folder_pyr_mask = kwargs.get("folder_pyr_mask", dao_setup.folder_pyr_mask)
-    folder_calib = kwargs.get("folder_calib", dao_setup.folder_calib)
-    pupil_size = kwargs.get("pupil_size", dao_setup.pupil_size)
+    folder_pyr_mask = kwargs.get("folder_pyr_mask", setup.folder_pyr_mask)
+    folder_calib = kwargs.get("folder_calib", setup.folder_calib)
+    pupil_size = kwargs.get("pupil_size", setup.pupil_size)
 
     summed_img_path = os.path.join(folder_calib, f'binned_summed_pyr_images_pup_{pupil_size}mm_3s_pyr.fits')
 
@@ -202,13 +164,13 @@ def create_flux_filtering_mask(method, flux_cutoff,
 
         if method == 'tip_tilt_modulation':
             summed_image = create_summed_image_for_mask(
-                modulation_angles, modulation_amp,
-                verbose=verbose, verbose_plot=verbose_plot, **kwargs
+                modulation_angles, modulation_amp, tiltx, tilty,
+                verbose=verbose, **kwargs
             )
         elif method == 'dm_random':
             summed_image = create_summed_image_for_mask_dm_random(
                 n_iter=n_iter,
-                verbose=verbose, verbose_plot=verbose_plot, **kwargs
+                verbose=verbose, **kwargs
             )
         else:
             raise ValueError("Invalid method. Use 'tip_tilt_modulation' or 'dm_random'.")

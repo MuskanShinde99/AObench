@@ -1,70 +1,47 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Mon Feb 17 13:56:42 2025
-
-@author: laboptic
-"""
+"""Module initializing AO bench hardware and pupil configuration."""
 
 # Import Libraries
-from hcipy import *
-from matplotlib.colors import LogNorm
-import gc
-from tqdm import tqdm
-from pypylon import pylon
-from matplotlib import pyplot as plt
-from PIL import Image
+from hcipy import (
+    evaluate_supersampled,
+    make_obstructed_circular_aperture,
+    make_pupil_grid,
+    make_zernike_basis,
+)
 import numpy as np
-import time
 from astropy.io import fits
-import os
-import sys
-import scipy
-import matplotlib.animation as animation
-from pathlib import Path
-from skimage.transform import resize
+from dataclasses import dataclass
 
-# Configure root paths without changing the working directory
-OPT_LAB_ROOT = Path(os.environ.get("OPT_LAB_ROOT", "/home/ristretto-dao/optlab-master"))
-PROJECT_ROOT = Path(os.environ.get("PROJECT_ROOT", OPT_LAB_ROOT / "PROJECTS_3/RISTRETTO/Banc AO"))
-sys.path.append(str(OPT_LAB_ROOT))
-sys.path.append(str(PROJECT_ROOT))
-ROOT_DIR = PROJECT_ROOT
 
 # Import Specific Modules
-from DEVICES_3.Thorlabs.MCLS1 import mcls1
+from src.config import config
+from src.hardware import Camera, SLM, Laser, DM
 import dao
-from src.create_circular_pupil import *
-from src.dao_create_flux_filtering_mask import *
-from src.tilt import *
-from src.utils import *
-from src.calibration_functions import *
-from src.dao_setup import *  # Import all variables from setup
-from src.kl_basis_eigenmodes import computeEigenModes, computeEigenModes_notsquarepupil
-from src.create_transformation_matrices import *
+from src.utils import compute_data_slm, set_default_setup, set_dm_actuators
+from src.circular_pupil_functions import create_slm_circular_pupil
 
-
-folder_calib = ROOT_DIR / 'outputs/Calibration_files'
-folder_pyr_mask = ROOT_DIR / 'outputs/3s_pyr_mask'
-folder_transformation_matrices = ROOT_DIR / 'outputs/Transformation_matrices'
-folder_closed_loop_tests = ROOT_DIR / 'outputs/Closed_loop_tests'
-folder_turbulence = ROOT_DIR / 'outputs/Phase_screens'
-folder_gui = ROOT_DIR / 'outputs/GUI_tests'
+ROOT_DIR = config.root_dir
+folder_calib = config.folder_calib
+folder_pyr_mask = config.folder_pyr_mask
+folder_transformation_matrices = config.folder_transformation_matrices
+folder_closed_loop_tests = config.folder_closed_loop_tests
+folder_turbulence = config.folder_turbulence
+folder_gui = config.folder_gui
 
 #%% Start the laser
 
 channel = 1
-las = mcls1("/dev/ttyUSB0")
-las.set_channel(channel)
-#las.enable(1) # 1 to turn on laser, 0 to turn off
-las.set_current(49) #55mA is a good value for pyramid images
+las = Laser("/dev/ttyUSB0", channel)
+# las.enable(1)  # 1 to turn on laser, 0 to turn off
+las.set_current(49)  # 55mA is a good value for pyramid images
 print('Laser is Accessible')
   
 #%% Configuration Camera
 
 # To set camera
-camera_wfs = dao.shm('/tmp/cam1.im.shm')
-camera_fp = dao.shm('/tmp/cam2.im.shm')
+camera_wfs = Camera('/tmp/cam1.im.shm')
+camera_fp = Camera('/tmp/cam2.im.shm')
 
 fps_wfs = dao.shm('/tmp/cam1Fps.im.shm')
 fps_wfs.set_data(fps_wfs.get_data()*0+300)
@@ -85,7 +62,7 @@ img_size_fp_cam = img_fp.shape[0]
 #%% Configuration SLM
 
 # Initializes the SLM library
-slm=dao.shm('/tmp/slm.im.shm')
+slm = SLM('/tmp/slm.im.shm')
 print('SLM is open')
 
 # Get SLM dimensions
@@ -98,7 +75,8 @@ wait_time = 0.15
 # dataHeight = slm.height_px
 # pixel_size = slm.pixelsize_m * 1e3  # Pixel size in mm
 
-#%% Create Pupil
+
+#%% Create Pupil grid
 
 # Parameters for the circular pupil
 pupil_size = 4  # [mm]
@@ -114,86 +92,6 @@ vlt_aperture_generator = make_obstructed_circular_aperture(pupil_size, 0, 0, 0)
 pupil_mask = evaluate_supersampled(vlt_aperture_generator, pupil_grid, 1)
 pupil_mask =pupil_mask.reshape(dataHeight, dataWidth)
 pupil_mask = pupil_mask.astype(bool)
-
-# Create circular pupil
-data_pupil = create_slm_circular_pupil(tilt_amp_outer, tilt_amp_inner, pupil_size, pupil_mask, slm)
-
-# Create Zernike basis
-zernike_basis = make_zernike_basis(11, pupil_size, pupil_grid)
-zernike_basis = [mode / np.ptp(mode) for mode in zernike_basis]
-zernike_basis = np.asarray(zernike_basis)
-
-# [-0.0813878287964559, 0.09992195172893337]
-# Create a Tip-Tilt (TT) matrix with specified amplitudes as the diagonal elements
-tt_amplitudes = [-1.680357716565717, 0.12651517048626593]  # Tip and Tilt amplitudes
-tt_amplitude_matrix = np.diag(tt_amplitudes)
-tt_matrix = tt_amplitude_matrix @ zernike_basis[1:3, :]  # Select modes 1 (tip) and 2 (tilt)
-
-data_tt = np.zeros((dataHeight, dataWidth), dtype=np.float32)
-data_tt[:, :] = (tt_matrix[0] + tt_matrix[1]).reshape(dataHeight, dataWidth)
-
-othermodes_amplitudes = [0.36500000000000077, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]  # Focus (mode 3) + modes 4 to 10
-othermodes_amplitude_matrix = np.diag(othermodes_amplitudes)
-othermodes_matrix = othermodes_amplitude_matrix @ zernike_basis[3:11, :]  # Select modes 3 (focus) to 10
-
-data_othermodes = np.zeros((dataHeight, dataWidth), dtype=np.float32)
-data_othermodes[:, :] = (othermodes_matrix[0] + othermodes_matrix[1] + othermodes_matrix[2]).reshape(dataHeight, dataWidth) 
-
-# Add all the modes to data pupil
-data_pupil = data_pupil + data_tt + data_othermodes  # Add TT and higher-order terms to pupil
-
-
-# Function to update pupil with new TT amplitudes and other modes
-def update_pupil(new_tt_amplitudes=None, new_othermodes_amplitudes=None,
-                 new_tilt_amp_outer=None, new_tilt_amp_inner=None):
-    """Recompute the pupil using updated tip/tilt and higher-order amplitudes.
-
-    Parameters
-    ----------
-    new_tt_amplitudes : sequence of float, optional
-        Two-element list ``[tip, tilt]`` for the TT matrix.
-    new_othermodes_amplitudes : sequence of float, optional
-        Amplitudes for focus and higher-order Zernike modes
-        (e.g., ``[focus, astig_x, astig_y, ...]``).
-    new_tilt_amp_outer : float, optional
-        Outer grating tilt amplitude.
-    new_tilt_amp_inner : float, optional
-        Inner grating tilt amplitude.
-    """
-    global tt_amplitudes, othermodes_amplitudes
-    global tilt_amp_outer, tilt_amp_inner, data_pupil
-
-    # Update the amplitudes and tilt parameters if new values are provided
-    if new_tt_amplitudes is not None:
-        tt_amplitudes = list(new_tt_amplitudes)
-
-    if new_othermodes_amplitudes is not None:
-        othermodes_amplitudes = list(new_othermodes_amplitudes)
-
-    if new_tilt_amp_outer is not None:
-        tilt_amp_outer = new_tilt_amp_outer
-
-    if new_tilt_amp_inner is not None:
-        tilt_amp_inner = new_tilt_amp_inner
-
-    # Recalculate pupil with updated values
-    data_pupil = create_slm_circular_pupil(tilt_amp_outer, tilt_amp_inner,
-                                           pupil_size, pupil_mask, slm)
-
-    # Create a new Tip-Tilt (TT) matrix with the updated amplitudes
-    tt_matrix = np.diag(tt_amplitudes) @ zernike_basis[1:3, :]  # Select modes 1 (tip) and 2 (tilt)
-    
-    # Create TT data
-    data_tt = np.zeros((dataHeight, dataWidth), dtype=np.float32)
-    data_tt[:, :] = (tt_matrix[0] + tt_matrix[1]).reshape(dataHeight, dataWidth)
-
-    # Recompute focus and higher-order terms
-    othermodes_matrix = np.diag(othermodes_amplitudes) @ zernike_basis[3:11, :]
-    data_othermodes = np.zeros((dataHeight, dataWidth), dtype=np.float32)
-    data_othermodes[:, :] = (othermodes_matrix[0] + othermodes_matrix[1] + othermodes_matrix[2]).reshape(dataHeight, dataWidth)
-
-    # Add the new TT and other modes to the pupil and return
-    return data_pupil + data_tt + data_othermodes
 
 #%% Create a pupil grid for a smaller pupil area
 
@@ -221,73 +119,237 @@ small_pupil_mask = pupil_mask[offset_height:offset_height + npix_small_pupil_gri
 # plt.title('Small Pupil Mask')
 # plt.show()
 
-#%% Create outer and inner data slm
-
-# Create a new `data_pupil_outer` with the same size as `data_pupil`
-data_pupil_outer = np.copy(data_pupil)
-data_pupil_outer[pupil_mask] = 0  # Zero out inner region given by 'pupil_mask'
-
-# Create a new `data_pupil_inner` with the same size as `small_pupil_mask`
-data_pupil_inner = np.copy(data_pupil[offset_height:offset_height + npix_small_pupil_grid, 
-                              offset_width:offset_width + npix_small_pupil_grid])
-data_pupil_inner[~small_pupil_mask] = 0 # Zero out inner region outside by 'small_pupil_mask'
-
-# plt.figure()
-# plt.imshow(data_pupil_outer)
-# plt.colorbar()
-# plt.title('Data Pupil Outer')
-# plt.show()
-
-# plt.figure()
-# plt.imshow(data_pupil_inner)
-# plt.colorbar()
-# plt.title('Data Pupil Inner')
-# plt.show()
-
-#%% Define deformable mirror
+#%% Configuration deformable mirror
 
 # Number of actuators
 nact = 17
 
-# Create influence functions for deformable mirror (DM)
-t0 = time.time()
-dm_modes_full = make_gaussian_influence_functions(small_pupil_grid, nact, pupil_size / (nact - 1), crosstalk=0.3)
+deformable_mirror = DM(
+    small_pupil_grid,
+    small_pupil_mask,
+    pupil_size,
+    nact,
+)
 
-# Resize the pupil mask to exactly nactxnact and compute the valid actuqator indices
-valid_actuators_mask = resize(np.logical_not(small_pupil_mask), (nact, nact), order=0, anti_aliasing=False, preserve_range=True).astype(int)
-valid_actuator_indices= np.column_stack(np.where(valid_actuators_mask))
-
-# Compute valid actuator counts
-nact_total = valid_actuators_mask.size
-nact_outside = np.sum(valid_actuators_mask)
-nact_valid = nact_total - nact_outside
-
-#Put the dm modes outside the valid actuator indices to zero
-dm_modes = np.asarray(dm_modes_full)
-
-for x, y in valid_actuator_indices:
-    dm_modes[x * nact + y] = 0  # Zero out the corresponding mode
-
-dm_modes = ModeBasis(dm_modes.T, small_pupil_grid)
-
-deformable_mirror = DeformableMirror(dm_modes_full)
-
-nmodes_dm = deformable_mirror.num_actuators
-
-# print("Number of DM modes =", nmodes_dm)
+dm_modes_full = deformable_mirror.dm_modes_full
+dm_modes = deformable_mirror.dm_modes
+nmodes_dm = deformable_mirror.nmodes_dm
+nact_total = deformable_mirror.nact_total
+nact_valid = deformable_mirror.nact_valid
 
 # Flatten the DM surface and set actuator values
-deformable_mirror.flatten()
-# deformable_mirror.actuators.fill(1)
+# deformable_mirror.flatten()
+# deformable_mirror.actuators = np.ones(nact**2)
 # plt.figure()
 # plt.imshow(deformable_mirror.opd.shaped)
 # plt.colorbar()
 # plt.title('Deformable Mirror Surface OPD')
 # plt.show()
 
-#%% Create shared memory
+#%% Define number of KL and Zernike modes
 
 nmodes_dm = nact_valid
 nmodes_KL = nact_valid
 nmodes_Znk = nact_valid
+
+
+#%% Load transformation matrices
+
+# From folder 
+KL2Act = fits.getdata(folder_transformation_matrices / f'KL2Act_nkl_{nmodes_KL}_nact_{nact}.fits')
+KL2Phs = fits.getdata(folder_transformation_matrices / f'KL2Phs_nkl_{nmodes_KL}_npupil_{npix_small_pupil_grid}.fits')
+
+
+#%%
+# Create circular pupil
+data_pupil = create_slm_circular_pupil(tilt_amp_outer, tilt_amp_inner, pupil_size, pupil_mask, slm)
+
+# Create Zernike basis
+zernike_basis = make_zernike_basis(11, pupil_size, pupil_grid)
+zernike_basis = [mode / np.ptp(mode) for mode in zernike_basis]
+zernike_basis = np.asarray(zernike_basis)
+
+# [-1.6510890005150187, 0.14406016044318903]
+# Create a Tip-Tilt (TT) matrix with specified amplitudes as the diagonal elements
+tt_amplitudes = [-1.5268547834231208, 0.16554335744784332] # Tip and Tilt amplitudes
+tt_amplitude_matrix = np.diag(tt_amplitudes)
+tt_matrix = tt_amplitude_matrix @ KL2Act[0:2, :]  # Select modes 1 (tip) and 2 (tilt)
+
+data_tt = (tt_matrix[0] + tt_matrix[1]).reshape(nact**2)
+
+othermodes_amplitudes = [-0.0, 0.0, -0.0, 0.0, 0.0, 0.0, 0.0, 0.0]  # Focus (mode 3) + modes 4 to 10
+othermodes_amplitude_matrix = np.diag(othermodes_amplitudes)
+othermodes_matrix = othermodes_amplitude_matrix @ KL2Act[2:10, :]  # Select modes 3 (focus) to 10
+
+data_othermodes = np.sum(othermodes_matrix, axis=0)
+
+#Put the modes on the dm
+data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
+deformable_mirror.flatten()
+deformable_mirror.actuators = data_tt + data_othermodes  # Add TT and higher-order terms to pupil
+#set_dm_actuators(deformable_mirror, data_tt + data_othermodes, pupil_setup)
+data_dm[:, :] = deformable_mirror.opd.shaped/2 #divide by 2 is very important to get the proper phase. because for this phase to be applied the slm surface needs to half of it.
+
+# Combine the DM surface with the pupil
+# ``data_dm`` is defined on the small pupil grid while ``data_pupil`` has the
+# full SLM dimensions.  To create a meaningful pattern for the SLM we first
+# split ``data_pupil`` into an outer (full size) and inner (small pupil sized)
+# part and then add ``data_dm`` to the inner part.  The result is wrapped and
+# inserted back into the full pupil.
+
+# Create a new `data_pupil_outer` with the same size as `data_pupil`
+data_pupil_outer = np.copy(data_pupil)
+data_pupil_outer[pupil_mask] = 0  # Zero out inner region given by `pupil_mask`
+
+# Create a new `data_pupil_inner` with the same size as the small pupil mask
+data_pupil_inner = np.copy(
+    data_pupil[offset_height:offset_height + npix_small_pupil_grid,
+               offset_width:offset_width + npix_small_pupil_grid])
+data_pupil_inner[~small_pupil_mask] = 0  # Zero out region outside the mask
+
+# Wrap and insert DM data into the pupil
+data_pupil_inner_new = data_pupil_inner + data_dm
+
+
+class PupilSetup:
+    """Encapsulate pupil parameters and provide update utilities."""
+
+    def __init__(self):
+        self.tilt_amp_outer = tilt_amp_outer
+        self.tilt_amp_inner = tilt_amp_inner
+        self.tt_amplitudes = list(tt_amplitudes)
+        self.othermodes_amplitudes = list(othermodes_amplitudes)
+        self.data_pupil = data_pupil
+        self.data_dm = data_dm
+        self.nact = nact
+        self.data_pupil_outer = data_pupil_outer
+        self.data_pupil_inner = data_pupil_inner
+        self.data_pupil_inner_new = data_pupil_inner_new
+        # Store masks for later use when recomputing the pupil
+        self.pupil_mask = pupil_mask
+        self.small_pupil_mask = small_pupil_mask
+        self.data_slm = compute_data_slm(setup=self)
+
+    def _recompute_dm(self):
+        """(Re)compute DM contribution and assemble the pupil."""
+        tt_matrix = np.diag(self.tt_amplitudes) @ KL2Act[0:2, :]
+        data_tt = (tt_matrix[0] + tt_matrix[1])
+
+        othermodes_matrix = np.diag(self.othermodes_amplitudes) @ KL2Act[2:10, :]
+        data_othermodes = np.sum(othermodes_matrix, axis=0)
+
+        self.data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
+        deformable_mirror.flatten()
+        # deformable_mirror.actuators = data_tt + data_othermodes  # Add TT and higher-order terms to pupil
+        set_dm_actuators(deformable_mirror, data_tt + data_othermodes, setup=self)
+        self.data_dm[:, :] = deformable_mirror.opd.shaped / 2
+
+        self.data_pupil_outer = np.copy(self.data_pupil)
+        self.data_pupil_outer[self.pupil_mask] = 0
+
+        self.data_pupil_inner = np.copy(
+            self.data_pupil[offset_height:offset_height + npix_small_pupil_grid,
+                             offset_width:offset_width + npix_small_pupil_grid])
+        self.data_pupil_inner[~self.small_pupil_mask] = 0
+
+        self.data_pupil_inner_new = self.data_pupil_inner + self.data_dm
+        self.data_slm = compute_data_slm(setup=self)
+
+    def update_pupil(self, new_tt_amplitudes=None, new_othermodes_amplitudes=None,
+                     new_tilt_amp_outer=None, new_tilt_amp_inner=None):
+        if new_tt_amplitudes is not None:
+            self.tt_amplitudes = list(new_tt_amplitudes)
+
+        if new_othermodes_amplitudes is not None:
+            self.othermodes_amplitudes = list(new_othermodes_amplitudes)
+
+        if new_tilt_amp_outer is not None:
+            self.tilt_amp_outer = new_tilt_amp_outer
+
+        if new_tilt_amp_inner is not None:
+            self.tilt_amp_inner = new_tilt_amp_inner
+
+        self.data_pupil = create_slm_circular_pupil(
+            self.tilt_amp_outer, self.tilt_amp_inner, pupil_size, self.pupil_mask, slm
+        )
+        self._recompute_dm()
+        return self.data_slm
+
+
+pupil_setup = PupilSetup()
+set_default_setup(pupil_setup)
+
+def update_pupil(*args, **kwargs):
+    """Wrapper for backward compatibility."""
+    return pupil_setup.update_pupil(*args, **kwargs)
+
+
+@dataclass
+class DAOSetup:
+    """Bundled access to frequently used setup objects."""
+
+    las: Laser
+    camera_wfs: Camera
+    camera_fp: Camera
+    slm: SLM
+    deformable_mirror: DM
+    pupil_setup: PupilSetup
+    wait_time: float
+    dataWidth: int
+    dataHeight: int
+    npix_small_pupil_grid: int
+    pupil_size: float
+    pixel_size: float
+    folder_calib: str
+    folder_pyr_mask: str
+    folder_transformation_matrices: str
+    folder_closed_loop_tests: str
+    folder_turbulence: str
+    folder_gui: str
+    img_size_wfs_cam: int
+    img_size_fp_cam: int
+    nact: int
+    nact_valid: int
+    nact_total: int
+    nmodes_dm: int
+    nmodes_KL: int
+    nmodes_Znk: int
+    small_pupil_mask: np.ndarray
+    pupil_mask: np.ndarray
+
+
+def init_setup() -> DAOSetup:
+    """Return a :class:`DAOSetup` instance with initialized components."""
+
+    return DAOSetup(
+        las=las,
+        camera_wfs=camera_wfs,
+        camera_fp=camera_fp,
+        slm=slm,
+        deformable_mirror=deformable_mirror,
+        pupil_setup=pupil_setup,
+        wait_time=wait_time,
+        dataWidth=dataWidth,
+        dataHeight=dataHeight,
+        npix_small_pupil_grid=npix_small_pupil_grid,
+        pupil_size=pupil_size,
+        pixel_size=pixel_size,
+        folder_calib=str(folder_calib),
+        folder_pyr_mask=str(folder_pyr_mask),
+        folder_transformation_matrices=str(folder_transformation_matrices),
+        folder_closed_loop_tests=str(folder_closed_loop_tests),
+        folder_turbulence=str(folder_turbulence),
+        folder_gui=str(folder_gui),
+        img_size_wfs_cam=img_size_wfs_cam,
+        img_size_fp_cam=img_size_fp_cam,
+        nact=nact,
+        nact_valid=nact_valid,
+        nact_total=nact_total,
+        nmodes_dm=nmodes_dm,
+        nmodes_KL=nmodes_KL,
+        nmodes_Znk=nmodes_Znk,
+        small_pupil_mask=small_pupil_mask,
+        pupil_mask=pupil_mask,
+    )
+
 

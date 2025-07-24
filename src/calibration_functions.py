@@ -1,15 +1,32 @@
+import os
 import numpy as np
+from astropy.io import fits
 import time
 import dao
 import matplotlib.pyplot as plt
 from datetime import datetime
 from src.utils import *
-from src.dao_setup import *  # Import all variables from setup
-import src.dao_setup as dao_setup
+from src.utils import set_data_dm
+from src.dao_setup import init_setup
+from .shm_loader import shm
+
+slopes_image_shm = shm.slopes_image_shm
+
+setup = init_setup()
 
 
-def perform_push_pull_calibration_with_phase_basis(basis, phase_amp, ref_image, mask,
-    verbose=False, verbose_plot=False, mode_repetitions=None, **kwargs):
+def perform_push_pull_calibration_with_phase_basis(
+    basis,
+    phase_amp,
+    ref_image,
+    mask,
+    verbose=False,
+    verbose_plot=False,
+    mode_repetitions=None,
+    push_pull=False,
+    pull_push=True,
+    **kwargs,
+):
     """
     Perform push-pull calibration using a phase basis.
 
@@ -22,6 +39,8 @@ def perform_push_pull_calibration_with_phase_basis(basis, phase_amp, ref_image, 
     - verbose_plot: Live plot during calibration.
     - mode_repetitions: Sequence or dict specifying how many times each mode is
       repeated and averaged. Modes with unspecified counts default to 1.
+    - push_pull: If True, perform a push followed by a pull ([-phase_amp, phase_amp]).
+    - pull_push: If True, perform a pull followed by a push ([phase_amp, -phase_amp]).
     - kwargs:
         - slm
         - camera
@@ -33,24 +52,25 @@ def perform_push_pull_calibration_with_phase_basis(basis, phase_amp, ref_image, 
     Returns:
     - pull_images, push_images, push_pull_images
     """
-    from src.dao_setup import wait_time  # lazy import to avoid circular dependency
+    wait_time = setup.wait_time
 
-    # Load devices and data from kwargs or fallback to dao_setup
-    camera = kwargs.get("camera", dao_setup.camera_wfs)
-    slm = kwargs.get("slm", dao_setup.slm)
-    pupil_mask = kwargs.get("pupil_mask", dao_setup.pupil_mask)
-    small_pupil_mask = kwargs.get("small_pupil_mask", dao_setup.small_pupil_mask)
-    deformable_mirror = kwargs.get("deformable_mirror", dao_setup.deformable_mirror)
-    nact = kwargs.get("nact", dao_setup.nact)
+    # Load devices and data from kwargs or fallback to setup
+    camera = kwargs.get("camera", setup.camera_wfs)
+    slm = kwargs.get("slm", setup.slm)
+    pupil_mask = kwargs.get("pupil_mask", setup.pupil_setup.pupil_mask)
+    small_pupil_mask = kwargs.get("small_pupil_mask", setup.pupil_setup.small_pupil_mask)
+    deformable_mirror = kwargs.get("deformable_mirror", setup.deformable_mirror)
+    nact = kwargs.get("nact", setup.nact)
+    npix_small_pupil_grid = kwargs.get("npix_small_pupil_grid", setup.npix_small_pupil_grid)
 
+    if not (push_pull or pull_push):
+        raise ValueError("Either push_pull or pull_push must be True")
+    
     # Set dimensions equal to img_size
     height, width = ref_image.shape
 
     # Number of phase modes
     nmodes_basis = basis.shape[0]
-    
-    # Compute size of the small pupil mask
-    npix_small_pupil_grid = small_pupil_mask.shape[0]
 
     # Normalize reference image with explicit bias_img set to zero
     normalized_reference_image = normalize_image(ref_image, mask, bias_img=np.zeros_like(ref_image))
@@ -74,6 +94,12 @@ def perform_push_pull_calibration_with_phase_basis(basis, phase_amp, ref_image, 
             mode_repetitions = reps
         elif mode_repetitions.size > nmodes_basis:
             mode_repetitions = mode_repetitions[:nmodes_basis]
+
+    orders = []
+    if push_pull:
+        orders.append([-phase_amp, phase_amp])
+    if pull_push:
+        orders.append([phase_amp, -phase_amp])
 
     # Pre-allocate arrays
     pull_images = np.zeros((nmodes_basis, height, width), dtype=np.float32)
@@ -101,52 +127,51 @@ def perform_push_pull_calibration_with_phase_basis(basis, phase_amp, ref_image, 
         t1 = time.time()
 
         for i in range(rep_count):
-            push_pull_img = np.zeros((height, width), dtype=np.float32)
+            for order in orders:
+                push_pull_img = np.zeros((height, width), dtype=np.float32)
 
-            for amp in [-phase_amp, phase_amp]:
-                # Compute Zernike phase pattern
-                t2 = time.time()
-                deformable_mirror.flatten()
-                deformable_mirror.actuators = amp * basis[mode].reshape(nact**2)
-                data_dm[:, :] = deformable_mirror.opd.shaped
-                t3 = time.time()
+                for amp in order:
+                    # Compute Zernike phase pattern
+                    t2 = time.time()
+                    kl_mode = amp * basis[mode].reshape(nact**2)
+                    t3 = time.time()
 
-                # Add and wrap data within the pupil mask
-                t4 = time.time()
-                data_slm = compute_data_slm(data_dm=data_dm)
-                slm.set_data(data_slm)
-                time.sleep(wait_time)
-                t7 = time.time()
+                    # Send DM data of kl mode to the SLM
+                    t4 = time.time()
+                    set_data_dm(kl_mode, setup=setup,)
+                    t7 = time.time()
 
-                # Allow SLM to settle and capture the image
-                t8 = time.time()
-                pyr_img = camera.get_data()
-                t9 = time.time()
+                    # Capture the image and compute slopes
+                    t8 = time.time()
+                    slopes_image = get_slopes_image(
+                        mask,
+                        np.zeros_like(ref_image),
+                        normalized_reference_image,
+                        setup=setup,
+                    )
+                    slopes_image_shm.set_data(slopes_image) # setting the shared memory separately because setting inside the function is not working
 
-                # Compute slopes
-                t10 = time.time()
-                normalized_pyr_img = normalize_image(pyr_img, mask, bias_img=np.zeros_like(pyr_img))
-                slopes_image = compute_pyr_slopes(normalized_pyr_img, normalized_reference_image)
-                t11 = time.time()
+                    t9 = time.time()
 
-                # Store images for push & pull
-                t12 = time.time()
-                if amp > 0:
-                    pull_acc += slopes_image / abs(amp)
-                else:
-                    push_acc += slopes_image / abs(amp)
+                    # Store images for push & pull
+                    t12 = time.time()
+                    if amp > 0:
+                        pull_acc += slopes_image / abs(amp)
+                    else:
+                        push_acc += slopes_image / abs(amp)
 
-                # Combine push-pull intensity
-                push_pull_img += slopes_image / (2 * amp)
-                t13 = time.time()
+                    # Combine push-pull intensity
+                    push_pull_img += slopes_image / (2 * amp)
+                    t13 = time.time()
 
-            # Save the combined response for this repetition
-            pp_acc += push_pull_img
+                # Save the combined response for this order
+                pp_acc += push_pull_img
 
-        # Average over repetitions
-        pull_images[mode, :, :] = pull_acc / rep_count
-        push_images[mode, :, :] = push_acc / rep_count
-        push_pull_images[mode, :, :] = pp_acc / rep_count
+        divisor = rep_count * len(orders)
+        # Average over repetitions and orders
+        pull_images[mode, :, :] = pull_acc / divisor
+        push_images[mode, :, :] = push_acc / divisor
+        push_pull_images[mode, :, :] = pp_acc / divisor
         
         # Live display of images
         if verbose_plot:
@@ -170,8 +195,7 @@ def perform_push_pull_calibration_with_phase_basis(basis, phase_amp, ref_image, 
             print(f"Time to initialize arrays: {t1 - t0:.4f} s")
             print(f"Time to initialize phase mode: {t3 - t2:.4f} s")
             print(f"Time to send data to SLM: {t7 - t4:.4f} s")
-            print(f"Time to capture image: {t9 - t8:.4f} s")
-            print(f"Time to compute slopes: {t11 - t10:.4f} s")
+            print(f"Time to capture image and compute slopes: {t9 - t8:.4f} s")
             print(f"Time to store and combine images: {t13 - t12:.4f} s")
             print("")
 
@@ -210,11 +234,6 @@ def compute_response_matrix(images, mask=None):
     return response_matrix
 
 
-
-import os
-import numpy as np
-from astropy.io import fits
-
 def create_response_matrix(
     KL2Act,
     phase_amp,
@@ -225,6 +244,8 @@ def create_response_matrix(
     verbose_plot=False,
     mode_repetitions=None,
     calibration_repetitions=1,
+    push_pull=False,
+    pull_push=True,
     **kwargs,
 ):
     """
@@ -256,6 +277,10 @@ def create_response_matrix(
     calibration_repetitions : int
         Number of times to repeat the whole calibration process. The returned
         response matrices are the average over these runs.
+    push_pull : bool
+        If True, perform a push followed by a pull ([-phase_amp, phase_amp]).
+    pull_push : bool
+        If True, perform a pull followed by a push ([phase_amp, -phase_amp]).
     kwargs:
         - pupil_size
         - nact
@@ -267,9 +292,9 @@ def create_response_matrix(
         Flattened 2D response matrix for all modes.
     """
     
-    pupil_size = kwargs.get("pupil_size", dao_setup.pupil_size)
-    nact = kwargs.get("nact", dao_setup.nact)
-    folder_calib = kwargs.get("folder_calib", dao_setup.folder_calib)
+    pupil_size = kwargs.get("pupil_size", setup.pupil_size)
+    nact = kwargs.get("nact", setup.nact)
+    folder_calib = kwargs.get("folder_calib", setup.folder_calib)
 
     # Run push-pull calibration
     n_runs = max(1, int(calibration_repetitions))
@@ -287,6 +312,9 @@ def create_response_matrix(
             verbose=verbose,
             verbose_plot=verbose_plot,
             mode_repetitions=mode_repetitions,
+            push_pull=push_pull,
+            pull_push=pull_push,
+            **kwargs,
         )
 
         # Initialize accumulators using first run dimensions

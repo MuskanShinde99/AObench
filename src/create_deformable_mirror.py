@@ -6,19 +6,17 @@ Created on Wed Aug 21 15:05:07 2024
 """
 
 from matplotlib import pyplot as plt
-from hcipy import *
+from hcipy import make_gaussian_influence_functions
+from src.hardware import DeformableMirror
 from PIL import Image
 import numpy as np
 import os
 import sys
 from pathlib import Path
 
-# Configure root paths without changing the working directory
-OPT_LAB_ROOT = Path(os.environ.get("OPT_LAB_ROOT", "/home/ristretto-dao/optlab-master"))
-PROJECT_ROOT = Path(os.environ.get("PROJECT_ROOT", OPT_LAB_ROOT / "PROJECTS_3/RISTRETTO/Banc AO"))
-sys.path.append(str(OPT_LAB_ROOT))
-sys.path.append(str(PROJECT_ROOT))
-ROOT_DIR = PROJECT_ROOT
+from src.config import config
+
+ROOT_DIR = config.root_dir
 
 # Import Specific Modules
 from src.tilt import *

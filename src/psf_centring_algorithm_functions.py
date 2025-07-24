@@ -4,7 +4,6 @@ from matplotlib import pyplot as plt
 import numpy as np
 import os
 import time
-from hcipy import *
 from skopt import gp_minimize
 from DEVICES_3.Basler_Pylon.test_pylon import *
 import sys
@@ -12,15 +11,17 @@ from pathlib import Path
 import cv2
 import re
 
-# Configure root paths without changing the working directory
-OPT_LAB_ROOT = Path(os.environ.get("OPT_LAB_ROOT", "/home/ristretto-dao/optlab-master"))
-PROJECT_ROOT = Path(os.environ.get("PROJECT_ROOT", OPT_LAB_ROOT / "PROJECTS_3/RISTRETTO/Banc AO"))
-sys.path.append(str(OPT_LAB_ROOT))
-sys.path.append(str(PROJECT_ROOT))
-ROOT_DIR = PROJECT_ROOT
+from src.config import config
 
-from src.dao_setup import *  # Import all variables from setup
-#import src.dao_setup as dao_setup
+ROOT_DIR = config.root_dir
+
+from src.dao_setup import init_setup, ROOT_DIR
+
+setup = init_setup()
+wait_time = setup.wait_time
+pupil_setup = setup.pupil_setup
+camera_wfs = setup.camera_wfs
+slm = setup.slm
 
 
 # Access the SLM and cameras
@@ -57,8 +58,8 @@ def cost_function(amplitudes, pupil_coords, radius, iteration, variance_threshol
     """
     global stop_optimization  #Flag to stop when pupil intensities are equal
 
-    data_pupil = update_pupil(new_tt_amplitudes=amplitudes)
-    slm.set_data(((data_pupil * 256) % 256).astype(np.uint8))  # Update SLM data
+    data_slm = pupil_setup.update_pupil(new_tt_amplitudes=amplitudes)
+    slm.set_data(data_slm)  # Update SLM data
     time.sleep(wait_time)  # Wait for the update to take effect
 
     # Capture and average 5 images
@@ -71,15 +72,16 @@ def cost_function(amplitudes, pupil_coords, radius, iteration, variance_threshol
     
     # Calculate the variance of the intensities as the cost
     mean_intensity = np.mean(intensities)
-    variance = np.mean((intensities - mean_intensity) ** 2)
+    normalized_intensities = intensities / mean_intensity 
+    variance = np.mean((normalized_intensities - 1) ** 2)
     
     # Print iteration number and variance
-    print(f"Iteration: {iteration} | Variance: {round(variance)} | Tipi-tilt amptitude: {amplitudes}")
+    print(f"Iteration: {iteration} | Variance: {variance:.3f} | Tipi-tilt amptitude: {amplitudes}")
 
     # Check stopping condition based on the provided threshold
     if variance < variance_threshold:
         print(
-            f"Stopping condition met: Variance {variance:.2f} below threshold {variance_threshold}."
+            f"Stopping condition met: Variance {variance:.3f} below threshold {variance_threshold}."
         )
         stop_optimization = True  # Set stopping flag
         

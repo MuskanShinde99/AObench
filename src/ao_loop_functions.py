@@ -9,16 +9,24 @@ import numpy as np
 import time
 import os
 import matplotlib.pyplot as plt
-from tqdm import tqdm
+import tqdm
 from PIL import Image
 from matplotlib.colors import LogNorm
 from src.utils import *
-from hcipy import *
-from DEVICES_3.Basler_Pylon.test_pylon import *
 from collections import deque
-from src.dao_setup import *  # Import all variables from setup
-import src.dao_setup as dao_setup
-from src.create_shared_memories import *
+from src.dao_setup import init_setup
+from .shm_loader import shm
+
+setup = init_setup()
+dm_phase_shm = shm.dm_phase_shm
+phase_screen_shm = shm.phase_screen_shm
+phase_residuals_shm = shm.phase_residuals_shm
+residual_modes_shm = shm.residual_modes_shm
+slopes_image_shm = shm.slopes_image_shm
+normalized_psf_shm = shm.normalized_psf_shm
+computed_modes_shm = shm.computed_modes_shm
+commands_shm = shm.commands_shm
+dm_kl_modes_shm = shm.dm_kl_modes_shm
 
 
 def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, anim_path, aim_name, anim_title,
@@ -59,25 +67,25 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
     - aim_name: Name for the saved animation file
     - anim_title: Title of the animation
     """
-    from src.dao_setup import wait_time  # lazy import to avoid circular dependency
-    
+    wait_time = setup.wait_time
+
     # Load hardware and configuration parameters
-    deformable_mirror = kwargs.get("deformable_mirror", dao_setup.deformable_mirror)
-    slm = kwargs.get("slm", dao_setup.slm)
-    camera_wfs = kwargs.get("camera_wfs", dao_setup.camera_wfs)
-    camera_fp = kwargs.get("camera_fp", dao_setup.camera_fp)
-    npix_small_pupil_grid = kwargs.get("npix_small_pupil_grid", dao_setup.npix_small_pupil_grid)
-    data_pupil = kwargs.get("data_pupil", dao_setup.data_pupil)
-    data_pupil_outer = kwargs.get("data_pupil_outer", dao_setup.data_pupil_outer)
-    data_pupil_inner = kwargs.get("data_pupil_inner", dao_setup.data_pupil_inner)
-    pupil_mask = kwargs.get("pupil_mask", dao_setup.pupil_mask)
-    small_pupil_mask = kwargs.get("small_pupil_mask", dao_setup.small_pupil_mask)
+    deformable_mirror = kwargs.get("deformable_mirror", setup.deformable_mirror)
+    slm = kwargs.get("slm", setup.slm)
+    camera_wfs = kwargs.get("camera_wfs", setup.camera_wfs)
+    camera_fp = kwargs.get("camera_fp", setup.camera_fp)
+    npix_small_pupil_grid = kwargs.get("npix_small_pupil_grid", setup.npix_small_pupil_grid)
+    data_pupil = kwargs.get("data_pupil", setup.pupil_setup.data_pupil)
+    data_pupil_outer = kwargs.get("data_pupil_outer", setup.pupil_setup.data_pupil_outer)
+    data_pupil_inner = kwargs.get("data_pupil_inner", setup.pupil_setup.data_pupil_inner)
+    pupil_mask = kwargs.get("pupil_mask", setup.pupil_setup.pupil_mask)
+    small_pupil_mask = kwargs.get("small_pupil_mask", setup.pupil_setup.small_pupil_mask)
     
     # Load the folder
-    folder_gui = kwargs.get("folder_gui", dao_setup.folder_gui)
+    folder_gui = kwargs.get("folder_gui", setup.folder_gui)
     
     # Display Pupil Data on SLM
-    data_slm = compute_data_slm()
+    data_slm = compute_data_slm(setup=setup.pupil_setup)
     slm.set_data(data_slm)
     time.sleep(wait_time)  # Wait for stabilization of SLM
         
@@ -178,10 +186,10 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
 
     start_time = time.time()
 
-    for i in tqdm(range(num_iterations)):
+    for i in tqdm.tqdm(range(num_iterations)):
         
         # Update deformable mirror surface
-        data_dm[:, :] = deformable_mirror.opd.shaped
+        data_dm[:, :] = deformable_mirror.opd.shaped/2
         data_dm = data_dm * small_pupil_mask
         dm_phase_shm.set_data(data_dm.astype(np.float32))  # setting shared memory
         fits.writeto(os.path.join(folder_gui, f'dm_phase.fits'), data_dm.astype(np.float32), overwrite=True)
@@ -212,16 +220,19 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
         residual_modes_shm.set_data(residual_modes) # setting shared memory
 
         # Compute and  set SLM command
-        data_slm = compute_data_slm(data_dm=data_dm, data_phase_screen=phase_slice)
+        data_slm = compute_data_slm(data_dm=data_dm, data_phase_screen=phase_slice, setup=setup.pupil_setup)
         slm.set_data(data_slm) # setting shared memory
         time.sleep(wait_time)
 
         # Capture and process WFS image
-        pyr_img = camera_wfs.get_data()
-        normalized_pyr_img = normalize_image(pyr_img, mask, bias_image)
-        slopes_image = compute_pyr_slopes(normalized_pyr_img, normalized_reference_image)
-        slopes = slopes_image[valid_pixels_indices].flatten()
+        slopes_image = get_slopes_image(
+            mask,
+            bias_image,
+            normalized_reference_image,
+            setup=setup,
+        )
         slopes_image_shm.set_data(slopes_image)
+        slopes = slopes_image[valid_pixels_indices].flatten()
         #fits.writeto(os.path.join(folder_gui, f'slopes_image.fits'), slopes_image, overwrite=True)
 
         # Capture PSF
@@ -253,8 +264,13 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
         delayed_act_pos = act_pos_queue[-(max_buffer)]  
         
         # Apply delayed actuator command
-        deformable_mirror.actuators = (1 - leakage) * deformable_mirror.actuators - gain * delayed_act_pos
-        #deformable_mirror.actuators = (1-leakage) * deformable_mirror.actuators - gain * act_pos
+        # deformable_mirror.actuators = (1 - leakage) * deformable_mirror.actuators - gain * delayed_act_pos
+        new_act_pos = (1 - leakage) * deformable_mirror.actuators - gain * delayed_act_pos
+        set_dm_actuators(
+            deformable_mirror,
+            new_act_pos,
+            setup=setup,
+        )
         
         # KL modes corresponding the total actuator postion or the DM shape
         modes_act_pos_tot = deformable_mirror.actuators @ Act2KL
