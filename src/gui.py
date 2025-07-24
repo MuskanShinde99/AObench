@@ -362,6 +362,7 @@ class MainWindow(QMainWindow):
         self.num_iterations_shm           = dao.shm(shm_path['num_iterations'])
         self.cam1_shm                     = dao.shm(shm_path['cam1'])             
         self.cam2_shm                     = dao.shm(shm_path['cam2'])
+        self.dm_act_shm                     = dao.shm(shm_path['dm_act'])
 
     def init_vector_plots(self):
         self.computed_KL_modes_view = CustomChartView(self.computed_KL_modes_widget,"mode","amplitude", n_lines = 2)
@@ -397,6 +398,7 @@ class MainWindow(QMainWindow):
             "normalized_psf_widget": "normalized_psf_view",
             "cam1_widget": "cam1_view",
             "cam2_widget": "cam2_view",
+            "dm_act_widget": "dm_act_view",
         }
 
         for placeholder_name, attr_name in placeholders.items():
@@ -412,6 +414,7 @@ class MainWindow(QMainWindow):
         self.normalized_psf_view.setImage(self.normalized_psf_shm.get_data(check=False,semNb=self.sem_nb), autoLevels=(self.autoscale_normalized_psf_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
         self.cam1_view.setImage(self.cam1_shm.get_data(check=False,semNb=self.sem_nb), autoLevels=(self.autoscale_cam1_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
         self.cam2_view.setImage(self.cam2_shm.get_data(check=False,semNb=self.sem_nb), autoLevels=(self.autoscale_cam2_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
+        self.dm_act_view.setImage(self.dm_act_shm.get_data(check=False,semNb=self.sem_nb), autoLevels=(self.autoscale_dm_act_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
 
         eps = 1e-3
         
