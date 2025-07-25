@@ -84,7 +84,7 @@ time.sleep(5)
 # slm.set_data(data_slm)
 # time.sleep(wait_time)
 
-set_data_dm(actuators=setup.dm_flat, setup=setup)
+set_data_dm(setup=setup)
 
 print('Pupil created on the SLM.')
 

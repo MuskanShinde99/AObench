@@ -22,20 +22,29 @@ def set_default_setup(setup):
     DEFAULT_SETUP = setup
 
 
-def set_dm_actuators(dm, actuators, setup=None):
+def set_dm_actuators(dm, actuators=None, dm_flat=None, setup=None):
     """Set DM actuators and update the shared memory grid."""
-    dm_act_shm = shm.dm_act_shm
 
-    dm.actuators = actuators
     if setup is None:
         if DEFAULT_SETUP is None:
             raise ValueError("No setup provided and no default registered.")
         setup = DEFAULT_SETUP
-    dm_act_shm.set_data(
-        np.asarray(dm.actuators).reshape(
-            setup.nact, setup.nact
+
+    if actuators is None:
+        actuators = np.zeros(setup.nact ** 2)
+    if dm_flat is None:
+        dm_flat = setup.dm_flat
+
+    actuators = np.asarray(actuators)
+    if actuators.size != setup.nact ** 2:
+        raise ValueError(
+            f"Expected {setup.nact ** 2} actuators, got {actuators.size}"
         )
-    )
+
+    dm.actuators = actuators + dm_flat
+
+    dm_act_shm = shm.dm_act_shm
+    dm_act_shm.set_data(np.asarray(dm.actuators).reshape(setup.nact, setup.nact))
     
 
 
