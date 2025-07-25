@@ -6,14 +6,6 @@ Created on Mon May 19 10:16:49 2025
 @author: ristretto-dao
 """
 
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Feb 17 14:49:20 2025
-
-@author: laboptic
-"""
-
 # Import Libraries
 import os
 import time
