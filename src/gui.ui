@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>2542</width>
-    <height>1803</height>
+    <width>1558</width>
+    <height>1202</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,14 +17,14 @@
    <widget class="QTabWidget" name="main_tab">
     <property name="geometry">
      <rect>
-      <x>30</x>
-      <y>20</y>
-      <width>2501</width>
-      <height>1641</height>
+      <x>10</x>
+      <y>10</y>
+      <width>1961</width>
+      <height>1131</height>
      </rect>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>3</number>
     </property>
     <widget class="QWidget" name="Images">
      <attribute name="title">
@@ -33,7 +33,7 @@
      <widget class="QLabel" name="label_5">
       <property name="geometry">
        <rect>
-        <x>240</x>
+        <x>200</x>
         <y>20</y>
         <width>151</width>
         <height>20</height>
@@ -46,8 +46,8 @@
      <widget class="QLabel" name="label_6">
       <property name="geometry">
        <rect>
-        <x>740</x>
-        <y>30</y>
+        <x>650</x>
+        <y>20</y>
         <width>151</width>
         <height>20</height>
        </rect>
@@ -72,8 +72,8 @@
      <widget class="QLabel" name="label_8">
       <property name="geometry">
        <rect>
-        <x>720</x>
-        <y>470</y>
+        <x>650</x>
+        <y>380</y>
         <width>151</width>
         <height>20</height>
        </rect>
@@ -85,8 +85,8 @@
      <widget class="QLabel" name="label_9">
       <property name="geometry">
        <rect>
-        <x>210</x>
-        <y>480</y>
+        <x>200</x>
+        <y>390</y>
         <width>151</width>
         <height>20</height>
        </rect>
@@ -98,8 +98,8 @@
      <widget class="QCheckBox" name="autoscale_slopes_image_checkbox">
       <property name="geometry">
        <rect>
-        <x>220</x>
-        <y>450</y>
+        <x>180</x>
+        <y>350</y>
         <width>121</width>
         <height>24</height>
        </rect>
@@ -114,8 +114,8 @@
      <widget class="QCheckBox" name="autoscale_phase_screen_checkbox">
       <property name="geometry">
        <rect>
-        <x>730</x>
-        <y>440</y>
+        <x>660</x>
+        <y>350</y>
         <width>121</width>
         <height>24</height>
        </rect>
@@ -130,8 +130,8 @@
      <widget class="QCheckBox" name="autoscale_normalized_psf_checkbox">
       <property name="geometry">
        <rect>
-        <x>1250</x>
-        <y>460</y>
+        <x>1190</x>
+        <y>320</y>
         <width>121</width>
         <height>24</height>
        </rect>
@@ -146,8 +146,8 @@
      <widget class="QCheckBox" name="autoscale_phase_residuals_checkbox">
       <property name="geometry">
        <rect>
-        <x>720</x>
-        <y>890</y>
+        <x>640</x>
+        <y>680</y>
         <width>121</width>
         <height>24</height>
        </rect>
@@ -162,8 +162,8 @@
      <widget class="QCheckBox" name="autoscale_dm_phase_checkbox">
       <property name="geometry">
        <rect>
-        <x>230</x>
-        <y>890</y>
+        <x>150</x>
+        <y>690</y>
         <width>121</width>
         <height>24</height>
        </rect>
@@ -180,18 +180,18 @@
        <rect>
         <x>1079</x>
         <y>79</y>
-        <width>471</width>
-        <height>351</height>
+        <width>341</width>
+        <height>231</height>
        </rect>
       </property>
      </widget>
      <widget class="QWidget" name="phase_screen_widget" native="true">
       <property name="geometry">
        <rect>
-        <x>570</x>
-        <y>70</y>
-        <width>471</width>
-        <height>351</height>
+        <x>510</x>
+        <y>80</y>
+        <width>371</width>
+        <height>261</height>
        </rect>
       </property>
      </widget>
@@ -200,18 +200,18 @@
        <rect>
         <x>60</x>
         <y>70</y>
-        <width>471</width>
-        <height>351</height>
+        <width>341</width>
+        <height>261</height>
        </rect>
       </property>
      </widget>
      <widget class="QWidget" name="dm_phase_widget" native="true">
       <property name="geometry">
        <rect>
-        <x>70</x>
-        <y>530</y>
-        <width>471</width>
-        <height>351</height>
+        <x>60</x>
+        <y>440</y>
+        <width>321</width>
+        <height>231</height>
        </rect>
       </property>
      </widget>
@@ -219,16 +219,16 @@
       <property name="geometry">
        <rect>
         <x>550</x>
-        <y>530</y>
-        <width>471</width>
-        <height>351</height>
+        <y>440</y>
+        <width>311</width>
+        <height>221</height>
        </rect>
       </property>
      </widget>
      <widget class="QLabel" name="label_15">
       <property name="geometry">
        <rect>
-        <x>260</x>
+        <x>210</x>
         <y>40</y>
         <width>151</width>
         <height>20</height>
@@ -241,7 +241,7 @@
      <widget class="QLabel" name="label_17">
       <property name="geometry">
        <rect>
-        <x>750</x>
+        <x>660</x>
         <y>50</y>
         <width>151</width>
         <height>20</height>
@@ -267,8 +267,8 @@
      <widget class="QLabel" name="label_19">
       <property name="geometry">
        <rect>
-        <x>740</x>
-        <y>500</y>
+        <x>670</x>
+        <y>410</y>
         <width>151</width>
         <height>20</height>
        </rect>
@@ -280,8 +280,8 @@
      <widget class="QLabel" name="label_20">
       <property name="geometry">
        <rect>
-        <x>220</x>
-        <y>510</y>
+        <x>210</x>
+        <y>420</y>
         <width>151</width>
         <height>20</height>
        </rect>
@@ -290,89 +290,11 @@
        <string>scale λ</string>
       </property>
      </widget>
-     <widget class="QWidget" name="cam2_widget" native="true">
-      <property name="geometry">
-       <rect>
-        <x>1550</x>
-        <y>550</y>
-        <width>471</width>
-        <height>351</height>
-       </rect>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="autoscale_cam1_checkbox">
-      <property name="geometry">
-       <rect>
-        <x>1740</x>
-        <y>460</y>
-        <width>121</width>
-        <height>24</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>autoscale</string>
-      </property>
-      <property name="checked">
-       <bool>true</bool>
-      </property>
-     </widget>
-     <widget class="QWidget" name="cam1_widget" native="true">
-      <property name="geometry">
-       <rect>
-        <x>1580</x>
-        <y>100</y>
-        <width>471</width>
-        <height>351</height>
-       </rect>
-      </property>
-     </widget>
-     <widget class="QLabel" name="label_24">
-      <property name="geometry">
-       <rect>
-        <x>1730</x>
-        <y>500</y>
-        <width>151</width>
-        <height>20</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>cam 2</string>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="autoscale_cam2_checkbox">
-      <property name="geometry">
-       <rect>
-        <x>1710</x>
-        <y>930</y>
-        <width>121</width>
-        <height>24</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>autoscale</string>
-      </property>
-      <property name="checked">
-       <bool>true</bool>
-      </property>
-     </widget>
-     <widget class="QLabel" name="label_22">
-      <property name="geometry">
-       <rect>
-        <x>1760</x>
-        <y>30</y>
-        <width>151</width>
-        <height>20</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>cam 1</string>
-      </property>
-     </widget>
      <widget class="QPushButton" name="reset_computed_KL_modes_view_button">
       <property name="geometry">
        <rect>
-        <x>250</x>
-        <y>1430</y>
+        <x>100</x>
+        <y>990</y>
         <width>89</width>
         <height>25</height>
        </rect>
@@ -384,18 +306,18 @@
      <widget class="QWidget" name="computed_KL_modes_widget" native="true">
       <property name="geometry">
        <rect>
-        <x>40</x>
-        <y>1030</y>
-        <width>601</width>
-        <height>371</height>
+        <x>20</x>
+        <y>760</y>
+        <width>421</width>
+        <height>201</height>
        </rect>
       </property>
      </widget>
      <widget class="QCheckBox" name="square_computed_KL_modes_checkbox">
       <property name="geometry">
        <rect>
-        <x>370</x>
-        <y>1430</y>
+        <x>220</x>
+        <y>990</y>
         <width>121</width>
         <height>24</height>
        </rect>
@@ -407,8 +329,8 @@
      <widget class="QLabel" name="label_11">
       <property name="geometry">
        <rect>
-        <x>280</x>
-        <y>1000</y>
+        <x>130</x>
+        <y>730</y>
         <width>151</width>
         <height>20</height>
        </rect>
@@ -420,8 +342,8 @@
      <widget class="QLabel" name="label_12">
       <property name="geometry">
        <rect>
-        <x>950</x>
-        <y>990</y>
+        <x>650</x>
+        <y>720</y>
         <width>91</width>
         <height>20</height>
        </rect>
@@ -433,8 +355,8 @@
      <widget class="QPushButton" name="reset_commands_view_button">
       <property name="geometry">
        <rect>
-        <x>840</x>
-        <y>1410</y>
+        <x>550</x>
+        <y>980</y>
         <width>89</width>
         <height>25</height>
        </rect>
@@ -446,8 +368,8 @@
      <widget class="QCheckBox" name="square_commands_checkbox">
       <property name="geometry">
        <rect>
-        <x>960</x>
-        <y>1410</y>
+        <x>660</x>
+        <y>980</y>
         <width>121</width>
         <height>24</height>
        </rect>
@@ -459,28 +381,28 @@
      <widget class="QWidget" name="commands_widget" native="true">
       <property name="geometry">
        <rect>
-        <x>670</x>
-        <y>1040</y>
-        <width>601</width>
-        <height>361</height>
+        <x>480</x>
+        <y>760</y>
+        <width>431</width>
+        <height>191</height>
        </rect>
       </property>
      </widget>
      <widget class="QWidget" name="computed_act_pos_widget" native="true">
       <property name="geometry">
        <rect>
-        <x>1310</x>
-        <y>1050</y>
-        <width>601</width>
-        <height>371</height>
+        <x>970</x>
+        <y>760</y>
+        <width>391</width>
+        <height>201</height>
        </rect>
       </property>
      </widget>
      <widget class="QCheckBox" name="square_computed_act_pos_checkbox">
       <property name="geometry">
        <rect>
-        <x>1620</x>
-        <y>1440</y>
+        <x>1150</x>
+        <y>980</y>
         <width>121</width>
         <height>24</height>
        </rect>
@@ -492,8 +414,8 @@
      <widget class="QLabel" name="label_10">
       <property name="geometry">
        <rect>
-        <x>1410</x>
-        <y>1030</y>
+        <x>980</x>
+        <y>720</y>
         <width>361</width>
         <height>20</height>
        </rect>
@@ -505,8 +427,8 @@
      <widget class="QPushButton" name="reset_computed_act_pos_view_button">
       <property name="geometry">
        <rect>
-        <x>1490</x>
-        <y>1440</y>
+        <x>1050</x>
+        <y>980</y>
         <width>89</width>
         <height>25</height>
        </rect>
@@ -518,8 +440,8 @@
      <widget class="QCheckBox" name="autoscale_dm_act_checkbox">
       <property name="geometry">
        <rect>
-        <x>1220</x>
-        <y>920</y>
+        <x>1110</x>
+        <y>680</y>
         <width>121</width>
         <height>24</height>
        </rect>
@@ -534,8 +456,8 @@
      <widget class="QLabel" name="label_25">
       <property name="geometry">
        <rect>
-        <x>1230</x>
-        <y>510</y>
+        <x>1130</x>
+        <y>400</y>
         <width>151</width>
         <height>20</height>
        </rect>
@@ -547,10 +469,10 @@
      <widget class="QWidget" name="dm_act_widget" native="true">
       <property name="geometry">
        <rect>
-        <x>1060</x>
-        <y>540</y>
-        <width>471</width>
-        <height>351</height>
+        <x>1000</x>
+        <y>440</y>
+        <width>321</width>
+        <height>221</height>
        </rect>
       </property>
      </widget>
@@ -559,10 +481,88 @@
      <attribute name="title">
       <string>Cam</string>
      </attribute>
+     <widget class="QCheckBox" name="autoscale_cam1_checkbox">
+      <property name="geometry">
+       <rect>
+        <x>250</x>
+        <y>500</y>
+        <width>121</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>autoscale</string>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QWidget" name="cam2_widget" native="true">
+      <property name="geometry">
+       <rect>
+        <x>60</x>
+        <y>590</y>
+        <width>471</width>
+        <height>351</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="autoscale_cam2_checkbox">
+      <property name="geometry">
+       <rect>
+        <x>220</x>
+        <y>970</y>
+        <width>121</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>autoscale</string>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QWidget" name="cam1_widget" native="true">
+      <property name="geometry">
+       <rect>
+        <x>90</x>
+        <y>140</y>
+        <width>471</width>
+        <height>351</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_22">
+      <property name="geometry">
+       <rect>
+        <x>270</x>
+        <y>70</y>
+        <width>151</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>cam 1</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_24">
+      <property name="geometry">
+       <rect>
+        <x>240</x>
+        <y>540</y>
+        <width>151</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>cam 2</string>
+      </property>
+     </widget>
     </widget>
-    <widget class="QWidget" name="Vector">
+    <widget class="QWidget" name="Control">
      <attribute name="title">
-      <string>Vector</string>
+      <string>Control</string>
      </attribute>
     </widget>
     <widget class="QWidget" name="main">
@@ -686,6 +686,48 @@
       </property>
       <property name="text">
        <string>Num iterations</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="closed_loop_checkbox">
+      <property name="geometry">
+       <rect>
+        <x>820</x>
+        <y>20</y>
+        <width>121</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>loop closed</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_21">
+      <property name="geometry">
+       <rect>
+        <x>710</x>
+        <y>60</y>
+        <width>151</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string># controlled modes</string>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="n_modes_spinbox">
+      <property name="geometry">
+       <rect>
+        <x>870</x>
+        <y>60</y>
+        <width>61</width>
+        <height>27</height>
+       </rect>
+      </property>
+      <property name="maximum">
+       <number>195</number>
+      </property>
+      <property name="value">
+       <number>195</number>
       </property>
      </widget>
     </widget>
@@ -1072,8 +1114,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>2542</width>
-     <height>27</height>
+     <width>1558</width>
+     <height>24</height>
     </rect>
    </property>
   </widget>
