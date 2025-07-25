@@ -226,6 +226,7 @@ class PupilSetup:
         self.tt_amplitudes = list(tt_amplitudes)
         self.othermodes_amplitudes = list(othermodes_amplitudes)
         self.data_pupil = data_pupil
+        self.data_focus = data_focus
         self.data_dm = data_dm
         self.nact = nact
         self.data_pupil_outer = data_pupil_outer
@@ -278,6 +279,7 @@ class PupilSetup:
         self.data_pupil = create_slm_circular_pupil(
             self.tilt_amp_outer, self.tilt_amp_inner, pupil_size, self.pupil_mask, slm
         )
+        self.data_pupil = self.data_pupil + self.data_focus
         self._recompute_dm()
         return self.data_slm
 
