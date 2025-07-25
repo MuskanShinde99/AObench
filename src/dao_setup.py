@@ -137,6 +137,8 @@ nmodes_dm = deformable_mirror.nmodes_dm
 nact_total = deformable_mirror.nact_total
 nact_valid = deformable_mirror.nact_valid
 
+dm_flat = np.zeros(nact**2)
+
 # Flatten the DM surface and set actuator values
 # deformable_mirror.flatten()
 # deformable_mirror.actuators = np.ones(nact**2)
@@ -169,9 +171,13 @@ zernike_basis = make_zernike_basis(11, pupil_size, pupil_grid)
 zernike_basis = [mode / np.ptp(mode) for mode in zernike_basis]
 zernike_basis = np.asarray(zernike_basis)
 
+data_focus = 0.4*zernike_basis[3].reshape(dataHeight, dataWidth)
+
+data_pupil = data_pupil + data_focus
+
 # [-1.6510890005150187, 0.14406016044318903]
 # Create a Tip-Tilt (TT) matrix with specified amplitudes as the diagonal elements
-tt_amplitudes = [-1.5268547834231208, 0.16554335744784332] # Tip and Tilt amplitudes
+tt_amplitudes = [-1.5373485739741495, 0.14406288977671222] # Tip and Tilt amplitudes
 tt_amplitude_matrix = np.diag(tt_amplitudes)
 tt_matrix = tt_amplitude_matrix @ KL2Act[0:2, :]  # Select modes 1 (tip) and 2 (tilt)
 
@@ -316,6 +322,7 @@ class DAOSetup:
     nmodes_Znk: int
     small_pupil_mask: np.ndarray
     pupil_mask: np.ndarray
+    dm_flat: np.ndarray
 
 
 def init_setup() -> DAOSetup:
@@ -327,6 +334,7 @@ def init_setup() -> DAOSetup:
         camera_fp=camera_fp,
         slm=slm,
         deformable_mirror=deformable_mirror,
+        dm_flat=dm_flat,
         pupil_setup=pupil_setup,
         wait_time=wait_time,
         dataWidth=dataWidth,

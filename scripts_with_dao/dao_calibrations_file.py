@@ -84,8 +84,7 @@ time.sleep(5)
 # slm.set_data(data_slm)
 # time.sleep(wait_time)
 
-actuators = 1*np.zeros(setup.nact**2)
-set_data_dm(actuators=actuators, setup=setup)
+set_data_dm(actuators=setup.dm_flat, setup=setup)
 
 print('Pupil created on the SLM.')
 
