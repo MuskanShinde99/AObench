@@ -1,4 +1,5 @@
 import os
+import dao
 import numpy as np
 from astropy.io import fits
 import time
@@ -267,7 +268,6 @@ def create_response_matrix(
     pull_push : bool
         If True, perform a pull followed by a push ([phase_amp, -phase_amp]).
     kwargs:
-        - pupil_size
         - nact
         - folder_calib
 
@@ -277,7 +277,6 @@ def create_response_matrix(
         Flattened 2D response matrix for all modes.
     """
     
-    pupil_size = kwargs.get("pupil_size", setup.pupil_size)
     nact = kwargs.get("nact", setup.nact)
     folder_calib = kwargs.get("folder_calib", setup.folder_calib)
 
@@ -322,9 +321,9 @@ def create_response_matrix(
     response_matrix_filtered = compute_response_matrix(push_pull_images, mask)
 
     # Define output filenames
-    pull_filename     = f'binned_processed_response_cube_KL2PWFS_only_pull_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
-    push_filename     = f'binned_processed_response_cube_KL2PWFS_only_push_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
-    pushpull_filename = f'binned_processed_response_cube_KL2PWFS_push-pull_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
+    pull_filename     = f'binned_processed_response_cube_KL2PWFS_only_pull_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
+    push_filename     = f'binned_processed_response_cube_KL2PWFS_only_push_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
+    pushpull_filename = f'binned_processed_response_cube_KL2PWFS_push-pull_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
 
     # Save FITS files
     if verbose: print('Pull images saved')
