@@ -11,6 +11,7 @@ camera_wfs = setup.camera_wfs
 slm = setup.slm
 from pathlib import Path
 import re
+from src.utils import set_data_dm
 
 
 def scan_othermode_amplitudes(test_values, mode_index, wait=wait_time,
@@ -105,7 +106,7 @@ def scan_othermode_amplitudes(test_values, mode_index, wait=wait_time,
     return best_amp
 
 
-def scan_othermode_amplitudes_wfs_std(test_values, mode_index, mask, wait=wait_time,
+def scan_othermode_amplitudes_wfs_std(test_values, mode_index, mask,
                                       update_setup_file=False):
     """Iterate over amplitude values for a specified othermode using WFS data.
 
@@ -120,8 +121,6 @@ def scan_othermode_amplitudes_wfs_std(test_values, mode_index, mask, wait=wait_t
         Amplitude values to test.
     mode_index : int
         Index in ``othermodes_amplitudes`` to update.
-    wait : float, optional
-        Delay between successive SLM updates. Defaults to ``wait_time``.
     update_setup_file : bool, optional
         If True, update ``othermodes_amplitudes`` in ``dao_setup.py`` with
         the best-performing amplitude. If multiple amplitudes yield the same
@@ -148,7 +147,7 @@ def scan_othermode_amplitudes_wfs_std(test_values, mode_index, mask, wait=wait_t
         new_amps = list(pupil_setup.othermodes_amplitudes)
         new_amps[mode_index] = amp
 
-        actuators = pupil_setup.update_pupil(new_othermodes_amplitudes=new_amps)
+        pupil_setup.update_pupil(new_othermodes_amplitudes=new_amps)
         set_data_dm(setup=setup)
 
         # Capture WFS images and compute standard deviation over valid pixels
