@@ -60,6 +60,7 @@ def cost_function(amplitudes, pupil_coords, radius, iteration, variance_threshol
     global stop_optimization  #Flag to stop when pupil intensities are equal
 
     act_pos = pupil_setup.update_pupil(new_tt_amplitudes=amplitudes)
+    applied_amplitudes = pupil_setup.tt_amplitudes  # Get the applied tip-tilt amplitudes
     set_data_dm(actuators=act_pos, setup=setup)
     time.sleep(wait_time)  # Wait for the update to take effect
 
@@ -76,8 +77,11 @@ def cost_function(amplitudes, pupil_coords, radius, iteration, variance_threshol
     normalized_intensities = intensities / mean_intensity 
     variance = np.mean((normalized_intensities - 1) ** 2)
     
-    # Print iteration number and variance
-    print(f"Iteration: {iteration} | Variance: {variance:.3f} | Tipi-tilt amptitude: {amplitudes}")
+    # Print iteration number, variance and the applied tip-tilt amplitudes
+    print(
+        f"Iteration: {iteration} | Variance: {variance:.3f} | "
+        f"Tip-tilt amplitudes applied: {applied_amplitudes}"
+    )
 
     # Check stopping condition based on the provided threshold
     if variance < variance_threshold:
