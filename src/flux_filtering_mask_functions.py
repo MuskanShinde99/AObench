@@ -20,18 +20,27 @@ setup = init_setup()
 
 
 def create_summed_image_for_mask(modulation_angles, modulation_amp, tiltx, tilty, verbose=False, **kwargs):
-    """
-    Create a mask based on the modulation angles and flux cutoff.
+    """Acquire and sum images for flux mask generation using tip-tilt modulation.
 
-    Parameters:
-    - modulation_angles: list of angles for modulation
-    - modulation_amp: modulation amplitude
-    - verbose: if True, print info messages
-    - kwargs: optional overrides for:
-        - camera: camera object
-      
-    Returns:
-    - summed_image: the summed image used for mask creation
+    Parameters
+    ----------
+    modulation_angles : array-like
+        Tip/tilt angles (degrees) to apply on the deformable mirror.
+    modulation_amp : float
+        Amplitude of the modulation in actuator units.
+    tiltx : ndarray
+        X component of the tip/tilt mode.
+    tilty : ndarray
+        Y component of the tip/tilt mode.
+    verbose : bool, optional
+        If ``True`` print progress information.
+    camera : optional
+        Camera object used for acquisition (default ``setup.camera_wfs``).
+
+    Returns
+    -------
+    numpy.ndarray
+        Summed image resulting from the modulation sequence.
     """
     
     # Use kwargs or default from setup
@@ -59,23 +68,30 @@ def create_summed_image_for_mask(modulation_angles, modulation_amp, tiltx, tilty
     return summed_image
 
 
-def create_summed_image_for_mask_dm_random(n_iter, verbose=False, **kwargs):
+def create_summed_image_for_mask_dm_random(n_iter, camera=None, nact_total=None, verbose=False):
+    """Acquire a summed image using random DM actuator patterns.
+
+    Parameters
+    ----------
+    n_iter : int
+        Number of random actuator patterns to apply.
+    camera : optional
+        Camera object used for acquisition. Defaults to ``setup.camera_wfs``.
+    nact_total : int, optional
+        Number of DM actuators. Defaults to ``setup.nact_total``.
+    verbose : bool, optional
+        If ``True`` display progress information.
+
+    Returns
+    -------
+    numpy.ndarray
+        Summed image produced by random push--pull modulation.
     """
-    Run push-pull image acquisition using random DM actuator patterns.
 
-    Parameters:
-    - n_iter: number of random actuator patterns to test
-    - verbose: whether to print/display progress
-    - kwargs:
-        - camera: initialized camera object (default: camera_wfs)
-        - deformable_mirror: DM object with actuator control (default: deformable_mirror)
-
-    Returns:
-    - summed_image: result of push-pull image subtraction summed over all modes
-    """
-
-    camera = kwargs.get("camera", setup.camera_wfs)
-    nact_total = kwargs.get("camera", setup.nact_total)
+    if camera is None:
+        camera = setup.camera_wfs
+    if nact_total is None:
+        nact_total = setup.nact_total
 
     img_arr = []
 
@@ -101,24 +117,36 @@ def create_summed_image_for_mask_dm_random(n_iter, verbose=False, **kwargs):
 def create_flux_filtering_mask(method, flux_cutoff, tiltx, tilty,
                                modulation_angles=np.arange(0, 360, 10), modulation_amp=15, n_iter=200,
                                create_summed_image=True, verbose=False, verbose_plot=False, **kwargs):
-    """
-    Create a flux filtering mask.
+    """Generate a binary mask highlighting high-flux regions.
 
-    Parameters:
-    - method (str): Type of summed image acquisition. Options:
-        * 'tip_tilt_modulation' → uses `create_summed_image_for_mask`
-        * 'dm_random' → uses `create_summed_image_for_mask_dm_random`
-    - flux_cutoff (float): Relative intensity threshold to generate binary mask (e.g., 0.61)
-    - modulation_angles (array): Tip-tilt modulation angles in degrees (only used in 'tip_tilt_modulation')
-    - modulation_amp (float): Tip-tilt modulation amplitude (only used in 'tip_tilt_modulation')
-    - n_iter (int): Number of iterations (only used in 'dm_random')
-    - create_summed_image (bool): If True, compute new summed image; otherwise load from disk
-    - verbose (bool): Print progress info
-    - verbose_plot (bool): Show real-time image display
-    - **kwargs: Additional parameters passed to the internal image generation functions
+    Parameters
+    ----------
+    method : str
+        Acquisition strategy, ``'tip_tilt_modulation'`` or ``'dm_random'``.
+    flux_cutoff : float
+        Relative intensity threshold used to build the mask.
+    tiltx, tilty : ndarray
+        Tip/tilt modes used when ``method='tip_tilt_modulation'``.
+    modulation_angles : array-like, optional
+        Modulation angles in degrees for tip-tilt modulation.
+    modulation_amp : float, optional
+        Modulation amplitude for tip-tilt modulation.
+    n_iter : int, optional
+        Number of iterations for the ``'dm_random'`` method.
+    create_summed_image : bool, optional
+        If ``True`` compute a new summed image, otherwise load the previous one.
+    verbose : bool, optional
+        Print progress information.
+    verbose_plot : bool, optional
+        Display intermediate plots.
+    **kwargs : optional
+        ``camera`` and ``nact_total`` passed to image acquisition functions,
+        ``folder_pyr_mask`` and ``folder_calib`` to override output locations.
 
-    Returns:
-    - mask (np.ndarray): Binary mask highlighting high-flux regions
+    Returns
+    -------
+    numpy.ndarray
+        Binary mask highlighting high-flux regions.
     """
 
     folder_pyr_mask = kwargs.get("folder_pyr_mask", setup.folder_pyr_mask)
@@ -138,7 +166,7 @@ def create_flux_filtering_mask(method, flux_cutoff, tiltx, tilty,
         elif method == 'dm_random':
             summed_image = create_summed_image_for_mask_dm_random(
                 n_iter=n_iter,
-                verbose=verbose, **kwargs
+                verbose=verbose,
             )
         else:
             raise ValueError("Invalid method. Use 'tip_tilt_modulation' or 'dm_random'.")
