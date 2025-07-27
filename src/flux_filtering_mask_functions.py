@@ -166,8 +166,6 @@ def create_flux_filtering_mask(method, flux_cutoff, tiltx, tilty,
         elif method == 'dm_random':
             summed_image = create_summed_image_for_mask_dm_random(
                 n_iter=n_iter,
-                camera=kwargs.get("camera"),
-                nact_total=kwargs.get("nact_total"),
                 verbose=verbose,
             )
         else:
