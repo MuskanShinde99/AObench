@@ -249,7 +249,8 @@ class PupilSetup:
         self.data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
         deformable_mirror.flatten()
         # deformable_mirror.actuators = data_tt + data_othermodes  # Add TT and higher-order terms to pupil
-        set_dm_actuators(deformable_mirror, data_tt + data_othermodes, setup=self)
+        actuators = data_tt + data_othermodes
+        set_dm_actuators(deformable_mirror, actuators, setup=self)
         self.data_dm[:, :] = deformable_mirror.opd.shaped / 2
 
         self.data_pupil_outer = np.copy(self.data_pupil)
