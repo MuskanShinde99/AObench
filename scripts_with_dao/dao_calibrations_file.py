@@ -149,15 +149,15 @@ KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_
 
 #%% Creating a Flux Filtering Mask
 
-method='dm_random'
+method='tip_tilt_modulation'
 flux_cutoff = 0.3
 modulation_angles = np.arange(0, 360, 5)  # angles of modulation
 modulation_amp = 15 # in lamda/D
-n_iter=200 # number of iternations for dm random commands
+n_iter=50 # number of iternations for dm random commands
 
 mask = create_flux_filtering_mask(method, flux_cutoff, KL2Act[0], KL2Act[1],
                                modulation_angles, modulation_amp, n_iter,
-                               create_summed_image=False, verbose=False, verbose_plot=True)
+                               create_summed_image=True, verbose=False, verbose_plot=True)
 
 valid_pixels_mask_shm.set_data(mask)
 

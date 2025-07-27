@@ -29,21 +29,13 @@ def create_summed_image_for_mask(modulation_angles, modulation_amp, tiltx, tilty
     - verbose: if True, print info messages
     - kwargs: optional overrides for:
         - camera: camera object
-        - pupil_size: pupil size in mm
-        - pixel_size: pixel size in mm
-        - small_pupil_mask (ndarray): Boolean mask for small square pupil on the slm.
-
+      
     Returns:
     - summed_image: the summed image used for mask creation
     """
     
     # Use kwargs or default from setup
     camera = kwargs.get("camera", setup.camera_wfs)
-    pupil_size = kwargs.get("pupil_size", setup.pupil_size)
-    pixel_size = kwargs.get("pixel_size", setup.pixel_size)
-    small_pupil_mask = kwargs.get("small_pupil_mask", setup.pupil_setup.small_pupil_mask)
-
-    Npix = pupil_size / pixel_size  # replaced npix_pupil with Npix
 
     modulation_img_arr = []
 
@@ -52,7 +44,7 @@ def create_summed_image_for_mask(modulation_angles, modulation_amp, tiltx, tilty
             print(f"Applying modulation angle: {angle}")
         
         #modulation_step = apply_intensity_tilt(small_pupil_mask, Npix / 2, tilt_angle=angle)
-        modulation_step = apply_intensity_tilt_kl(tiltx, tilty, small_pupil_mask, tilt_angle=angle)
+        modulation_step = apply_intensity_tilt_kl(tiltx, tilty, tilt_angle=angle)
         data_modulation = modulation_amp * modulation_step
         
         # Put on DM
@@ -77,17 +69,13 @@ def create_summed_image_for_mask_dm_random(n_iter, verbose=False, **kwargs):
     - kwargs:
         - camera: initialized camera object (default: camera_wfs)
         - deformable_mirror: DM object with actuator control (default: deformable_mirror)
-        - npix_small_pupil_grid: resolution of the inner grid (default: npix_small_pupil_grid)
 
     Returns:
     - summed_image: result of push-pull image subtraction summed over all modes
     """
 
     camera = kwargs.get("camera", setup.camera_wfs)
-    deformable_mirror = kwargs.get("deformable_mirror", setup.deformable_mirror)
-    npix_small_pupil_grid = kwargs.get("npix_small_pupil_grid", setup.npix_small_pupil_grid)
-
-    nact_total = int(deformable_mirror.num_actuators)
+    nact_total = kwargs.get("camera", setup.nact_total)
 
     img_arr = []
 
@@ -135,9 +123,8 @@ def create_flux_filtering_mask(method, flux_cutoff, tiltx, tilty,
 
     folder_pyr_mask = kwargs.get("folder_pyr_mask", setup.folder_pyr_mask)
     folder_calib = kwargs.get("folder_calib", setup.folder_calib)
-    pupil_size = kwargs.get("pupil_size", setup.pupil_size)
 
-    summed_img_path = os.path.join(folder_calib, f'binned_summed_pyr_images_pup_{pupil_size}mm_3s_pyr.fits')
+    summed_img_path = os.path.join(folder_calib, f'binned_summed_pyr_images_3s_pyr.fits')
 
     if create_summed_image:
         if verbose:
@@ -200,11 +187,11 @@ def create_flux_filtering_mask(method, flux_cutoff, tiltx, tilty,
         print('Saving masked image and mask')
 
     fits.writeto(
-        os.path.join(folder_calib, f'binned_masked_pyr_images_pup_{pupil_size}mm_3s_pyr.fits'),
+        os.path.join(folder_calib, f'binned_masked_pyr_images_3s_pyr.fits'),
         masked_summed_image.astype(np.float32), overwrite=True
     )
     fits.writeto(
-        os.path.join(folder_calib, f'binned_mask_pup_{pupil_size}mm_3s_pyr.fits'),
+        os.path.join(folder_calib, f'binned_mask_3s_pyr.fits'),
         mask.astype(np.uint8), overwrite=True
     )
 
