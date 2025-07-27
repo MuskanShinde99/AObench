@@ -12,10 +12,12 @@ import cv2
 import re
 
 from src.config import config
+from src.utils import set_dm_actuators, set_data_dm
 
 ROOT_DIR = config.root_dir
 
 from src.dao_setup import init_setup, ROOT_DIR
+
 
 setup = init_setup()
 wait_time = setup.wait_time
@@ -58,9 +60,10 @@ def cost_function(amplitudes, pupil_coords, radius, iteration, variance_threshol
     """
     global stop_optimization  #Flag to stop when pupil intensities are equal
 
-    data_slm, _ = pupil_setup.update_pupil(new_tt_amplitudes=amplitudes)
-    slm.set_data(data_slm)  # Update SLM data
-    time.sleep(wait_time)  # Wait for the update to take effect
+    data_slm, actuators = pupil_setup.update_pupil(new_tt_amplitudes=amplitudes)
+    # slm.set_data(data_slm)  # Update SLM data
+    # time.sleep(wait_time)  # Wait for the update to take effect
+    set_data_dm(actuators=actuators, setup=setup)
 
     # Capture and average 5 images
     num_images = 5
