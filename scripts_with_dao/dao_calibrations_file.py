@@ -149,8 +149,8 @@ KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_
 
 #%% Creating a Flux Filtering Mask
 
-method='tip_tilt_modulation'
-flux_cutoff = 0.4
+method='dm_random'
+flux_cutoff = 0.3
 modulation_angles = np.arange(0, 360, 5)  # angles of modulation
 modulation_amp = 15 # in lamda/D
 n_iter=200 # number of iternations for dm random commands
@@ -188,7 +188,7 @@ center_psf_on_pyramid_tip(mask=mask, initial_tt_amplitudes=[-0.2, 0.1],
 #%% Scanning modes to find zero of the pyramid
 
 test_values = np.arange(-0.5, 0.5, 0.05)
-mode_index = 1 # 0 - focus, 1 - astimgatism, 2 -astigmatism 
+mode_index = 3 # 0 - focus, 1 - astimgatism, 2 -astigmatism 
 #scan_othermode_amplitudes(test_values, mode_index, update_setup_file=True)
 scan_othermode_amplitudes_wfs_std(test_values, mode_index, mask, 
                                   update_setup_file=False)

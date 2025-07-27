@@ -102,7 +102,6 @@ def create_summed_image_for_mask_dm_random(n_iter, verbose=False, **kwargs):
     slm = kwargs.get("slm", setup.slm)
     camera = kwargs.get("camera", setup.camera_wfs)
     deformable_mirror = kwargs.get("deformable_mirror", setup.deformable_mirror)
-    deformable_mirror = DeformableMirror(dm_modes_full)
     npix_small_pupil_grid = kwargs.get("npix_small_pupil_grid", setup.npix_small_pupil_grid)
 
     nact_total = int(deformable_mirror.num_actuators)
@@ -120,7 +119,7 @@ def create_summed_image_for_mask_dm_random(n_iter, verbose=False, **kwargs):
             act_random,
             setup=setup,
         )
-        time.sleep(wait_time)
+        time.sleep(setup.wait_time)
         
         img = camera.get_data()
         img_arr.append(img)
