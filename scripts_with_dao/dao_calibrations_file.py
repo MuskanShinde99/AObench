@@ -89,7 +89,7 @@ set_data_dm(setup=setup)
 print('Pupil created on the SLM.')
 
 #DM function for papyrus, and have a dm flat
-# for a dm flat put 10% of the total DM unit
+# for a dm flat put 10% of the total DM unit/
 # make setting the shared memory part of the DM function
 
 

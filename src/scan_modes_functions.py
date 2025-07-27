@@ -148,9 +148,8 @@ def scan_othermode_amplitudes_wfs_std(test_values, mode_index, mask, wait=wait_t
         new_amps = list(pupil_setup.othermodes_amplitudes)
         new_amps[mode_index] = amp
 
-        slm_data, _ = pupil_setup.update_pupil(new_othermodes_amplitudes=new_amps)
-        slm.set_data(slm_data)
-        time.sleep(wait)
+        actuators = pupil_setup.update_pupil(new_othermodes_amplitudes=new_amps)
+        set_data_dm(setup=setup)
 
         # Capture WFS images and compute standard deviation over valid pixels
         num_images = 5

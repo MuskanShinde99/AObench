@@ -22,33 +22,7 @@ def set_default_setup(setup):
     DEFAULT_SETUP = setup
 
 
-def set_dm_actuators(dm, actuators=None, dm_flat=None, setup=None):
-    """Set DM actuators and update the shared memory grid."""
 
-    if setup is None:
-        if DEFAULT_SETUP is None:
-            raise ValueError("No setup provided and no default registered.")
-        setup = DEFAULT_SETUP
-
-    if actuators is None:
-        actuators = np.zeros(setup.nact ** 2)
-    if dm_flat is None:
-        dm_flat = setup.dm_flat
-
-    actuators = np.asarray(actuators)
-    if actuators.size != setup.nact ** 2:
-        raise ValueError(
-            f"Expected {setup.nact ** 2} actuators, got {actuators.size}"
-        )
-
-    dm.actuators = actuators + dm_flat
-
-    dm_act_shm = shm.dm_act_shm
-    dm_act_shm.set_data(np.asarray(dm.actuators).reshape(setup.nact, setup.nact))
-    
-
-
-# Add and wrap data within the pupil mask
 
 def compute_data_slm(data_dm=0, data_phase_screen=0, data_dm_flat=0, setup=None, **kwargs):
     """
@@ -83,6 +57,32 @@ def compute_data_slm(data_dm=0, data_phase_screen=0, data_dm_flat=0, setup=None,
     data_slm[pupil_mask] = data_inner[small_pupil_mask]
 
     return data_slm.astype(np.uint8)
+
+
+def set_dm_actuators(dm, actuators=None, dm_flat=None, setup=None):
+    """Set DM actuators and update the shared memory grid."""
+
+    if setup is None:
+        if DEFAULT_SETUP is None:
+            raise ValueError("No setup provided and no default registered.")
+        setup = DEFAULT_SETUP
+
+    if actuators is None:
+        actuators = np.zeros(setup.nact ** 2)
+    if dm_flat is None:
+        dm_flat = setup.dm_flat
+
+    actuators = np.asarray(actuators)
+    if actuators.size != setup.nact ** 2:
+        raise ValueError(
+            f"Expected {setup.nact ** 2} actuators, got {actuators.size}"
+        )
+
+    dm.actuators = actuators + dm_flat
+
+    dm_act_shm = shm.dm_act_shm
+    dm_act_shm.set_data(np.asarray(dm.actuators).reshape(setup.nact, setup.nact))
+    
 
 # ---------------------------------------------------------------------------
 def set_data_dm(actuators=None, *, setup=None, dm_flat=None, **kwargs):
@@ -145,10 +145,7 @@ def set_data_dm(actuators=None, *, setup=None, dm_flat=None, **kwargs):
 
     return data_dm, data_slm
 
-# ---------------------------------------------------------------------------
-# data_slm = data_pupil_outer.copy()
-# data_inner = ((data_pupil_inner + (data_dm)) * 256) % 256
-# data_slm[pupil_mask] = data_inner[small_pupil_mask]
+
 
 
 def create_psf_mask(psf, crop_size=100, radius=50):

@@ -177,7 +177,7 @@ data_pupil = data_pupil + data_focus
 
 # [-1.6510890005150187, 0.14406016044318903]
 # Create a Tip-Tilt (TT) matrix with specified amplitudes as the diagonal elements
-tt_amplitudes = [-0.8228147330140445, 0.044321341241222] # Tip and Tilt amplitudes
+tt_amplitudes = [-1.6643032179340225, 0.09163513242902432] # Tip and Tilt amplitudes
 tt_amplitude_matrix = np.diag(tt_amplitudes)
 tt_matrix = tt_amplitude_matrix @ KL2Act[0:2, :]  # Select modes 1 (tip) and 2 (tilt)
 
@@ -264,7 +264,7 @@ class PupilSetup:
         self.data_pupil_inner[~self.small_pupil_mask] = 0
 
         self.data_pupil_inner_new = self.data_pupil_inner + self.data_dm
-        self.data_slm = compute_data_slm(setup=self)
+
 
     def update_pupil(self, new_tt_amplitudes=None, new_othermodes_amplitudes=None,
                      new_tilt_amp_outer=None, new_tilt_amp_inner=None):
@@ -285,7 +285,7 @@ class PupilSetup:
         )
         self.data_pupil = self.data_pupil + self.data_focus
         self._recompute_dm()
-        return self.data_slm, self.actuators
+        return self.actuators
 
 
 pupil_setup = PupilSetup()
