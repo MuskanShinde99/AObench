@@ -355,15 +355,15 @@ def create_response_matrix(
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     
     # Filterd
-    filtered = f'binned_response_matrix_KL2S_filtered_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
-    filtered_timestamped = f'binned_response_matrix_KL2S_filtered_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr_{timestamp}.fits'
+    filtered = f'binned_response_matrix_KL2S_filtered_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
+    filtered_timestamped = f'binned_response_matrix_KL2S_filtered_nact_{nact}_amp_{phase_amp}_3s_pyr_{timestamp}.fits'
     fits.writeto(os.path.join(folder_calib, filtered), response_matrix_filtered, overwrite=True)
     fits.writeto(os.path.join(folder_calib, filtered_timestamped), response_matrix_filtered, overwrite=True)
     if verbose: print(f"Filtered matrix saved to:\n  {filtered}\n  {filtered_timestamped}")
     
     # Full
-    full = f'binned_response_matrix_KL2S_full_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
-    full_timestamped = f'binned_response_matrix_KL2S_full_pup_{pupil_size}mm_nact_{nact}_amp_{phase_amp}_3s_pyr_{timestamp}.fits'
+    full = f'binned_response_matrix_KL2S_full_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
+    full_timestamped = f'binned_response_matrix_KL2S_full_nact_{nact}_amp_{phase_amp}_3s_pyr_{timestamp}.fits'
     fits.writeto(os.path.join(folder_calib, full), response_matrix_full, overwrite=True)
     fits.writeto(os.path.join(folder_calib, full_timestamped), response_matrix_full, overwrite=True)
     if verbose: print(f"Full matrix saved to:\n  {full}\n  {full_timestamped}")
