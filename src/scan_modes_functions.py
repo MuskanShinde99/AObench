@@ -8,7 +8,6 @@ wait_time = setup.wait_time
 pupil_setup = setup.pupil_setup
 camera_fp = setup.camera_fp
 camera_wfs = setup.camera_wfs
-slm = setup.slm
 from pathlib import Path
 import re
 from src.utils import set_data_dm
@@ -55,9 +54,8 @@ def scan_othermode_amplitudes(test_values, mode_index, wait=wait_time,
         new_amps = list(pupil_setup.othermodes_amplitudes)
         new_amps[mode_index] = amp
 
-        slm_data, _ = pupil_setup.update_pupil(new_othermodes_amplitudes=new_amps)
-        slm.set_data(slm_data)
-        time.sleep(wait)
+        pupil_setup.update_pupil(new_othermodes_amplitudes=new_amps)
+        set_data_dm(setup=setup)
 
         # Capture focal-plane image and log stats
         # Capture and average 5 images
