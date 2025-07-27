@@ -221,6 +221,9 @@ class PupilSetup:
     """Encapsulate pupil parameters and provide update utilities."""
 
     def __init__(self):
+        # Register this instance as the default setup so utility functions
+        # can rely on it without explicitly passing it around.
+        set_default_setup(self)
         self.tilt_amp_outer = tilt_amp_outer
         self.tilt_amp_inner = tilt_amp_inner
         self.tt_amplitudes = list(tt_amplitudes)
@@ -237,7 +240,7 @@ class PupilSetup:
         self.pupil_mask = pupil_mask
         self.small_pupil_mask = small_pupil_mask
         self.dm_flat = dm_flat
-        self.data_slm = compute_data_slm(setup=self)
+        self.data_slm = compute_data_slm()
 
     def _recompute_dm(self):
         """(Re)compute DM contribution and assemble the pupil."""
@@ -251,7 +254,7 @@ class PupilSetup:
         deformable_mirror.flatten()
         # deformable_mirror.actuators = data_tt + data_othermodes  # Add TT and higher-order terms to pupil
         actuators = data_tt + data_othermodes
-        set_dm_actuators(deformable_mirror, actuators, setup=self)
+        set_dm_actuators(deformable_mirror, actuators)
         self.actuators = actuators
         self.data_dm[:, :] = deformable_mirror.opd.shaped / 2
 
@@ -289,7 +292,6 @@ class PupilSetup:
 
 
 pupil_setup = PupilSetup()
-set_default_setup(pupil_setup)
 
 def update_pupil(*args, **kwargs):
     """Wrapper for backward compatibility."""
