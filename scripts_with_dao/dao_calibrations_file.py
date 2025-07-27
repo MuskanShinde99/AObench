@@ -149,7 +149,7 @@ KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_
 
 #%% Creating a Flux Filtering Mask
 
-method='tip_tilt_modulation'
+method='dm_random'
 flux_cutoff = 0.3
 modulation_angles = np.arange(0, 360, 5)  # angles of modulation
 modulation_amp = 15 # in lamda/D
