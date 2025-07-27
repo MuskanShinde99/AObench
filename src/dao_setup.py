@@ -250,13 +250,12 @@ class PupilSetup:
         othermodes_matrix = np.diag(self.othermodes_amplitudes) @ KL2Act[2:10, :]
         data_othermodes = np.sum(othermodes_matrix, axis=0)
 
-        self.data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
-        deformable_mirror.flatten()
-        # deformable_mirror.actuators = data_tt + data_othermodes  # Add TT and higher-order terms to pupil
+        # Compute actuator values but don't apply them to the DM here.  The
+        # actual DM update is performed explicitly via ``set_data_dm`` so that
+        # callers can control when the new shape is sent.
         actuators = data_tt + data_othermodes
-        set_dm_actuators(deformable_mirror, actuators)
         self.actuators = actuators
-        self.data_dm[:, :] = deformable_mirror.opd.shaped / 2
+        self.data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
 
         self.data_pupil_outer = np.copy(self.data_pupil)
         self.data_pupil_outer[self.pupil_mask] = 0
@@ -266,7 +265,10 @@ class PupilSetup:
                              offset_width:offset_width + npix_small_pupil_grid])
         self.data_pupil_inner[~self.small_pupil_mask] = 0
 
-        self.data_pupil_inner_new = self.data_pupil_inner + self.data_dm
+        # ``data_pupil_inner_new`` should contain only the static pupil.  The DM
+        # contribution will be added when ``set_data_dm`` is called with the
+        # returned actuator values.
+        self.data_pupil_inner_new = self.data_pupil_inner
 
 
     def update_pupil(self, new_tt_amplitudes=None, new_othermodes_amplitudes=None,

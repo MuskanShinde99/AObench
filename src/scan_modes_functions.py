@@ -54,8 +54,8 @@ def scan_othermode_amplitudes(test_values, mode_index, wait=wait_time,
         new_amps = list(pupil_setup.othermodes_amplitudes)
         new_amps[mode_index] = amp
 
-        pupil_setup.update_pupil(new_othermodes_amplitudes=new_amps)
-        set_data_dm(setup=setup)
+        actuators = pupil_setup.update_pupil(new_othermodes_amplitudes=new_amps)
+        set_data_dm(actuators=actuators, setup=setup)
 
         # Capture focal-plane image and log stats
         # Capture and average 5 images
@@ -145,8 +145,8 @@ def scan_othermode_amplitudes_wfs_std(test_values, mode_index, mask,
         new_amps = list(pupil_setup.othermodes_amplitudes)
         new_amps[mode_index] = amp
 
-        pupil_setup.update_pupil(new_othermodes_amplitudes=new_amps)
-        set_data_dm(setup=setup)
+        actuators = pupil_setup.update_pupil(new_othermodes_amplitudes=new_amps)
+        set_data_dm(actuators=actuators, setup=setup)
 
         # Capture WFS images and compute standard deviation over valid pixels
         num_images = 5
