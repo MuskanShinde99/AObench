@@ -235,6 +235,7 @@ class PupilSetup:
         # Store masks for later use when recomputing the pupil
         self.pupil_mask = pupil_mask
         self.small_pupil_mask = small_pupil_mask
+        self.dm_flat = dm_flat
         self.data_slm = compute_data_slm(setup=self)
 
     def _recompute_dm(self):
