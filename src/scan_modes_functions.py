@@ -17,6 +17,9 @@ def scan_othermode_amplitudes(test_values, mode_index, wait=wait_time,
                               update_setup_file=False):
     """Iterate over amplitude values for a specified othermode.
 
+    The pupil configuration is restored to its original othermode amplitudes
+    unless ``update_setup_file`` is ``True`` and an optimal value is stored.
+
     Parameters
     ----------
     test_values : sequence of float
@@ -29,7 +32,15 @@ def scan_othermode_amplitudes(test_values, mode_index, wait=wait_time,
         If True, update ``othermodes_amplitudes`` in ``dao_setup.py``
         with the best-performing amplitude. If multiple amplitudes
         achieve the same maximum intensity, their mean value is stored.
+
+    Returns
+    -------
+    float or None
+        Amplitude yielding the best intensity, or ``None`` if no optimum was
+        found.
     """
+
+    original_amps = list(pupil_setup.othermodes_amplitudes)
 
     if mode_index < 0 or mode_index >= len(pupil_setup.othermodes_amplitudes):
         raise ValueError(
@@ -84,8 +95,14 @@ def scan_othermode_amplitudes(test_values, mode_index, wait=wait_time,
             with open(dao_setup_path, 'w') as file:
                 file.write(updated_content)
             print('Updated `othermodes_amplitudes` in dao_setup.py')
+            pupil_setup.update_pupil(new_othermodes_amplitudes=values)
         else:
             print('Failed to update `othermodes_amplitudes` in dao_setup.py')
+            pupil_setup.update_pupil(new_othermodes_amplitudes=original_amps)
+    else:
+        pupil_setup.update_pupil(new_othermodes_amplitudes=original_amps)
+
+    return best_amp
 
 
 def scan_othermode_amplitudes_wfs_std(test_values, mode_index, mask, wait=wait_time,
@@ -93,7 +110,9 @@ def scan_othermode_amplitudes_wfs_std(test_values, mode_index, mask, wait=wait_t
     """Iterate over amplitude values for a specified othermode using WFS data.
 
     This variant captures images from the wavefront sensor camera and
-    minimizes the standard deviation of valid pixels within the mask.
+    minimizes the standard deviation of valid pixels within the mask. The
+    pupil configuration is restored to its original state unless
+    ``update_setup_file`` is ``True`` and the best amplitude is recorded.
 
     Parameters
     ----------
@@ -107,7 +126,15 @@ def scan_othermode_amplitudes_wfs_std(test_values, mode_index, mask, wait=wait_t
         If True, update ``othermodes_amplitudes`` in ``dao_setup.py`` with
         the best-performing amplitude. If multiple amplitudes yield the same
         minimum standard deviation, their mean value is stored.
+
+    Returns
+    -------
+    float or None
+        Amplitude yielding the minimum standard deviation, or ``None`` if
+        no optimum was found.
     """
+
+    original_amps = list(pupil_setup.othermodes_amplitudes)
 
     if mode_index < 0 or mode_index >= len(pupil_setup.othermodes_amplitudes):
         raise ValueError(
@@ -161,5 +188,11 @@ def scan_othermode_amplitudes_wfs_std(test_values, mode_index, mask, wait=wait_t
             with open(dao_setup_path, 'w') as file:
                 file.write(updated_content)
             print('Updated `othermodes_amplitudes` in dao_setup.py')
+            pupil_setup.update_pupil(new_othermodes_amplitudes=values)
         else:
             print('Failed to update `othermodes_amplitudes` in dao_setup.py')
+            pupil_setup.update_pupil(new_othermodes_amplitudes=original_amps)
+    else:
+        pupil_setup.update_pupil(new_othermodes_amplitudes=original_amps)
+
+    return best_amp
