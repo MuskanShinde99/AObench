@@ -68,19 +68,19 @@ def create_summed_image_for_mask(modulation_angles, modulation_amp, tiltx, tilty
     return summed_image
 
 
-def create_summed_image_for_mask_dm_random(n_iter, camera=None, nact_total=None, verbose=False):
+def create_summed_image_for_mask_dm_random(n_iter, verbose=False, **kwargs):
     """Acquire a summed image using random DM actuator patterns.
 
     Parameters
     ----------
     n_iter : int
         Number of random actuator patterns to apply.
-    camera : optional
-        Camera object used for acquisition. Defaults to ``setup.camera_wfs``.
-    nact_total : int, optional
-        Number of DM actuators. Defaults to ``setup.nact_total``.
     verbose : bool, optional
         If ``True`` display progress information.
+    camera : optional
+        Camera object used for acquisition (default ``setup.camera_wfs``).
+    nact_total : int, optional
+        Number of DM actuators (default ``setup.nact_total``).
 
     Returns
     -------
@@ -88,10 +88,9 @@ def create_summed_image_for_mask_dm_random(n_iter, camera=None, nact_total=None,
         Summed image produced by random push--pull modulation.
     """
 
-    if camera is None:
-        camera = setup.camera_wfs
-    if nact_total is None:
-        nact_total = setup.nact_total
+    # Use kwargs or defaults from the setup
+    camera = kwargs.get("camera", setup.camera_wfs)
+    nact_total = kwargs.get("nact_total", setup.nact_total)
 
     img_arr = []
 
@@ -167,6 +166,7 @@ def create_flux_filtering_mask(method, flux_cutoff, tiltx, tilty,
             summed_image = create_summed_image_for_mask_dm_random(
                 n_iter=n_iter,
                 verbose=verbose,
+                **kwargs
             )
         else:
             raise ValueError("Invalid method. Use 'tip_tilt_modulation' or 'dm_random'.")
