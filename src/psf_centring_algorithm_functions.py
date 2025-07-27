@@ -80,6 +80,7 @@ def cost_function(amplitudes, pupil_coords, radius, iteration, variance_threshol
     # Print iteration number, variance and the applied tip-tilt amplitudes
     print(
         f"Iteration: {iteration} | Variance: {variance:.3f} | "
+        f"Tip-tilt amptitude: {amplitudes} |"
         f"Tip-tilt amplitudes applied: {applied_amplitudes}"
     )
 
