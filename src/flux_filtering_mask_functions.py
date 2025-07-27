@@ -13,7 +13,6 @@ from matplotlib import pyplot as plt
 from src.dao_setup import init_setup
 from src.tilt_functions import apply_intensity_tilt_kl
 from src.utils import set_data_dm
-import matplotlib.colors as mcolors
 from astropy.io import fits
 
 setup = init_setup()
@@ -28,36 +27,23 @@ def create_summed_image_for_mask(modulation_angles, modulation_amp, tiltx, tilty
     - modulation_angles: list of angles for modulation
     - modulation_amp: modulation amplitude
     - verbose: if True, print info messages
-    - verbose_plot: if True, update the displayed image dynamically
     - kwargs: optional overrides for:
-        - camera: camera object 
-        - slm: spatial light modulator object 
-        - data_pupil: pupil data array 
-        - pupil_size: pupil size in mm 
-        - pupil_mask (ndarray): Boolean mask for pupil over the full slm.
+        - camera: camera object
+        - pupil_size: pupil size in mm
+        - pixel_size: pixel size in mm
         - small_pupil_mask (ndarray): Boolean mask for small square pupil on the slm.
 
     Returns:
     - summed_image: the summed image used for mask creation
     """
     
-    wait_time = setup.wait_time
-
     # Use kwargs or default from setup
     camera = kwargs.get("camera", setup.camera_wfs)
-    slm = kwargs.get("slm", setup.slm)
-    deformable_mirror = kwargs.get("deformable_mirror", setup.deformable_mirror)
-    data_pupil = kwargs.get("data_pupil", setup.pupil_setup.data_pupil)
     pupil_size = kwargs.get("pupil_size", setup.pupil_size)
     pixel_size = kwargs.get("pixel_size", setup.pixel_size)
-    pupil_mask = kwargs.get("pupil_mask", setup.pupil_setup.pupil_mask)
     small_pupil_mask = kwargs.get("small_pupil_mask", setup.pupil_setup.small_pupil_mask)
-    dataHeight = kwargs.get("dataHeight", setup.dataHeight)
-    dataWidth = kwargs.get("dataWidth", setup.dataWidth)
-    npix_small_pupil_grid = kwargs.get("npix_small_pupil_grid", setup.npix_small_pupil_grid)
 
-    pixel_size_mm = pixel_size
-    Npix = pupil_size / pixel_size_mm  # replaced npix_pupil with Npix
+    Npix = pupil_size / pixel_size  # replaced npix_pupil with Npix
 
     modulation_img_arr = []
 
@@ -88,9 +74,7 @@ def create_summed_image_for_mask_dm_random(n_iter, verbose=False, **kwargs):
     Parameters:
     - n_iter: number of random actuator patterns to test
     - verbose: whether to print/display progress
-    - verbose_plot: if True, live image display is updated
     - kwargs:
-        - slm: SLM instance (default: slm)
         - camera: initialized camera object (default: camera_wfs)
         - deformable_mirror: DM object with actuator control (default: deformable_mirror)
         - npix_small_pupil_grid: resolution of the inner grid (default: npix_small_pupil_grid)
@@ -99,13 +83,11 @@ def create_summed_image_for_mask_dm_random(n_iter, verbose=False, **kwargs):
     - summed_image: result of push-pull image subtraction summed over all modes
     """
 
-    slm = kwargs.get("slm", setup.slm)
     camera = kwargs.get("camera", setup.camera_wfs)
     deformable_mirror = kwargs.get("deformable_mirror", setup.deformable_mirror)
     npix_small_pupil_grid = kwargs.get("npix_small_pupil_grid", setup.npix_small_pupil_grid)
 
     nact_total = int(deformable_mirror.num_actuators)
-    data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
 
     img_arr = []
 
@@ -115,7 +97,7 @@ def create_summed_image_for_mask_dm_random(n_iter, verbose=False, **kwargs):
             print(f"Iteration {i + 1}")
 
         act_random = np.random.choice([0, 1], size=nact_total)
-        data_dm, data_slm = set_data_dm(
+        set_data_dm(
             act_random,
             setup=setup,
         )
