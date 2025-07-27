@@ -55,11 +55,18 @@ def cost_function(amplitudes, pupil_coords, radius, iteration, variance_threshol
         Current optimisation iteration.
     variance_threshold : float, optional
         Variance value below which the optimisation should stop. Defaults to ``5``.
+
+    Notes
+    -----
+    ``update_pupil`` returns the actuator values but does not apply them. The
+    returned actuators must be sent using :func:`set_data_dm`.
     """
     global stop_optimization  # Flag to stop when pupil intensities are equal
 
     actuators = pupil_setup.update_pupil(new_tt_amplitudes=amplitudes)
-    set_data_dm(setup=setup)
+    # Explicitly send the new actuator values to the DM. ``update_pupil`` no
+    # longer updates the DM directly.
+    set_data_dm(actuators=actuators, setup=setup)
 
     # Capture and average 5 images
     num_images = 5
