@@ -239,17 +239,24 @@ class PupilSetup:
         self.data_slm = compute_data_slm(setup=self)
 
     def _recompute_dm(self):
-        """(Re)compute DM contribution and assemble the pupil."""
+        """(Re)compute DM contribution and assemble the pupil.
+
+        Returns
+        -------
+        numpy.ndarray
+            DM actuator values applied during the computation.
+        """
         tt_matrix = np.diag(self.tt_amplitudes) @ KL2Act[0:2, :]
         data_tt = (tt_matrix[0] + tt_matrix[1])
 
         othermodes_matrix = np.diag(self.othermodes_amplitudes) @ KL2Act[2:10, :]
         data_othermodes = np.sum(othermodes_matrix, axis=0)
 
+        actuators = data_tt + data_othermodes
+
         self.data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
         deformable_mirror.flatten()
-        # deformable_mirror.actuators = data_tt + data_othermodes  # Add TT and higher-order terms to pupil
-        set_dm_actuators(deformable_mirror, data_tt + data_othermodes, setup=self)
+        set_dm_actuators(deformable_mirror, actuators, setup=self)
         self.data_dm[:, :] = deformable_mirror.opd.shaped / 2
 
         self.data_pupil_outer = np.copy(self.data_pupil)
@@ -262,6 +269,8 @@ class PupilSetup:
 
         self.data_pupil_inner_new = self.data_pupil_inner + self.data_dm
         self.data_slm = compute_data_slm(setup=self)
+
+        return actuators
 
     def update_pupil(self, new_tt_amplitudes=None, new_othermodes_amplitudes=None,
                      new_tilt_amp_outer=None, new_tilt_amp_inner=None):
@@ -278,11 +287,15 @@ class PupilSetup:
             self.tilt_amp_inner = new_tilt_amp_inner
 
         self.data_pupil = create_slm_circular_pupil(
-            self.tilt_amp_outer, self.tilt_amp_inner, pupil_size, self.pupil_mask, slm
+            self.tilt_amp_outer,
+            self.tilt_amp_inner,
+            pupil_size,
+            self.pupil_mask,
+            slm,
         )
         self.data_pupil = self.data_pupil + self.data_focus
-        self._recompute_dm()
-        return self.data_slm
+        actuators = self._recompute_dm()
+        return actuators
 
 
 pupil_setup = PupilSetup()

@@ -2,6 +2,7 @@ import time
 import numpy as np
 
 from src.dao_setup import init_setup, ROOT_DIR
+from src.utils import set_data_dm
 
 setup = init_setup()
 wait_time = setup.wait_time
@@ -54,8 +55,8 @@ def scan_othermode_amplitudes(test_values, mode_index, wait=wait_time,
         new_amps = list(pupil_setup.othermodes_amplitudes)
         new_amps[mode_index] = amp
 
-        slm_data = pupil_setup.update_pupil(new_othermodes_amplitudes=new_amps)
-        slm.set_data(slm_data)
+        act_pos = pupil_setup.update_pupil(new_othermodes_amplitudes=new_amps)
+        set_data_dm(actuators=act_pos, setup=setup)
         time.sleep(wait)
 
         # Capture focal-plane image and log stats
@@ -148,8 +149,8 @@ def scan_othermode_amplitudes_wfs_std(test_values, mode_index, mask, wait=wait_t
         new_amps = list(pupil_setup.othermodes_amplitudes)
         new_amps[mode_index] = amp
 
-        slm_data = pupil_setup.update_pupil(new_othermodes_amplitudes=new_amps)
-        slm.set_data(slm_data)
+        act_pos = pupil_setup.update_pupil(new_othermodes_amplitudes=new_amps)
+        set_data_dm(actuators=act_pos, setup=setup)
         time.sleep(wait)
 
         # Capture WFS images and compute standard deviation over valid pixels
