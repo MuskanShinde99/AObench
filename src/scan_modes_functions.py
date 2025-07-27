@@ -54,7 +54,7 @@ def scan_othermode_amplitudes(test_values, mode_index, wait=wait_time,
         new_amps = list(pupil_setup.othermodes_amplitudes)
         new_amps[mode_index] = amp
 
-        slm_data = pupil_setup.update_pupil(new_othermodes_amplitudes=new_amps)
+        slm_data, _ = pupil_setup.update_pupil(new_othermodes_amplitudes=new_amps)
         slm.set_data(slm_data)
         time.sleep(wait)
 
@@ -148,7 +148,7 @@ def scan_othermode_amplitudes_wfs_std(test_values, mode_index, mask, wait=wait_t
         new_amps = list(pupil_setup.othermodes_amplitudes)
         new_amps[mode_index] = amp
 
-        slm_data = pupil_setup.update_pupil(new_othermodes_amplitudes=new_amps)
+        slm_data, _ = pupil_setup.update_pupil(new_othermodes_amplitudes=new_amps)
         slm.set_data(slm_data)
         time.sleep(wait)
 

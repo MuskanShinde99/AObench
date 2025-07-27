@@ -232,6 +232,7 @@ class PupilSetup:
         self.data_pupil_outer = data_pupil_outer
         self.data_pupil_inner = data_pupil_inner
         self.data_pupil_inner_new = data_pupil_inner_new
+        self.actuators = np.zeros(nact**2)
         # Store masks for later use when recomputing the pupil
         self.pupil_mask = pupil_mask
         self.small_pupil_mask = small_pupil_mask
@@ -251,6 +252,7 @@ class PupilSetup:
         # deformable_mirror.actuators = data_tt + data_othermodes  # Add TT and higher-order terms to pupil
         actuators = data_tt + data_othermodes
         set_dm_actuators(deformable_mirror, actuators, setup=self)
+        self.actuators = actuators
         self.data_dm[:, :] = deformable_mirror.opd.shaped / 2
 
         self.data_pupil_outer = np.copy(self.data_pupil)
@@ -283,7 +285,7 @@ class PupilSetup:
         )
         self.data_pupil = self.data_pupil + self.data_focus
         self._recompute_dm()
-        return self.data_slm
+        return self.data_slm, self.actuators
 
 
 pupil_setup = PupilSetup()
