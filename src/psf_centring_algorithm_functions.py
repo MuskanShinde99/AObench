@@ -1,18 +1,12 @@
-
-from pypylon import pylon
 from matplotlib import pyplot as plt
 import numpy as np
-import os
-import time
 from skopt import gp_minimize
-from DEVICES_3.Basler_Pylon.test_pylon import *
-import sys
 from pathlib import Path
 import cv2
 import re
 
 from src.config import config
-from src.utils import set_dm_actuators, set_data_dm
+from src.utils import set_data_dm
 
 ROOT_DIR = config.root_dir
 
@@ -23,24 +17,28 @@ setup = init_setup()
 wait_time = setup.wait_time
 pupil_setup = setup.pupil_setup
 camera_wfs = setup.camera_wfs
-slm = setup.slm
 
 
 # Access the SLM and cameras
 
+
 def compute_pupil_intensities(img, pupil_coords, radius):
     """Compute average intensity for each pupil location."""
     intensities = []
-    for (x, y) in pupil_coords:
+    for x, y in pupil_coords:
         mask = np.zeros_like(img)
-        yy, xx = np.ogrid[:img.shape[0], :img.shape[1]]
-        mask_area = (xx - x) ** 2 + (yy - y) ** 2 <= radius ** 2  # Create a circular mask
-        intensities.append(np.mean(img[mask_area]))  # Calculate mean intensity in the mask area
-        
+        yy, xx = np.ogrid[: img.shape[0], : img.shape[1]]
+        mask_area = (xx - x) ** 2 + (yy - y) ** 2 <= radius**2  # Create a circular mask
+        intensities.append(
+            np.mean(img[mask_area])
+        )  # Calculate mean intensity in the mask area
+
     return np.array(intensities)
 
+
 # Global stopping flag
-stop_optimization = False  
+stop_optimization = False
+
 
 def cost_function(amplitudes, pupil_coords, radius, iteration, variance_threshold=5):
     """Cost function for optimization based on intensity variance.
@@ -58,7 +56,7 @@ def cost_function(amplitudes, pupil_coords, radius, iteration, variance_threshol
     variance_threshold : float, optional
         Variance value below which the optimisation should stop. Defaults to ``5``.
     """
-    global stop_optimization  #Flag to stop when pupil intensities are equal
+    global stop_optimization  # Flag to stop when pupil intensities are equal
 
     actuators = pupil_setup.update_pupil(new_tt_amplitudes=amplitudes)
     set_data_dm(setup=setup)
@@ -67,17 +65,21 @@ def cost_function(amplitudes, pupil_coords, radius, iteration, variance_threshol
     num_images = 5
     images = [camera_wfs.get_data() for i in range(num_images)]
     img = np.mean(images, axis=0)
-    
-    #Compute pupil intensities
-    intensities = compute_pupil_intensities(img, pupil_coords, radius)  # Compute intensities
-    
+
+    # Compute pupil intensities
+    intensities = compute_pupil_intensities(
+        img, pupil_coords, radius
+    )  # Compute intensities
+
     # Calculate the variance of the intensities as the cost
     mean_intensity = np.mean(intensities)
-    normalized_intensities = intensities / mean_intensity 
+    normalized_intensities = intensities / mean_intensity
     variance = np.mean((normalized_intensities - 1) ** 2)
-    
+
     # Print iteration number and variance
-    print(f"Iteration: {iteration} | Variance: {variance:.3f} | Tipi-tilt amptitude: {amplitudes}")
+    print(
+        f"Iteration: {iteration} | Variance: {variance:.3f} | Tipi-tilt amptitude: {amplitudes}"
+    )
 
     # Check stopping condition based on the provided threshold
     if variance < variance_threshold:
@@ -85,15 +87,15 @@ def cost_function(amplitudes, pupil_coords, radius, iteration, variance_threshol
             f"Stopping condition met: Variance {variance:.3f} below threshold {variance_threshold}."
         )
         stop_optimization = True  # Set stopping flag
-        
+
     return variance + 1e-3  # Add a small noise floor
 
 
 # Global list to store cost function values for debugging
 cost_values = []
 
+
 def optimize_amplitudes(
-    initial_amplitudes,
     pupil_coords,
     radius,
     bounds=[(-1.0, 1.0), (-1.0, 1.0)],
@@ -101,11 +103,10 @@ def optimize_amplitudes(
     variance_threshold=5,
 ):
     """
-    Optimize amplitudes using Scikit-Optimize's gp_minimize. 
+    Optimize amplitudes using Scikit-Optimize's gp_minimize.
     Bayesian optimization using Gaussian Processes.
 
     Parameters:
-    - initial_amplitudes (list): Initial guess for tip and tilt amplitudes
     - pupil_coords (list): List of (x, y) pupil center coordinates
     - radius (float): Approximate radius of pupil mask
     - bounds (list): Search bounds for tip and tilt amplitudes
@@ -141,19 +142,17 @@ def optimize_amplitudes(
     # Perform Gaussian Process optimization
     result = gp_minimize(
         wrapped_cost_function,
-        bounds,           # Search bounds
+        bounds,  # Search bounds
         n_calls=n_calls,  # Number of evaluations
         random_state=42,  # Reproducibility
-        callback=[stop_callback]  # Add callback for early stopping
+        callback=[stop_callback],  # Add callback for early stopping
     )
 
     return result.x  # Return optimized amplitudes
 
 
-
 def center_psf_on_pyramid_tip(
     mask,
-    initial_tt_amplitudes=[-0.5, 0.2],
     bounds=[(-1.0, 1.0), (-1.0, 1.0)],
     n_calls=200,
     update_setup_file=False,
@@ -166,7 +165,6 @@ def center_psf_on_pyramid_tip(
 
     Parameters:
     - mask (np.ndarray): Binary mask of pupil regions
-    - initial_tt_amplitudes (list): Initial [tip, tilt] guess
     - bounds (list of tuple): Bounds for the [tip, tilt] amplitudes
     - n_calls (int): Number of iterations for the optimizer
     - update_setup_file (bool): If True, update `tt_amplitudes` in dao_setup.py
@@ -177,7 +175,7 @@ def center_psf_on_pyramid_tip(
     Returns:
     - new_tt_amplitudes (list): Optimized [tip, tilt] amplitudes
     """
-    
+
     global stop_optimization, cost_values
     # Reset global state so subsequent calls start a fresh optimization
     stop_optimization = False
@@ -198,7 +196,6 @@ def center_psf_on_pyramid_tip(
 
     # Optimize tip-tilt amplitudes using Bayesian optimization
     optimized_tt_amplitudes = optimize_amplitudes(
-        initial_tt_amplitudes,
         pupil_centers,
         radius,
         bounds=bounds,
@@ -215,7 +212,7 @@ def center_psf_on_pyramid_tip(
     final_img = camera_wfs.get_data()
 
     # Example of plotting the cost function values after optimization
-    if verbose_plot and 'cost_values' in globals():
+    if verbose_plot and "cost_values" in globals():
         plt.figure()
         plt.plot(cost_values)
         plt.title("Cost Function Values Over Iterations")
@@ -226,17 +223,17 @@ def center_psf_on_pyramid_tip(
     # Display Final Image
     if verbose_plot:
         plt.figure()
-        plt.imshow(final_img, cmap='gray')
-        plt.title('Final Balanced Pupil Intensities')
+        plt.imshow(final_img, cmap="gray")
+        plt.title("Final Balanced Pupil Intensities")
         plt.colorbar()
         plt.show()
 
     # Update the dao_setup.py file with the new optimized amplitudes
     if update_setup_file:
-        dao_setup_path = Path(ROOT_DIR) / 'src/dao_setup.py'
+        dao_setup_path = Path(ROOT_DIR) / "src/dao_setup.py"
 
         # Read the existing file content
-        with open(dao_setup_path, 'r') as file:
+        with open(dao_setup_path, "r") as file:
             content = file.read()
 
         # Update the file with the new optimized amplitudes
@@ -244,7 +241,7 @@ def center_psf_on_pyramid_tip(
         updated_content = re.sub(r"tt_amplitudes\s*=\s*\[.*?\]", new_line, content)
 
         # Write the updated content back to the setup file
-        with open(dao_setup_path, 'w') as file:
+        with open(dao_setup_path, "w") as file:
             file.write(updated_content)
 
         if verbose:
@@ -256,8 +253,7 @@ def center_psf_on_pyramid_tip(
     return new_tt_amplitudes
 
 
-
-#%%
+# %%
 """
 # Example
 # Define pupil coordinates and radius
@@ -266,10 +262,7 @@ pupil_coords = [(1938.50, 1582.96),
                 (1827.07, 1778.61)]
 radius = 83
 
-# Initial TT amplitudes
-new_tt_amplitudes = [-0.5, 0.7]
 optimized_amplitudes = optimize_amplitudes(
-    new_tt_amplitudes,
     pupil_coords,
     radius,
     variance_threshold=5,
