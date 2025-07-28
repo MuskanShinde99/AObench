@@ -137,8 +137,6 @@ nmodes_dm = deformable_mirror.nmodes_dm
 nact_total = deformable_mirror.nact_total
 nact_valid = deformable_mirror.nact_valid
 
-dm_flat = np.zeros(nact**2)
-
 # Flatten the DM surface and set actuator values
 # deformable_mirror.flatten()
 # deformable_mirror.actuators = np.ones(nact**2)
@@ -189,12 +187,16 @@ othermodes_matrix = othermodes_amplitude_matrix @ KL2Act[2:10, :]  # Select mode
 
 data_othermodes = np.sum(othermodes_matrix, axis=0)
 
-#Put the modes on the dm
+# Pre-compute the static DM shape and apply it
+actuators = data_tt + data_othermodes
+dm_flat = actuators
+
+# Put the modes on the dm
 data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
 deformable_mirror.flatten()
-deformable_mirror.actuators = data_tt + data_othermodes  # Add TT and higher-order terms to pupil
-#set_dm_actuators(deformable_mirror, data_tt + data_othermodes, pupil_setup)
-data_dm[:, :] = deformable_mirror.opd.shaped/2 #divide by 2 is very important to get the proper phase. because for this phase to be applied the slm surface needs to half of it.
+deformable_mirror.actuators = actuators  # Add TT and higher-order terms to pupil
+#set_dm_actuators(deformable_mirror, actuators, pupil_setup)
+data_dm[:, :] = deformable_mirror.opd.shaped/2  # divide by 2 is very important to get the proper phase. because for this phase to be applied the slm surface needs to half of it.
 
 # Combine the DM surface with the pupil
 # ``data_dm`` is defined on the small pupil grid while ``data_pupil`` has the
@@ -214,7 +216,7 @@ data_pupil_inner = np.copy(
 data_pupil_inner[~small_pupil_mask] = 0  # Zero out region outside the mask
 
 # Wrap and insert DM data into the pupil
-data_pupil_inner_new = data_pupil_inner + data_dm
+data_pupil_inner_new = data_pupil_inner
 
 
 class PupilSetup:
@@ -255,6 +257,7 @@ class PupilSetup:
         # callers can control when the new shape is sent.
         actuators = data_tt + data_othermodes
         self.actuators = actuators
+        self.dm_flat = actuators
         self.data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
 
         self.data_pupil_outer = np.copy(self.data_pupil)
@@ -269,6 +272,9 @@ class PupilSetup:
         # contribution will be added when ``set_data_dm`` is called with the
         # returned actuator values.
         self.data_pupil_inner_new = self.data_pupil_inner
+
+        # Recompute the SLM image without DM contribution
+        self.data_slm = compute_data_slm(setup=self)
 
 
     def update_pupil(self, new_tt_amplitudes=None, new_othermodes_amplitudes=None,
