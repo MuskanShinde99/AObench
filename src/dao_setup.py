@@ -169,7 +169,7 @@ data_pupil = data_pupil + data_focus
 
 # [-1.6510890005150187, 0.14406016044318903]
 # Create a Tip-Tilt (TT) matrix with specified amplitudes as the diagonal elements
-tt_amplitudes = [-1.6666657221949552, 0.08939612793108109] # Tip and Tilt amplitudes
+tt_amplitudes = [-1.66611893493583, 0.09300012101265676] # Tip and Tilt amplitudes
 tt_amplitude_matrix = np.diag(tt_amplitudes)
 tt_matrix = tt_amplitude_matrix @ KL2Act[0:2, :]  # Select modes 1 (tip) and 2 (tilt)
 
@@ -182,7 +182,7 @@ othermodes_matrix = othermodes_amplitude_matrix @ KL2Act[2:10, :]  # Select mode
 data_othermodes = np.sum(othermodes_matrix, axis=0)
 
 #Put the modes on the dm
-dm_flat = data_tt + data_othermodes
+#dm_flat = data_tt + data_othermodes
 data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
 deformable_mirror.flatten()
 _setup = SimpleNamespace(nact=nact, dm_flat=dm_flat)
