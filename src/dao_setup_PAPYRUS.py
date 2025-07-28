@@ -26,7 +26,8 @@ from types import SimpleNamespace
 from src.config import config
 from src.hardware import Camera
 import dao
-from src.utils import set_default_setup, set_dm_actuators
+from src.utils import set_default_setup
+from src.dao_setup import set_dm_actuators
 
 ROOT_DIR = config.root_dir
 folder_calib = config.folder_calib

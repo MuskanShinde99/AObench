@@ -18,7 +18,7 @@ from matplotlib import pyplot as plt
 from src.config import config
 ROOT_DIR = config.root_dir
 import dao
-from src.dao_setup import init_setup, las
+from src.dao_setup import init_setup, las, set_data_dm
 setup = init_setup()  # Import all variables from setup
 from src.utils import *
 from src.circular_pupil_functions import *
