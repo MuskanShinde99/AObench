@@ -58,19 +58,12 @@ def set_dm_actuators(actuators=None, dm_flat=None, setup=None, **kwargs):
 
     actuators = np.asarray(actuators)
 
-    deformable_mirror = kwargs.get(
-        "deformable_mirror", getattr(setup, "deformable_mirror", None)
-    )
-
-    if deformable_mirror is not None:
-        deformable_mirror.actuators = actuators + dm_flat
-        actuators_to_store = deformable_mirror.actuators
-    else:
-        actuators_to_store = actuators + dm_flat
+    
+    actuators_to_apply = actuators + dm_flat
 
     dm_act_shm = shm.dm_act_shm
     dm_act_shm.set_data(
-        np.asarray(actuators_to_store).astype(np.float64).reshape(
+        np.asarray(actuators_to_apply).astype(np.float64).reshape(
             setup.nact, setup.nact
         )
     )
@@ -84,34 +77,16 @@ def set_data_dm(actuators=None, *, setup=None, dm_flat=None, **kwargs):
             raise ValueError("No setup provided and no default registered.")
         setup = DEFAULT_SETUP
 
-    slm = kwargs.get("slm", getattr(setup, "slm", None))
-    deformable_mirror = kwargs.get(
-        "deformable_mirror", getattr(setup, "deformable_mirror", None)
-    )
-    npix_small_pupil_grid = kwargs.get(
-        "npix_small_pupil_grid", getattr(setup, "npix_small_pupil_grid", None)
-    )
+   
     wait_time = kwargs.get("wait_time", getattr(setup, "wait_time", 0))
     pupil_setup = kwargs.get("pupil_setup", getattr(setup, "pupil_setup", None))
 
-    if deformable_mirror is not None:
-        deformable_mirror.flatten()
+    set_dm_actuators(actuators, dm_flat=dm_flat, setup=setup, )
 
-    set_dm_actuators(
-        actuators, dm_flat=dm_flat, setup=setup, deformable_mirror=deformable_mirror
-    )
-
-    if deformable_mirror is not None and npix_small_pupil_grid is not None:
-        data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
-        data_dm[:, :] = deformable_mirror.opd.shaped / 2
-    else:
-        data_dm = np.zeros((setup.nact, setup.nact), dtype=np.float32)
-
-    if slm is not None and pupil_setup is not None:
-        data_slm = compute_data_slm(data_dm=data_dm, setup=pupil_setup)
-        slm.set_data(data_slm)
-        time.sleep(wait_time)
-        return actuators, data_dm, data_slm
+    data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
+    
+    data_slm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
+ 
 
     return actuators, data_dm, None
 
@@ -137,6 +112,9 @@ img_size_fp_cam = img_fp.shape[0]
 # camera_wfs.get_data()
 # camera_fp.get_data()
 
+#%% Configure fake pupil 
+
+npix_small_pupil_grid = 550
 
 #%% Configuration deformable mirror
 
