@@ -28,6 +28,15 @@ You can also execute a script from the project root using the module syntax:
 python -m scripts_with_dao.<script_name>
 ```
 
+## Dependencies
+
+Install the required Python packages using `pip`:
+
+```bash
+pip install -r requirements.txt
+```
+
+
 ## Common Imports
 
 Most scripts share a long list of imports. These have been grouped into
