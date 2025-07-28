@@ -207,7 +207,10 @@ data_pupil_inner = np.copy(
 data_pupil_inner[~small_pupil_mask] = 0  # Zero out region outside the mask
 
 # Wrap and insert DM data into the pupil
-data_pupil_inner_new = data_pupil_inner + data_dm
+# ``data_pupil_inner_new`` represents the pupil without any DM contribution.
+# The DM shape is inserted later by ``set_data_dm`` so we start with the
+# pure pupil here.
+data_pupil_inner_new = data_pupil_inner.copy()
 
 
 class PupilSetup:
@@ -243,12 +246,23 @@ class PupilSetup:
         othermodes_matrix = np.diag(self.othermodes_amplitudes) @ KL2Act[2:10, :]
         data_othermodes = np.sum(othermodes_matrix, axis=0)
 
-        self.data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
-        deformable_mirror.flatten()
+        # Compute the actuator pattern but do not apply it to the DM here.
+        # Instead store it in ``dm_flat`` so it can be applied later via
+        # :func:`set_data_dm`.
         actuators = data_tt + data_othermodes
         self.actuators = actuators
-        set_dm_actuators(deformable_mirror, actuators)
-        self.data_dm[:, :] = deformable_mirror.opd.shaped / 2
+
+        # Update the flat map in place so that objects sharing the array (e.g.
+        # :class:`DAOSetup`) see the changes.
+        if self.dm_flat.shape == actuators.shape:
+            self.dm_flat[:] = actuators
+        else:
+            self.dm_flat = np.asarray(actuators)
+
+        # ``data_dm`` is reset to zero because the DM is not physically updated
+        # at this stage. ``set_data_dm`` will generate the actual DM phase when
+        # requested.
+        self.data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
 
         self.data_pupil_outer = np.copy(self.data_pupil)
         self.data_pupil_outer[self.pupil_mask] = 0
@@ -258,29 +272,34 @@ class PupilSetup:
                              offset_width:offset_width + npix_small_pupil_grid])
         self.data_pupil_inner[~self.small_pupil_mask] = 0
 
-        self.data_pupil_inner_new = self.data_pupil_inner + self.data_dm
+        # ``data_pupil_inner_new`` contains only the pupil contribution.  The DM
+        # shape is added later by ``set_data_dm`` when the new ``dm_flat`` is
+        # pushed to the hardware.
+        self.data_pupil_inner_new = self.data_pupil_inner
 
 
-    def update_pupil(self, new_tt_amplitudes=None, new_othermodes_amplitudes=None,
-                     new_tilt_amp_outer=None, new_tilt_amp_inner=None):
-        if new_tt_amplitudes is not None:
-            self.tt_amplitudes = list(new_tt_amplitudes)
+    def update_pupil(self, tt_amplitudes=None, othermodes_amplitudes=None,
+                     tilt_amp_outer=None, tilt_amp_inner=None):
+        """Update pupil parameters and recompute the DM flat map."""
+        if tt_amplitudes is not None:
+            self.tt_amplitudes = list(tt_amplitudes)
 
-        if new_othermodes_amplitudes is not None:
-            self.othermodes_amplitudes = list(new_othermodes_amplitudes)
+        if othermodes_amplitudes is not None:
+            self.othermodes_amplitudes = list(othermodes_amplitudes)
 
-        if new_tilt_amp_outer is not None:
-            self.tilt_amp_outer = new_tilt_amp_outer
+        if tilt_amp_outer is not None:
+            self.tilt_amp_outer = tilt_amp_outer
 
-        if new_tilt_amp_inner is not None:
-            self.tilt_amp_inner = new_tilt_amp_inner
+        if tilt_amp_inner is not None:
+            self.tilt_amp_inner = tilt_amp_inner
 
         self.data_pupil = create_slm_circular_pupil(
             self.tilt_amp_outer, self.tilt_amp_inner, pupil_size, self.pupil_mask, slm
         )
         self.data_pupil = self.data_pupil + self.data_focus
         self._recompute_dm()
-        return self.actuators
+        # Return the updated flat map so callers can apply it if needed
+        return self.dm_flat
 
 
 pupil_setup = PupilSetup()
