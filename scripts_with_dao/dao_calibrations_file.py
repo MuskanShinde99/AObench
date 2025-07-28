@@ -181,7 +181,7 @@ S2KL_shm = dao.shm('/tmp/S2KL.im.shm' , np.zeros((npix_valid, setup.nmodes_KL)).
 
 plt.close('all')
 
-center_psf_on_pyramid_tip(mask=mask, initial_tt_amplitudes=[-0.2, 0.1], 
+center_psf_on_pyramid_tip(mask=mask, 
                           bounds = [(-2.0, 2.0), (-2.0, 2.0)], variance_threshold=0.01, 
                           update_setup_file=True, verbose=True, verbose_plot=True)
 
