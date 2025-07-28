@@ -206,12 +206,6 @@ data_pupil_inner = np.copy(
                offset_width:offset_width + npix_small_pupil_grid])
 data_pupil_inner[~small_pupil_mask] = 0  # Zero out region outside the mask
 
-# Wrap and insert DM data into the pupil
-# ``data_pupil_inner_new`` represents the pupil without any DM contribution.
-# The DM shape is inserted later by ``set_data_dm`` so we start with the
-# pure pupil here.
-data_pupil_inner_new = data_pupil_inner.copy()
-
 
 class PupilSetup:
     """Encapsulate pupil parameters and provide update utilities."""
@@ -230,7 +224,6 @@ class PupilSetup:
         self.nact = nact
         self.data_pupil_outer = data_pupil_outer
         self.data_pupil_inner = data_pupil_inner
-        self.data_pupil_inner_new = data_pupil_inner_new
         self.actuators = np.zeros(nact**2)
         # Store masks for later use when recomputing the pupil
         self.pupil_mask = pupil_mask
@@ -271,11 +264,6 @@ class PupilSetup:
             self.data_pupil[offset_height:offset_height + npix_small_pupil_grid,
                              offset_width:offset_width + npix_small_pupil_grid])
         self.data_pupil_inner[~self.small_pupil_mask] = 0
-
-        # ``data_pupil_inner_new`` contains only the pupil contribution.  The DM
-        # shape is added later by ``set_data_dm`` when the new ``dm_flat`` is
-        # pushed to the hardware.
-        self.data_pupil_inner_new = self.data_pupil_inner
 
 
     def update_pupil(self, tt_amplitudes=None, othermodes_amplitudes=None,

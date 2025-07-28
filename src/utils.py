@@ -47,7 +47,7 @@ def compute_data_slm(data_dm=0, data_phase_screen=0, data_dm_flat=0, setup=None,
             raise ValueError("No setup provided and no default registered.")
         setup = DEFAULT_SETUP
 
-    data_pupil_inner = kwargs.get("data_pupil_inner", setup.data_pupil_inner_new)
+    data_pupil_inner = kwargs.get("data_pupil_inner", setup.data_pupil_inner)
     data_pupil_outer = kwargs.get("data_pupil_outer", setup.data_pupil_outer)
     pupil_mask = kwargs.get("pupil_mask", setup.pupil_mask)
     small_pupil_mask = kwargs.get("small_pupil_mask", setup.small_pupil_mask)
