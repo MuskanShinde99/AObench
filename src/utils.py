@@ -22,24 +22,7 @@ def set_default_setup(setup):
     DEFAULT_SETUP = setup
 
 
-def set_dm_actuators(dm, actuators, setup=None):
-    """Set DM actuators and update the shared memory grid."""
-    dm_act_shm = shm.dm_act_shm
 
-    dm.actuators = actuators
-    if setup is None:
-        if DEFAULT_SETUP is None:
-            raise ValueError("No setup provided and no default registered.")
-        setup = DEFAULT_SETUP
-    dm_act_shm.set_data(
-        np.asarray(dm.actuators).reshape(
-            setup.nact, setup.nact
-        )
-    )
-    
-
-
-# Add and wrap data within the pupil mask
 
 def compute_data_slm(data_dm=0, data_phase_screen=0, data_dm_flat=0, setup=None, **kwargs):
     """
@@ -64,7 +47,7 @@ def compute_data_slm(data_dm=0, data_phase_screen=0, data_dm_flat=0, setup=None,
             raise ValueError("No setup provided and no default registered.")
         setup = DEFAULT_SETUP
 
-    data_pupil_inner = kwargs.get("data_pupil_inner", setup.data_pupil_inner_new)
+    data_pupil_inner = kwargs.get("data_pupil_inner", setup.data_pupil_inner)
     data_pupil_outer = kwargs.get("data_pupil_outer", setup.data_pupil_outer)
     pupil_mask = kwargs.get("pupil_mask", setup.pupil_mask)
     small_pupil_mask = kwargs.get("small_pupil_mask", setup.small_pupil_mask)
@@ -75,14 +58,43 @@ def compute_data_slm(data_dm=0, data_phase_screen=0, data_dm_flat=0, setup=None,
 
     return data_slm.astype(np.uint8)
 
+
+def set_dm_actuators(dm, actuators=None, dm_flat=None, setup=None):
+    """Set DM actuators and update the shared memory grid."""
+
+    if setup is None:
+        if DEFAULT_SETUP is None:
+            raise ValueError("No setup provided and no default registered.")
+        setup = DEFAULT_SETUP
+
+    if actuators is None:
+        actuators = np.zeros(setup.nact ** 2)
+    if dm_flat is None:
+        dm_flat = setup.dm_flat
+
+    actuators = np.asarray(actuators)
+    if actuators.size != setup.nact ** 2:
+        raise ValueError(
+            f"Expected {setup.nact ** 2} actuators, got {actuators.size}"
+        )
+
+    dm.actuators = actuators + dm_flat
+
+    dm_act_shm = shm.dm_act_shm
+    dm_act_shm.set_data(np.asarray(dm.actuators).reshape(setup.nact, setup.nact))
+    
+
 # ---------------------------------------------------------------------------
-def set_data_dm(actuators, *, setup=None, **kwargs):
-    """Flatten the DM, apply ``actuators`` and show the resulting phase on the SLM.
+def set_data_dm(actuators=None, *, setup=None, dm_flat=None, **kwargs):
+    """Flatten the DM, optionally apply ``actuators`` and show the resulting
+    phase on the SLM.
 
     Parameters
     ----------
-    actuators : array_like
-        Actuator values to apply.
+    actuators : array_like, optional
+        Actuator values to apply. Defaults to zeros.
+    dm_flat : array_like, optional
+        Flat map added to the actuators. Defaults to ``setup.dm_flat``.
     setup : object, optional
         DAO setup providing defaults for devices and dimensions.
     kwargs : optional
@@ -121,7 +133,7 @@ def set_data_dm(actuators, *, setup=None, **kwargs):
         raise ValueError("Deformable mirror instance must be provided")
 
     dm.flatten()
-    set_dm_actuators(dm, actuators, setup=setup)
+    set_dm_actuators(dm, actuators, dm_flat=dm_flat, setup=setup)
 
     data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
     data_dm[:, :] = dm.opd.shaped / 2
@@ -133,10 +145,7 @@ def set_data_dm(actuators, *, setup=None, **kwargs):
 
     return data_dm, data_slm
 
-# ---------------------------------------------------------------------------
-# data_slm = data_pupil_outer.copy()
-# data_inner = ((data_pupil_inner + (data_dm)) * 256) % 256
-# data_slm[pupil_mask] = data_inner[small_pupil_mask]
+
 
 
 def create_psf_mask(psf, crop_size=100, radius=50):
