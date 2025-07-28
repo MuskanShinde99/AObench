@@ -26,3 +26,5 @@ old_files/
 files_with_4s_pyramid/
 files_with_ueye_camera/
 slm-cam_tests/
+
+*.fits

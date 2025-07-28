@@ -355,6 +355,11 @@ class MainWindow(QMainWindow):
         self.closed_loop_checkbox.stateChanged.connect(self.closed_loop_check)
         self.reset_state_mat_button.clicked.connect(self.reset_state_mat)
 
+        self.save_flat_button.clicked.connect(self.save_flat)
+        self.load_flat_button.clicked.connect(self.load_flat)
+        self.reset_flat_button.clicked.connect(self.reset_flat)
+
+
     def init_process(self):
         self.bias_process = ProcessManager("calibration_bias.py",self.start_bias_button, self.stop_bias_button, self.bias_output)
         self.valid_pixels_process = ProcessManager("calibration_bias.py",self.start_valid_pixels_button, self.stop_valid_pixels_button, self.valid_pixels_output)
@@ -363,7 +368,7 @@ class MainWindow(QMainWindow):
         self.scan_modes_process = ProcessManager("calibration_bias.py",self.start_scan_modes_button, self.stop_scan_modes_button, self.scan_modes_output)
         self.im_process = ProcessManager("calibration_bias.py",self.start_im_button, self.stop_im_button, self.im_output)
         self.record_process = ProcessManager("recorder.py",self.start_record_button, None, self.record_output)
-        
+
     def init_shm(self):
         with open('shm_path.toml', 'r') as f:
             shm_path = toml.load(f)
@@ -428,6 +433,9 @@ class MainWindow(QMainWindow):
         self.f_opti_shm = dao.shm(shm_path['control']['f_opti']) 
 
         self.reset_flag_shm = dao.shm(shm_path['control']['reset_flag']) 
+
+        self.dm_shm = dao.shm(shm_path['control']['dm']) 
+        self.flat_dm_shm = dao.shm(shm_path['control']['dm']) 
 
     def init_vector_plots(self):
         self.computed_KL_modes_view = CustomChartView(self.computed_KL_modes_widget,"mode","amplitude", n_lines = 2)
@@ -513,7 +521,7 @@ class MainWindow(QMainWindow):
 
     def gain_changed(self,value):
         # self.gain_shm.set_data(np.array([[value]],np.float32))
-        K_mat_int = self.K_mat_int_shm.get_data(check=False, semNb=self.sem_nb)
+        K_mat_int = self.K_mat_int_shm.get_data()
         K_mat_int[0,:] = value
         self.K_mat_int_shm.set_data(K_mat_int)
 
@@ -525,10 +533,8 @@ class MainWindow(QMainWindow):
             self.closed_loop_flag_shm.set_data(np.array([[0]],np.uint32))
     def n_modes_changed(self,value):
         self.n_modes_int_shm.set_data(np.array([[value]],np.uint32))
-    def reset_state_mat(self,value):
-        state_mat = self.state_mat_shm.get_data(check=False, semNb=self.sem_nb)
-        state_mat = np.zeros_like(state_mat)
-        self.state_mat_shm.set_data(state_mat)
+
+    def reset_state_mat(self):
         self.reset_flag_shm.set_data(np.ones((1,1),dtype = np.uint32))
 
     def delay_changed(self,value):
@@ -542,6 +548,24 @@ class MainWindow(QMainWindow):
 
     def record_time_changed(self,value):
         self.record_time_shm.set_data(np.array([[value]],np.float32))
+
+    def save_flat(self):
+        flat = self.dm_shm.get_data(check=False, semNb=self.sem_nb)
+        fits.writeto('save/flat.fits',flat, overwrite = True)
+        self.flat_dm_shm.set_data(flat)
+
+    def load_flat(self):
+        try:
+            flat = fits.getdata('save/flat.fits')
+            self.flat_dm_shm.set_data(flat)
+        except FileNotFoundError:
+            print("File: 'save/flat.fits' not found")
+
+    def reset_flat(self):
+        flat = self.dm_shm.get_data(check=False, semNb=self.sem_nb)*0
+        fits.writeto('save/flat.fits',flat, overwrite = True)
+        self.flat_dm_shm.set_data(flat)
+
 
     def closeEvent(self, event):
         self.bias_process.stop_process()

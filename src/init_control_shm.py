@@ -15,7 +15,7 @@ buf_size = config['visualizer']['buf_size']
 max_order = config['optimizer']['max_order']
 n_modes = config['common']['n_modes']
 gain = config['integrator']['gain']
-
+dm_shm = shm_path['control']['dm']
 
 # create shm
 # time domain data
@@ -74,6 +74,11 @@ S_int = np.ones((n_fft_max,1),dtype=np.float32)
 f_opti = np.ones((n_fft_max,1),dtype=np.float32)
 f_opti[:n_fft_optimizer[0][0]]= np.linspace(0.1,fs[0][0]/2,n_fft_optimizer[0][0])[:,np.newaxis]
 
+n_act = dm_shm.get_data().shape[0]
+flat = np.zeros((n_act,1),dtype = np.float32)
+
+dao.shm(shm_path['control']['flat'],flat)
+dao.shm(shm_path['control']['modes_buf'],modes_buf)
 dao.shm(shm_path['control']['modes_buf'],modes_buf)
 dao.shm(shm_path['control']['commands_buf'],commands_buf)
 dao.shm(shm_path['control']['pol_buf'],pol_buf)

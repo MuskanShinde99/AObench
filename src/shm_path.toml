@@ -105,3 +105,5 @@ slopes = '/tmp/papyrus_slopes.im.shm'
 dm = '/tmp/dmCmd02.im.shm'
 M2V = '/tmp/m2c.im.shm'
 S2M = '/tmp/S2M.shm'
+
+flat_dm = '/tmp/dmCmd00.im.shm'

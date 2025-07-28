@@ -792,6 +792,45 @@
        </rect>
       </property>
      </widget>
+     <widget class="QPushButton" name="save_flat_button">
+      <property name="geometry">
+       <rect>
+        <x>1210</x>
+        <y>200</y>
+        <width>101</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Save Flat</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="load_flat_button">
+      <property name="geometry">
+       <rect>
+        <x>1210</x>
+        <y>230</y>
+        <width>101</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Load Flat</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="reset_flat_button">
+      <property name="geometry">
+       <rect>
+        <x>1210</x>
+        <y>260</y>
+        <width>101</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Reset Flat</string>
+      </property>
+     </widget>
     </widget>
     <widget class="QWidget" name="calibration">
      <attribute name="title">
