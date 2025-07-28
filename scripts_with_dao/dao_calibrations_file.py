@@ -96,16 +96,16 @@ print('Pupil created on the SLM.')
 #%% Load transformation matrices
 
 # # Load transformation matrices from shared memories
-# KL2Act = KL2Act_shm.get_data()
-# KL2Phs = KL2Phs_shm.get_data()
+KL2Act = KL2Act_shm.get_data()
+KL2Phs = KL2Phs_shm.get_data()
 
 # From folder 
-KL2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Act_nkl_{setup.nmodes_KL}_nact_{setup.nact}.fits'))
-KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_{setup.nmodes_KL}_npupil_{setup.npix_small_pupil_grid}.fits'))
+# KL2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Act_nkl_{setup.nmodes_KL}_nact_{setup.nact}.fits'))
+# KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_{setup.nmodes_KL}_npupil_{setup.npix_small_pupil_grid}.fits'))
 
 #%% Creating a Flux Filtering Mask
 
-method='tip_tilt_modulation'
+method='dm_random'
 flux_cutoff = 0.3
 modulation_angles = np.arange(0, 360, 5)  # angles of modulation
 modulation_amp = 15 # in lamda/D

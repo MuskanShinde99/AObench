@@ -40,8 +40,8 @@ folder_gui = config.folder_gui
 #%% Configuration Camera
 
 # To set camera
-camera_wfs = Camera('/tmp/cam1.im.shm')
-camera_fp = Camera('/tmp/cam2.im.shm')
+camera_wfs = Camera('/tmp/cam1.im.shm') #change to CRED3
+camera_fp = Camera('/tmp/cam2.im.shm') #change to CBlue
 
 fps_wfs = dao.shm('/tmp/cam1Fps.im.shm')
 fps_wfs.set_data(fps_wfs.get_data()*0+300)
@@ -65,8 +65,8 @@ img_size_fp_cam = img_fp.shape[0]
 # Number of actuators
 nact = 17
 
-nact_total = dnact**2
-nact_valid = deformable_mirror.nact_valid
+nact_total = nact**2
+nact_valid = 195
 
 dm_flat = np.zeros(nact**2)
 
@@ -81,21 +81,9 @@ nmodes_Znk = nact_valid
 
 # From folder 
 KL2Act = fits.getdata(folder_transformation_matrices / f'KL2Act_nkl_{nmodes_KL}_nact_{nact}.fits')
-KL2Phs = fits.getdata(folder_transformation_matrices / f'KL2Phs_nkl_{nmodes_KL}_npupil_{npix_small_pupil_grid}.fits')
 
 
 #%%
-# Create circular pupil
-data_pupil = create_slm_circular_pupil(tilt_amp_outer, tilt_amp_inner, pupil_size, pupil_mask, slm)
-
-# Create Zernike basis
-zernike_basis = make_zernike_basis(11, pupil_size, pupil_grid)
-zernike_basis = [mode / np.ptp(mode) for mode in zernike_basis]
-zernike_basis = np.asarray(zernike_basis)
-
-data_focus = 0.4*zernike_basis[3].reshape(dataHeight, dataWidth)
-
-data_pupil = data_pupil + data_focus
 
 # [-1.6510890005150187, 0.14406016044318903]
 # Create a Tip-Tilt (TT) matrix with specified amplitudes as the diagonal elements
@@ -122,16 +110,6 @@ set_dm_actuators(deformable_mirror, dm_flat=dm_flat, setup=_setup)
 # split ``data_pupil`` into an outer (full size) and inner (small pupil sized)
 # part and then add ``data_dm`` to the inner part.  The result is wrapped and
 # inserted back into the full pupil.
-
-# Create a new `data_pupil_outer` with the same size as `data_pupil`
-data_pupil_outer = np.copy(data_pupil)
-data_pupil_outer[pupil_mask] = 0  # Zero out inner region given by `pupil_mask`
-
-# Create a new `data_pupil_inner` with the same size as the small pupil mask
-data_pupil_inner = np.copy(
-    data_pupil[offset_height:offset_height + npix_small_pupil_grid,
-               offset_width:offset_width + npix_small_pupil_grid])
-data_pupil_inner[~small_pupil_mask] = 0  # Zero out region outside the mask
 
 
 class PupilSetup:

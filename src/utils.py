@@ -22,8 +22,6 @@ def set_default_setup(setup):
     DEFAULT_SETUP = setup
 
 
-
-
 def compute_data_slm(data_dm=0, data_phase_screen=0, data_dm_flat=0, setup=None, **kwargs):
     """
     Computes the SLM data by combining phase screen and deformable mirror data
@@ -77,11 +75,13 @@ def set_dm_actuators(dm, actuators=None, dm_flat=None, setup=None):
         raise ValueError(
             f"Expected {setup.nact ** 2} actuators, got {actuators.size}"
         )
+        
+    
 
     dm.actuators = actuators + dm_flat
 
     dm_act_shm = shm.dm_act_shm
-    dm_act_shm.set_data(np.asarray(dm.actuators).reshape(setup.nact, setup.nact))
+    dm_act_shm.set_data(np.asarray(dm.actuators).astype(np.float64).reshape(setup.nact, setup.nact))
     
 
 # ---------------------------------------------------------------------------
@@ -143,7 +143,7 @@ def set_data_dm(actuators=None, *, setup=None, dm_flat=None, **kwargs):
     slm.set_data(data_slm)
     time.sleep(wait_time)
 
-    return data_dm, data_slm
+    return data_dm, data_slm, actuators
 
 
 
