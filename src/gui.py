@@ -322,15 +322,17 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         uic.loadUi("gui.ui", self)
+        self.sem_nb = 9
         self.init_images()
         self.init_vector_plots()
         self.init_shm()
         self.init_process()
+        self.init_spinboxes()
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_images)
         self.timer.start(100) # ms 
-        self.sem_nb = 9
 
+        print("init done")
     def init_spinboxes(self):
         self.gain_spinbox.valueChanged.connect(self.gain_changed)
         self.gain_changed(self.gain_spinbox.value())
@@ -344,6 +346,15 @@ class MainWindow(QMainWindow):
         self.leakage_spinbox.valueChanged.connect(self.leakage_changed)
         self.leakage_changed(self.leakage_spinbox.value())
 
+        self.n_modes_spinbox.valueChanged.connect(self.n_modes_changed)
+        self.n_modes_changed(self.n_modes_spinbox.value())
+
+        self.record_time_spinbox.valueChanged.connect(self.record_time_changed)
+        self.record_time_changed(self.record_time_spinbox.value())
+        
+        self.closed_loop_checkbox.stateChanged.connect(self.closed_loop_check)
+        self.reset_state_mat_button.clicked.connect(self.reset_state_mat)
+
     def init_process(self):
         self.bias_process = ProcessManager("calibration_bias.py",self.start_bias_button, self.stop_bias_button, self.bias_output)
         self.valid_pixels_process = ProcessManager("calibration_bias.py",self.start_valid_pixels_button, self.stop_valid_pixels_button, self.valid_pixels_output)
@@ -351,6 +362,8 @@ class MainWindow(QMainWindow):
         self.psf_center_process = ProcessManager("calibration_bias.py",self.start_psf_center_button, self.stop_psf_center_button, self.psf_center_output)
         self.scan_modes_process = ProcessManager("calibration_bias.py",self.start_scan_modes_button, self.stop_scan_modes_button, self.scan_modes_output)
         self.im_process = ProcessManager("calibration_bias.py",self.start_im_button, self.stop_im_button, self.im_output)
+        self.record_process = ProcessManager("recorder.py",self.start_record_button, None, self.record_output)
+        
     def init_shm(self):
         with open('shm_path.toml', 'r') as f:
             shm_path = toml.load(f)
@@ -369,7 +382,52 @@ class MainWindow(QMainWindow):
         self.num_iterations_shm           = dao.shm(shm_path['num_iterations'])
         self.cam1_shm                     = dao.shm(shm_path['cam1'])             
         self.cam2_shm                     = dao.shm(shm_path['cam2'])
-        self.dm_act_shm                     = dao.shm(shm_path['dm_act'])
+        self.dm_act_shm                   = dao.shm(shm_path['dm_act'])
+
+        self.modes_fft_shm = dao.shm(shm_path['control']['modes_fft'])
+        self.commands_fft_shm = dao.shm(shm_path['control']['commands_fft'])
+        self.pol_fft_shm = dao.shm(shm_path['control']['pol_fft'])
+        self.f_shm = dao.shm(shm_path['control']['f'])
+
+        self.modes_shm = dao.shm(shm_path['control']['modes_buf'])
+        self.commands_shm = dao.shm(shm_path['control']['commands_buf'])
+        self.pol_shm = dao.shm(shm_path['control']['pol_buf'])
+        self.t_shm = dao.shm(shm_path['control']['t'])    
+
+        self.closed_loop_flag_shm = dao.shm(shm_path['control']['closed_loop_flag']) 
+
+        self.n_modes_dd_high_shm = dao.shm(shm_path['control']['n_modes_dd_high'])  
+        self.n_modes_dd_low_shm = dao.shm(shm_path['control']['n_modes_dd_low']) 
+        self.n_modes_int_shm = dao.shm(shm_path['control']['n_modes_int'])
+
+        self.dd_update_rate_low_shm = dao.shm(shm_path['control']['dd_update_rate_high']) 
+        self.dd_update_rate_high_shm = dao.shm(shm_path['control']['dd_update_rate_low'])
+
+        self.K_mat_int_shm = dao.shm(shm_path['control']['K_mat_int']) 
+
+        self.state_mat_shm = dao.shm(shm_path['control']['state_mat']) 
+        self.K_mat_dd_shm = dao.shm(shm_path['control']['K_mat_dd']) 
+        self.K_mat_omgi_shm = dao.shm(shm_path['control']['K_mat_omgi']) 
+
+        self.dd_order_low_shm = dao.shm(shm_path['control']['dd_order_low']) 
+        self.dd_order_high_shm = dao.shm(shm_path['control']['dd_order_high']) 
+
+        self.latency_shm = dao.shm(shm_path['control']['latency']) 
+        self.fs_shm = dao.shm(shm_path['control']['fs']) 
+        self.delay_shm = dao.shm(shm_path['control']['delay']) 
+        self.S2M_shm = dao.shm(shm_path['control']['S2M']) 
+        self.controller_select_shm = dao.shm(shm_path['control']['controller_select']) 
+        self.gain_margin_shm = dao.shm(shm_path['control']['gain_margin']) 
+        self.record_time_shm = dao.shm(fixed_params['shm_path']['record_time'])
+        self.n_fft_shm = dao.shm(shm_path['control']['n_fft']) 
+        self.wait_time_shm = dao.shm(shm_path['control']['wait_time']) 
+        
+        self.S_dd_shm = dao.shm(shm_path['control']['S_dd']) 
+        self.S_omgi_shm = dao.shm(shm_path['control']['S_omgi']) 
+        self.S_int_shm = dao.shm(shm_path['control']['S_int']) 
+        self.f_opti_shm = dao.shm(shm_path['control']['f_opti']) 
+
+        self.reset_flag_shm = dao.shm(shm_path['control']['reset_flag']) 
 
     def init_vector_plots(self):
         self.computed_KL_modes_view = CustomChartView(self.computed_KL_modes_widget,"mode","amplitude", n_lines = 2)
@@ -435,45 +493,6 @@ class MainWindow(QMainWindow):
         self.cam2_view.setImage(cam2_log, autoLevels=(self.autoscale_normalized_psf_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
         update_histogram_axis_to_log(self.cam2_view, cam2, eps)
 
-
-        # self.slopes_image_view.setImage(fits.getdata("../outputs/GUI_tests/slopes_image.fits"), autoLevels=(self.autoscale_slopes_image_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
-        # self.phase_screen_view.setImage(fits.getdata("../outputs/GUI_tests/phase_screen.fits"), autoLevels=(self.autoscale_phase_screen_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
-        # self.dm_phase_view.setImage(fits.getdata("../outputs/GUI_tests/phase_screen.fits"), autoLevels=(self.autoscale_dm_phase_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
-        # self.phase_residuals_view.setImage(fits.getdata("../outputs/GUI_tests/phase_residuals.fits"),autoLevels=(self.autoscale_phase_residuals_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
-        # # self.normalized_psf_view.setImage(fits.getdata("../outputs/GUI_tests/normalized_psf.fits"), autoLevels=(self.autoscale_normalized_psf_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
-        # self.cam1_view.setImage(fits.getdata("../outputs/GUI_tests/normalized_psf.fits"), autoLevels=(self.autoscale_cam1_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
-        
-        # eps = 1e-3
-
-        # normalized_psf = fits.getdata("../outputs/GUI_tests/normalized_psf.fits")
-        # normalized_psf_log = np.log10(np.maximum(normalized_psf, eps))  
-        # self.normalized_psf_view.setImage(normalized_psf_log, autoLevels=(self.autoscale_normalized_psf_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
-        # update_histogram_axis_to_log(self.normalized_psf_view, normalized_psf, eps)
-
-        # cam2 = fits.getdata("../outputs/GUI_tests/normalized_psf.fits")
-        # cam2_log = np.log10(np.maximum(cam2, eps))  
-        # self.cam2_view.setImage(cam2_log, autoLevels=(self.autoscale_normalized_psf_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
-        # update_histogram_axis_to_log(self.cam2_view, cam2, eps)
-
-
-
-
-        # data2 = np.random.rand(100)-0.5
-        # if(self.square_computed_KL_modes_checkbox.checkState()==Qt.CheckState.Checked):
-        #     data3 = np.sqrt(np.square(data2))
-        # else: data3 = data2
-        # self.computed_KL_modes_view.draw([(np.arange(data3.shape[0]), data3),(np.arange(data3.shape[0]), data3+1)])
-
-        # if(self.square_computed_act_pos_checkbox.checkState()==Qt.CheckState.Checked):
-        #     data4 = np.sqrt(np.square(data2))
-        # else: data4 = data2
-        # self.computed_act_pos_view.draw([(np.arange(data4.shape[0]), data4)])
-
-        # if(self.square_commands_checkbox.checkState()==Qt.CheckState.Checked):
-        #     data5 = np.sqrt(np.square(data2))
-        # else: data5 = data2
-        # self.commands_view.draw([(np.arange(data5.shape[0]), data5)])
-
         residual_modes = self.residual_modes_shm.get_data(check=False, semNb=self.sem_nb)
         computed_modes = self.computed_modes_shm.get_data(check=False, semNb=self.sem_nb)
         if(self.square_computed_KL_modes_checkbox.checkState()==Qt.CheckState.Checked):
@@ -493,7 +512,24 @@ class MainWindow(QMainWindow):
         self.commands_view.draw([(np.arange(commands.shape[0]), commands)])
 
     def gain_changed(self,value):
-        self.gain_shm.set_data(np.array([[value]],np.float32))
+        # self.gain_shm.set_data(np.array([[value]],np.float32))
+        K_mat_int = self.K_mat_int_shm.get_data(check=False, semNb=self.sem_nb)
+        K_mat_int[0,:] = value
+        self.K_mat_int_shm.set_data(K_mat_int)
+
+    def closed_loop_check(self,state):
+        print("zbra")
+        if state == Qt.CheckState.Checked.value:
+            self.closed_loop_flag_shm.set_data(np.array([[1]],np.uint32))
+        elif state == Qt.CheckState.Unchecked.value:
+            self.closed_loop_flag_shm.set_data(np.array([[0]],np.uint32))
+    def n_modes_changed(self,value):
+        self.n_modes_int_shm.set_data(np.array([[value]],np.uint32))
+    def reset_state_mat(self,value):
+        state_mat = self.state_mat_shm.get_data(check=False, semNb=self.sem_nb)
+        state_mat = np.zeros_like(state_mat)
+        self.state_mat_shm.set_data(state_mat)
+        self.reset_flag_shm.set_data(np.ones((1,1),dtype = np.uint32))
 
     def delay_changed(self,value):
         self.delay_shm.set_data(np.array([[value]],np.uint32))
@@ -504,13 +540,17 @@ class MainWindow(QMainWindow):
     def leakage_changed(self,value):
         self.leakage_shm.set_data(np.array([[value]],np.float32))
 
+    def record_time_changed(self,value):
+        self.record_time_shm.set_data(np.array([[value]],np.float32))
+
     def closeEvent(self, event):
-        self.bias_process.stop()
-        self.valid_pixels_process.stop()
-        self.ref_images_process.stop()
-        self.psf_center_process.stop()
-        self.scan_modes_process.stop()
-        self.im_process.stop()
+        self.bias_process.stop_process()
+        self.valid_pixels_process.stop_process()
+        self.ref_images_process.stop_process()
+        self.psf_center_process.stop_process()
+        self.scan_modes_process.stop_process()
+        self.im_process.stop_process()
+        self.record_process.stop_process()
         self.timer.stop()
         print("All processes and timers stopped")
         event.accept()
