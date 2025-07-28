@@ -57,8 +57,20 @@ def compute_data_slm(data_dm=0, data_phase_screen=0, data_dm_flat=0, setup=None,
     return data_slm.astype(np.uint8)
 
 
-def set_dm_actuators(dm, actuators=None, dm_flat=None, setup=None):
-    """Set DM actuators and update the shared memory grid."""
+def set_dm_actuators(actuators=None, dm_flat=None, setup=None, **kwargs):
+    """Set DM actuators and update the shared memory grid.
+
+    Parameters
+    ----------
+    actuators : array_like, optional
+        Actuator values to apply. Defaults to zeros.
+    dm_flat : array_like, optional
+        Flat map added to the actuators. Defaults to ``setup.dm_flat``.
+    setup : object, optional
+        DAO setup providing defaults for the deformable mirror.
+    kwargs : optional
+        ``dm`` – Deformable mirror instance. Defaults to ``setup.deformable_mirror``.
+    """
 
     if setup is None:
         if DEFAULT_SETUP is None:
@@ -75,8 +87,10 @@ def set_dm_actuators(dm, actuators=None, dm_flat=None, setup=None):
         raise ValueError(
             f"Expected {setup.nact ** 2} actuators, got {actuators.size}"
         )
-        
-    
+
+    dm = kwargs.get("dm", getattr(setup, "deformable_mirror", None))
+    if dm is None:
+        raise ValueError("Deformable mirror instance must be provided")
 
     dm.actuators = actuators + dm_flat
 
@@ -133,7 +147,7 @@ def set_data_dm(actuators=None, *, setup=None, dm_flat=None, **kwargs):
         raise ValueError("Deformable mirror instance must be provided")
 
     dm.flatten()
-    set_dm_actuators(dm, actuators, dm_flat=dm_flat, setup=setup)
+    set_dm_actuators(actuators, dm_flat=dm_flat, setup=setup)
 
     data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
     data_dm[:, :] = dm.opd.shaped / 2

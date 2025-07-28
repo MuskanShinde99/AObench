@@ -18,7 +18,6 @@ deformable_mirror.flatten()
 desired_opd = 1e-9 # 100 nm OPD
 act_pos = desired_opd * np.ones(nact**2)/ 2
 set_dm_actuators(
-    deformable_mirror,
     act_pos,
     setup=setup,
 )
