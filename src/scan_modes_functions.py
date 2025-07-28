@@ -54,7 +54,7 @@ def scan_othermode_amplitudes(test_values, mode_index, wait=wait_time,
         new_amps = list(pupil_setup.othermodes_amplitudes)
         new_amps[mode_index] = amp
 
-        pupil_setup.update_pupil(new_othermodes_amplitudes=new_amps)
+        pupil_setup.update_pupil(othermodes_amplitudes=new_amps)
         set_data_dm(setup=setup)
 
         # Capture focal-plane image and log stats
@@ -94,12 +94,12 @@ def scan_othermode_amplitudes(test_values, mode_index, wait=wait_time,
             with open(dao_setup_path, 'w') as file:
                 file.write(updated_content)
             print('Updated `othermodes_amplitudes` in dao_setup.py')
-            pupil_setup.update_pupil(new_othermodes_amplitudes=values)
+            pupil_setup.update_pupil(othermodes_amplitudes=values)
         else:
             print('Failed to update `othermodes_amplitudes` in dao_setup.py')
-            pupil_setup.update_pupil(new_othermodes_amplitudes=original_amps)
+            pupil_setup.update_pupil(othermodes_amplitudes=original_amps)
     else:
-        pupil_setup.update_pupil(new_othermodes_amplitudes=original_amps)
+        pupil_setup.update_pupil(othermodes_amplitudes=original_amps)
 
     return best_amp
 
@@ -145,7 +145,7 @@ def scan_othermode_amplitudes_wfs_std(test_values, mode_index, mask,
         new_amps = list(pupil_setup.othermodes_amplitudes)
         new_amps[mode_index] = amp
 
-        pupil_setup.update_pupil(new_othermodes_amplitudes=new_amps)
+        pupil_setup.update_pupil(othermodes_amplitudes=new_amps)
         set_data_dm(setup=setup)
 
         # Capture WFS images and compute standard deviation over valid pixels
@@ -184,11 +184,11 @@ def scan_othermode_amplitudes_wfs_std(test_values, mode_index, mask,
             with open(dao_setup_path, 'w') as file:
                 file.write(updated_content)
             print('Updated `othermodes_amplitudes` in dao_setup.py')
-            pupil_setup.update_pupil(new_othermodes_amplitudes=values)
+            pupil_setup.update_pupil(othermodes_amplitudes=values)
         else:
             print('Failed to update `othermodes_amplitudes` in dao_setup.py')
-            pupil_setup.update_pupil(new_othermodes_amplitudes=original_amps)
+            pupil_setup.update_pupil(othermodes_amplitudes=original_amps)
     else:
-        pupil_setup.update_pupil(new_othermodes_amplitudes=original_amps)
+        pupil_setup.update_pupil(othermodes_amplitudes=original_amps)
 
     return best_amp
