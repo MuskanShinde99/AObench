@@ -478,7 +478,7 @@ def crop_around_com(mask, com, crop_size=50):
 def crop_and_combine(image, coms, crop_size=50):
     """
     Crop regions around each center of mass and combine them into one image.
-
+z
     Parameters:
     - image: 2D numpy array representing the image.
     - coms: List of tuples, where each tuple contains the (y, x) center of mass coordinates.

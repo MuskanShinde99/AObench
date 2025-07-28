@@ -57,7 +57,7 @@ def create_summed_image_for_mask(modulation_angles, modulation_amp, tiltx, tilty
         data_modulation = modulation_amp * modulation_step
         
         # Put on DM
-        _, _, actuators = set_data_dm(data_modulation, setup=setup,)
+        actuators, _, _  = set_data_dm(data_modulation, setup=setup,)
 
         # Capture image using pylon SDK wrapper function
         img = camera.get_data()
@@ -100,7 +100,7 @@ def create_summed_image_for_mask_dm_random(n_iter, verbose=False, **kwargs):
             print(f"Iteration {i + 1}")
 
         act_random = np.random.choice([0, 1], size=nact_total)
-        _, _, actuators = set_data_dm(act_random, setup=setup,)
+        actuators, _, _  = set_data_dm(act_random, setup=setup,)
         
         img = camera.get_data()
         img_arr.append(img)
