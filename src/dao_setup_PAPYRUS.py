@@ -75,9 +75,6 @@ def set_dm_actuators(actuators=None, dm_flat=None, setup=None, **kwargs):
         )
     )
 
-        
-        
-
 
 def set_data_dm(actuators=None, *, setup=None, dm_flat=None, **kwargs):
     """Flatten the DM, optionally apply ``actuators`` and, if available, update the SLM."""
@@ -147,14 +144,14 @@ img_size_fp_cam = img_fp.shape[0]
 nact = 17
 
 nact_total = nact**2
-nact_valid = 195
+nact_valid = nact_total #195
 
 dm_flat = np.zeros(nact**2)
 
 #%% Define number of KL and Zernike modes
 
 nmodes_dm = nact_valid
-nmodes_KL = nact_valid
+nmodes_KL = 185
 nmodes_Znk = nact_valid
 
 
