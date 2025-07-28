@@ -2,7 +2,6 @@ import os
 import numpy as np
 from astropy.io import fits
 import time
-import dao
 import matplotlib.pyplot as plt
 from datetime import datetime
 from src.utils import *
@@ -42,26 +41,13 @@ def perform_push_pull_calibration_with_phase_basis(
     - push_pull: If True, perform a push followed by a pull ([-phase_amp, phase_amp]).
     - pull_push: If True, perform a pull followed by a push ([phase_amp, -phase_amp]).
     - kwargs:
-        - slm
-        - camera
-        - pupil_mask
-        - small_pupil_mask
-        - deformable_mirror
         - nact
 
     Returns:
     - pull_images, push_images, push_pull_images
     """
-    wait_time = setup.wait_time
-
-    # Load devices and data from kwargs or fallback to setup
-    camera = kwargs.get("camera", setup.camera_wfs)
-    slm = kwargs.get("slm", setup.slm)
-    pupil_mask = kwargs.get("pupil_mask", setup.pupil_setup.pupil_mask)
-    small_pupil_mask = kwargs.get("small_pupil_mask", setup.pupil_setup.small_pupil_mask)
-    deformable_mirror = kwargs.get("deformable_mirror", setup.deformable_mirror)
+    # Load optional configuration values
     nact = kwargs.get("nact", setup.nact)
-    npix_small_pupil_grid = kwargs.get("npix_small_pupil_grid", setup.npix_small_pupil_grid)
 
     if not (push_pull or pull_push):
         raise ValueError("Either push_pull or pull_push must be True")
@@ -105,7 +91,6 @@ def perform_push_pull_calibration_with_phase_basis(
     pull_images = np.zeros((nmodes_basis, height, width), dtype=np.float32)
     push_images = np.zeros((nmodes_basis, height, width), dtype=np.float32)
     push_pull_images = np.zeros((nmodes_basis, height, width), dtype=np.float32)
-    data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
 
     # Start calibration
     start_time = time.time()
