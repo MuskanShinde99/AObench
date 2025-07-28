@@ -12,6 +12,7 @@ from hcipy import (
 import numpy as np
 from astropy.io import fits
 from dataclasses import dataclass
+from types import SimpleNamespace
 
 
 # Import Specific Modules
@@ -190,11 +191,12 @@ othermodes_matrix = othermodes_amplitude_matrix @ KL2Act[2:10, :]  # Select mode
 data_othermodes = np.sum(othermodes_matrix, axis=0)
 
 #Put the modes on the dm
+dm_flat = data_tt + data_othermodes
 data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
 deformable_mirror.flatten()
-deformable_mirror.actuators = data_tt + data_othermodes  # Add TT and higher-order terms to pupil
-#set_dm_actuators(deformable_mirror, data_tt + data_othermodes, pupil_setup)
-data_dm[:, :] = deformable_mirror.opd.shaped/2 #divide by 2 is very important to get the proper phase. because for this phase to be applied the slm surface needs to half of it.
+_setup = SimpleNamespace(nact=nact, dm_flat=dm_flat)
+set_dm_actuators(deformable_mirror, np.zeros(nact**2), dm_flat=dm_flat, setup=_setup)
+data_dm[:, :] = deformable_mirror.opd.shaped/2  # divide by 2 is very important to get the proper phase. because for this phase to be applied the slm surface needs to half of it.
 
 # Combine the DM surface with the pupil
 # ``data_dm`` is defined on the small pupil grid while ``data_pupil`` has the
@@ -250,12 +252,15 @@ class PupilSetup:
         othermodes_matrix = np.diag(self.othermodes_amplitudes) @ KL2Act[2:10, :]
         data_othermodes = np.sum(othermodes_matrix, axis=0)
 
+        self.dm_flat = data_tt + data_othermodes
         self.data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
         deformable_mirror.flatten()
-        # deformable_mirror.actuators = data_tt + data_othermodes  # Add TT and higher-order terms to pupil
-        actuators = data_tt + data_othermodes
-        set_dm_actuators(deformable_mirror, actuators)
-        self.actuators = actuators
+        set_dm_actuators(
+            deformable_mirror,
+            np.zeros(self.nact ** 2),
+            dm_flat=self.dm_flat,
+        )
+        self.actuators = np.zeros(self.nact ** 2)
         self.data_dm[:, :] = deformable_mirror.opd.shaped / 2
 
         self.data_pupil_outer = np.copy(self.data_pupil)
