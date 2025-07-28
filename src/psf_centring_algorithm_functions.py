@@ -59,6 +59,7 @@ def cost_function(amplitudes, pupil_coords, radius, iteration, variance_threshol
     global stop_optimization  # Flag to stop when pupil intensities are equal
 
     actuators = pupil_setup.update_pupil(new_tt_amplitudes=amplitudes)
+    # set_data_dm(setup=setup)
     set_data_dm(setup=setup)
 
     # Capture and average 5 images
