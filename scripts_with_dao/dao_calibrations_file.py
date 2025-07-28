@@ -93,50 +93,6 @@ print('Pupil created on the SLM.')
 # make setting the shared memory part of the DM function
 
 
-#%% Capturing an image to check
-
-# Display the Reference Image
-reference_image = camera_wfs.get_data()
-plt.figure()
-plt.imshow(reference_image)
-plt.colorbar()
-plt.title('Reference Image')
-plt.show()
-
-# Display the Focal pane image
-fp_image = camera_fp.get_data()
-plt.figure()
-plt.imshow(np.log10(fp_image))
-plt.colorbar()
-plt.title('PSF')
-plt.show()
-
-
-# Find the max position
-max_pos = np.unravel_index(np.argmax(fp_image), fp_image.shape)
-print(f"Maximum value is at position: {max_pos}, value: {fp_image[max_pos]}")
-
-# Extract vertical slice through the PSF peak column
-x_col = max_pos[1]
-profile = fp_image[:, x_col]
-y = np.arange(fp_image.shape[0])
-
-# Compute half-maximum value
-max_val = profile[max_pos[0]]
-half_max = max_val / 2
-
-# Plot the profile with horizontal lines
-plt.figure()
-plt.plot(y, profile, label='PSF profile')
-plt.axhline(max_val, color='r', linestyle='--', label='Max')
-plt.axhline(half_max, color='g', linestyle=':', label='Half Max')
-plt.title('PSF radial profile (vertical slice)')
-plt.xlabel('Y pixel')
-plt.ylabel('Intensity')
-plt.legend()
-plt.show()
-
-
 #%% Load transformation matrices
 
 # # Load transformation matrices from shared memories
