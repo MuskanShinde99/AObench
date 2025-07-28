@@ -96,20 +96,20 @@ print('Pupil created on the SLM.')
 #%% Load transformation matrices
 
 # # Load transformation matrices from shared memories
-KL2Act = KL2Act_shm.get_data()
-KL2Phs = KL2Phs_shm.get_data()
+# KL2Act = KL2Act_shm.get_data()
+# KL2Phs = KL2Phs_shm.get_data()
 
 # From folder 
-# KL2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Act_nkl_{setup.nmodes_KL}_nact_{setup.nact}.fits'))
-# KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_{setup.nmodes_KL}_npupil_{setup.npix_small_pupil_grid}.fits'))
+KL2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Act_nkl_{setup.nmodes_KL}_nact_{setup.nact}.fits'))
+KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_{setup.nmodes_KL}_npupil_{setup.npix_small_pupil_grid}.fits'))
 
 #%% Creating a Flux Filtering Mask
 
-method='dm_random'
-flux_cutoff = 0.3
+method='tip_tilt_modulation'
+flux_cutoff = 0.25
 modulation_angles = np.arange(0, 360, 5)  # angles of modulation
 modulation_amp = 15 # in lamda/D
-n_iter=50 # number of iternations for dm random commands
+n_iter=100 # number of iternations for dm random commands
 
 mask = create_flux_filtering_mask(method, flux_cutoff, KL2Act[0], KL2Act[1],
                                modulation_angles, modulation_amp, n_iter,
@@ -130,8 +130,8 @@ set_data_dm(setup=setup)
 # Create shared memories that depends on number of valid pixels
 KL2PWFS_cube_shm = dao.shm('/tmp/KL2PWFS_cube.im.shm' , np.zeros((setup.nmodes_KL, setup.img_size_wfs_cam**2)).astype(np.float64)) 
 slopes_shm = dao.shm('/tmp/slopes.im.shm', np.zeros((npix_valid, 1)).astype(np.uint32)) 
-KL2S_shm = dao.shm('/tmp/KL2S.im.shm' , np.zeros((setup.nmodes_KL, npix_valid)).astype(np.float64)) 
-S2KL_shm = dao.shm('/tmp/S2KL.im.shm' , np.zeros((npix_valid, setup.nmodes_KL)).astype(np.float64)) 
+KL2S_shm = dao.shm('/tmp/KL2S.im.shm' , np.zeros((setup.nmodes_KL, npix_valid)).astype(np.float32) 
+S2KL_shm = dao.shm('/tmp/S2KL.im.shm' , np.zeros((npix_valid, setup.nmodes_KL)).astype(np.float32)) 
 
 #%% Centering the PSF on the Pyramid Tip
 
