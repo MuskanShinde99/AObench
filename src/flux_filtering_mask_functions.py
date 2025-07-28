@@ -12,7 +12,7 @@ import os
 from matplotlib import pyplot as plt
 from src.dao_setup import init_setup
 from src.tilt_functions import apply_intensity_tilt_kl
-from src.utils import set_data_dm
+from src.dao_setup import set_data_dm
 from astropy.io import fits
 
 setup = init_setup()

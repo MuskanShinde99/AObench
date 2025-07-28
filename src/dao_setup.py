@@ -10,6 +10,7 @@ from hcipy import (
     make_zernike_basis,
 )
 import numpy as np
+import time
 from astropy.io import fits
 from dataclasses import dataclass
 from types import SimpleNamespace
@@ -18,7 +19,8 @@ from types import SimpleNamespace
 from src.config import config
 from src.hardware import Camera, SLM, Laser, DM
 import dao
-from src.utils import compute_data_slm, set_default_setup, set_dm_actuators
+from src.utils import compute_data_slm, set_default_setup, DEFAULT_SETUP
+from src.shm_loader import shm
 from src.circular_pupil_functions import create_slm_circular_pupil
 
 ROOT_DIR = config.root_dir
@@ -28,6 +30,69 @@ folder_transformation_matrices = config.folder_transformation_matrices
 folder_closed_loop_tests = config.folder_closed_loop_tests
 folder_turbulence = config.folder_turbulence
 folder_gui = config.folder_gui
+
+def set_dm_actuators(actuators=None, dm_flat=None, setup=None, **kwargs):
+    """Set DM actuators and update the shared memory grid."""
+
+    if setup is None:
+        if DEFAULT_SETUP is None:
+            raise ValueError("No setup provided and no default registered.")
+        setup = DEFAULT_SETUP
+
+    if actuators is None:
+        actuators = np.zeros(setup.nact ** 2)
+    if dm_flat is None:
+        dm_flat = setup.dm_flat
+
+    actuators = np.asarray(actuators)
+
+    deformable_mirror = kwargs.get("deformable_mirror", setup.deformable_mirror)
+    if deformable_mirror is None:
+        raise ValueError("Deformable mirror instance must be provided")
+
+    deformable_mirror.actuators = actuators + dm_flat
+
+    dm_act_shm = shm.dm_act_shm
+    dm_act_shm.set_data(
+        np.asarray(deformable_mirror.actuators).astype(np.float64).reshape(
+            setup.nact, setup.nact
+        )
+    )
+
+
+def set_data_dm(actuators=None, *, setup=None, dm_flat=None, **kwargs):
+    """Flatten the DM, optionally apply ``actuators`` and show the resulting phase on the SLM."""
+
+    if setup is None:
+        if DEFAULT_SETUP is None:
+            raise ValueError("No setup provided and no default registered.")
+        setup = DEFAULT_SETUP
+
+    slm = kwargs.get("slm", setup.slm)
+    if slm is None:
+        raise ValueError("SLM instance must be provided")
+
+    deformable_mirror = kwargs.get("deformable_mirror", setup.deformable_mirror)
+    if deformable_mirror is None:
+        raise ValueError("Deformable mirror instance must be provided")
+
+    npix_small_pupil_grid = kwargs.get(
+        "npix_small_pupil_grid", setup.npix_small_pupil_grid
+    )
+    wait_time = kwargs.get("wait_time", setup.wait_time)
+    pupil_setup = kwargs.get("pupil_setup", setup.pupil_setup)
+
+    deformable_mirror.flatten()
+    set_dm_actuators(actuators, dm_flat=dm_flat, setup=setup)
+
+    data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
+    data_dm[:, :] = deformable_mirror.opd.shaped / 2
+
+    data_slm = compute_data_slm(data_dm=data_dm, setup=pupil_setup)
+    slm.set_data(data_slm)
+    time.sleep(wait_time)
+
+    return actuators, data_dm, data_slm
 
 #%% Start the laser
 
