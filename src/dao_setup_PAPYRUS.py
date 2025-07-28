@@ -24,10 +24,9 @@ from types import SimpleNamespace
 
 # Import Specific Modules
 from src.config import config
-from src.hardware import Camera, SLM, Laser, DM
+from src.hardware import Camera
 import dao
-from src.utils import compute_data_slm, set_default_setup, set_dm_actuators
-from src.circular_pupil_functions import create_slm_circular_pupil
+from src.utils import set_default_setup, set_dm_actuators
 
 ROOT_DIR = config.root_dir
 folder_calib = config.folder_calib
@@ -129,7 +128,6 @@ class PupilSetup:
         self.actuators = np.zeros(nact**2)
         # Store masks for later use when recomputing the pupil
         self.dm_flat = dm_flat
-        self.data_slm = compute_data_slm()
 
     def _recompute_dm(self):
         """(Re)compute DM contribution and assemble the pupil."""
@@ -178,18 +176,9 @@ def update_pupil(*args, **kwargs):
 class DAOSetup:
     """Bundled access to frequently used setup objects."""
 
-    las: Laser
     camera_wfs: Camera
     camera_fp: Camera
-    slm: SLM
-    deformable_mirror: DM
     pupil_setup: PupilSetup
-    wait_time: float
-    dataWidth: int
-    dataHeight: int
-    npix_small_pupil_grid: int
-    pupil_size: float
-    pixel_size: float
     folder_calib: str
     folder_pyr_mask: str
     folder_transformation_matrices: str
@@ -204,8 +193,6 @@ class DAOSetup:
     nmodes_dm: int
     nmodes_KL: int
     nmodes_Znk: int
-    small_pupil_mask: np.ndarray
-    pupil_mask: np.ndarray
     dm_flat: np.ndarray
 
 
@@ -213,19 +200,9 @@ def init_setup() -> DAOSetup:
     """Return a :class:`DAOSetup` instance with initialized components."""
 
     return DAOSetup(
-        las=las,
         camera_wfs=camera_wfs,
         camera_fp=camera_fp,
-        slm=slm,
-        deformable_mirror=deformable_mirror,
-        dm_flat=dm_flat,
         pupil_setup=pupil_setup,
-        wait_time=wait_time,
-        dataWidth=dataWidth,
-        dataHeight=dataHeight,
-        npix_small_pupil_grid=npix_small_pupil_grid,
-        pupil_size=pupil_size,
-        pixel_size=pixel_size,
         folder_calib=str(folder_calib),
         folder_pyr_mask=str(folder_pyr_mask),
         folder_transformation_matrices=str(folder_transformation_matrices),
@@ -240,8 +217,7 @@ def init_setup() -> DAOSetup:
         nmodes_dm=nmodes_dm,
         nmodes_KL=nmodes_KL,
         nmodes_Znk=nmodes_Znk,
-        small_pupil_mask=small_pupil_mask,
-        pupil_mask=pupil_mask,
+        dm_flat=dm_flat,
     )
 
 
