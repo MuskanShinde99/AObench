@@ -1,0 +1,15 @@
+# Core dependencies for AObench
+numpy
+scipy
+astropy
+matplotlib
+opencv-python-headless
+tqdm
+hcipy
+pillow
+pyqtgraph
+PyQt6
+scikit-image
+scikit-optimize
+toml
+pypylon
