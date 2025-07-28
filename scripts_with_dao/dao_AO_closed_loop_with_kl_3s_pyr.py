@@ -41,8 +41,7 @@ from src.ao_loop_functions import *
 #%% Creating and Displaying a Circular Pupil on the SLM
 
 # Display Pupil Data on SLM
-data_slm = compute_data_slm()
-slm.set_data(data_slm)
+set_data_dm(setup=setup)
 
 #%% Load transformation matrices
 
@@ -62,7 +61,7 @@ bias_image = fits.getdata(os.path.join(folder_calib, bias_filename))
 print(f"Bias image shape: {bias_image.shape}")
 
 # Load the calibration mask for processing images.
-mask_filename = f'binned_mask_pup_{setup.pupil_size}mm_3s_pyr.fits'
+mask_filename = f'binned_mask_3s_pyr.fits'
 mask = fits.getdata(os.path.join(folder_calib, mask_filename))
 print(f"Mask dimensions: {mask.shape}")
 
@@ -70,17 +69,8 @@ print(f"Mask dimensions: {mask.shape}")
 valid_pixels_indices = np.where(mask > 0)
 
 # Load the response matrix 
-IM_filename = f'binned_response_matrix_KL2S_filtered_pup_{setup.pupil_size}mm_nact_{setup.nact}_amp_0.1_3s_pyr.fits'
+IM_filename = f'binned_response_matrix_KL2S_filtered_nact_{setup.nact}_amp_0.1_3s_pyr.fits'
 IM_KL2S = fits.getdata(os.path.join(folder_calib, IM_filename))  # /0.1
-
-#SVD
-# Compute SVD
-U, S, Vt = np.linalg.svd(IM_KL2S)
-S_matrix = np.diag(S)
-# plt.figure()
-# plt.imshow(S_matrix)
-# plt.colorbar()
-# plt.show()
 
 RM_S2KL = np.linalg.pinv(IM_KL2S, rcond=0.10)
 print(f"Shape of the response matrix: {RM_S2KL.shape}")
