@@ -169,7 +169,7 @@ data_pupil = data_pupil + data_focus
 
 # [-1.6510890005150187, 0.14406016044318903]
 # Create a Tip-Tilt (TT) matrix with specified amplitudes as the diagonal elements
-tt_amplitudes = [-1.630739251175573, 0.10104102593146225] # Tip and Tilt amplitudes
+tt_amplitudes = [-1.662106229803814, 0.09673273462756615] # Tip and Tilt amplitudes
 tt_amplitude_matrix = np.diag(tt_amplitudes)
 tt_matrix = tt_amplitude_matrix @ KL2Act[0:2, :]  # Select modes 1 (tip) and 2 (tilt)
 
@@ -182,12 +182,9 @@ othermodes_matrix = othermodes_amplitude_matrix @ KL2Act[2:10, :]  # Select mode
 data_othermodes = np.sum(othermodes_matrix, axis=0)
 
 #Put the modes on the dm
-#dm_flat = data_tt + data_othermodes
-data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
-deformable_mirror.flatten()
+dm_flat = data_tt + data_othermodes
 _setup = SimpleNamespace(nact=nact, dm_flat=dm_flat)
-set_dm_actuators(deformable_mirror, data_tt + data_othermodes, setup=_setup)
-data_dm[:, :] = deformable_mirror.opd.shaped / 2  # divide by 2 is important to get the proper phase
+set_dm_actuators(deformable_mirror, dm_flat=dm_flat, setup=_setup)
 
 # Combine the DM surface with the pupil
 # ``data_dm`` is defined on the small pupil grid while ``data_pupil`` has the
@@ -220,7 +217,6 @@ class PupilSetup:
         self.othermodes_amplitudes = list(othermodes_amplitudes)
         self.data_pupil = data_pupil
         self.data_focus = data_focus
-        self.data_dm = data_dm
         self.nact = nact
         self.data_pupil_outer = data_pupil_outer
         self.data_pupil_inner = data_pupil_inner
