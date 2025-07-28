@@ -104,7 +104,6 @@ dm_flat = data_tt + data_othermodes
 _setup = SimpleNamespace(
     nact=nact,
     dm_flat=dm_flat,
-    deformable_mirror=deformable_mirror,
 )
 set_dm_actuators(dm_flat=dm_flat, setup=_setup)
 
@@ -123,19 +122,12 @@ class PupilSetup:
         # Register this instance as the default setup so utility functions
         # can rely on it without explicitly passing it around.
         set_default_setup(self)
-        self.tilt_amp_outer = tilt_amp_outer
-        self.tilt_amp_inner = tilt_amp_inner
+
         self.tt_amplitudes = list(tt_amplitudes)
         self.othermodes_amplitudes = list(othermodes_amplitudes)
-        self.data_pupil = data_pupil
-        self.data_focus = data_focus
         self.nact = nact
-        self.data_pupil_outer = data_pupil_outer
-        self.data_pupil_inner = data_pupil_inner
         self.actuators = np.zeros(nact**2)
         # Store masks for later use when recomputing the pupil
-        self.pupil_mask = pupil_mask
-        self.small_pupil_mask = small_pupil_mask
         self.dm_flat = dm_flat
         self.data_slm = compute_data_slm()
 
@@ -160,22 +152,8 @@ class PupilSetup:
         else:
             self.dm_flat = np.asarray(actuators)
 
-        # ``data_dm`` is reset to zero because the DM is not physically updated
-        # at this stage. ``set_data_dm`` will generate the actual DM phase when
-        # requested.
-        self.data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
 
-        self.data_pupil_outer = np.copy(self.data_pupil)
-        self.data_pupil_outer[self.pupil_mask] = 0
-
-        self.data_pupil_inner = np.copy(
-            self.data_pupil[offset_height:offset_height + npix_small_pupil_grid,
-                             offset_width:offset_width + npix_small_pupil_grid])
-        self.data_pupil_inner[~self.small_pupil_mask] = 0
-
-
-    def update_pupil(self, tt_amplitudes=None, othermodes_amplitudes=None,
-                     tilt_amp_outer=None, tilt_amp_inner=None):
+    def update_pupil(self, tt_amplitudes=None, othermodes_amplitudes=None,):
         """Update pupil parameters and recompute the DM flat map."""
         if tt_amplitudes is not None:
             self.tt_amplitudes = list(tt_amplitudes)
@@ -183,16 +161,7 @@ class PupilSetup:
         if othermodes_amplitudes is not None:
             self.othermodes_amplitudes = list(othermodes_amplitudes)
 
-        if tilt_amp_outer is not None:
-            self.tilt_amp_outer = tilt_amp_outer
 
-        if tilt_amp_inner is not None:
-            self.tilt_amp_inner = tilt_amp_inner
-
-        self.data_pupil = create_slm_circular_pupil(
-            self.tilt_amp_outer, self.tilt_amp_inner, pupil_size, self.pupil_mask, slm
-        )
-        self.data_pupil = self.data_pupil + self.data_focus
         self._recompute_dm()
         # Return the updated flat map so callers can apply it if needed
         return self.dm_flat
