@@ -101,7 +101,11 @@ data_othermodes = np.sum(othermodes_matrix, axis=0)
 
 #Put the modes on the dm
 dm_flat = data_tt + data_othermodes
-_setup = SimpleNamespace(nact=nact, dm_flat=dm_flat)
+_setup = SimpleNamespace(
+    nact=nact,
+    dm_flat=dm_flat,
+    deformable_mirror=deformable_mirror,
+)
 set_dm_actuators(dm_flat=dm_flat, setup=_setup)
 
 # Combine the DM surface with the pupil
