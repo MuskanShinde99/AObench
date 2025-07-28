@@ -24,13 +24,13 @@ def set_default_setup(setup):
 
 
 
-def compute_data_slm(data_dm=0, data_phase_screen=0, data_dm_flat=0, setup=None, **kwargs):
+def compute_data_slm(data_dm=None, data_phase_screen=0, data_dm_flat=0, setup=None, **kwargs):
     """
     Computes the SLM data by combining phase screen and deformable mirror data
     with pupil-related masks and arrays.
 
     Parameters:
-    - data_dm (float or ndarray): Deformable mirror phase data (default: 0).
+    - data_dm (float or ndarray, optional): Deformable mirror phase data. If ``None``, ``setup.data_dm`` is used.
     - data_phase_screen (float or ndarray): Phase screen data to add (default: 0).
     - **kwargs:
         - data_pupil_inner (ndarray): Inner pupil data array.
@@ -47,7 +47,9 @@ def compute_data_slm(data_dm=0, data_phase_screen=0, data_dm_flat=0, setup=None,
             raise ValueError("No setup provided and no default registered.")
         setup = DEFAULT_SETUP
 
-    data_pupil_inner = kwargs.get("data_pupil_inner", setup.data_pupil_inner_new)
+    if data_dm is None:
+        data_dm = setup.data_dm
+    data_pupil_inner = kwargs.get("data_pupil_inner", setup.data_pupil_inner)
     data_pupil_outer = kwargs.get("data_pupil_outer", setup.data_pupil_outer)
     pupil_mask = kwargs.get("pupil_mask", setup.pupil_mask)
     small_pupil_mask = kwargs.get("small_pupil_mask", setup.small_pupil_mask)

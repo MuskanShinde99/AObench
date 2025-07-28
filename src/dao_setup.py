@@ -216,7 +216,6 @@ data_pupil_inner = np.copy(
 data_pupil_inner[~small_pupil_mask] = 0  # Zero out region outside the mask
 
 # Wrap and insert DM data into the pupil
-data_pupil_inner_new = data_pupil_inner + data_dm
 
 
 class PupilSetup:
@@ -236,13 +235,12 @@ class PupilSetup:
         self.nact = nact
         self.data_pupil_outer = data_pupil_outer
         self.data_pupil_inner = data_pupil_inner
-        self.data_pupil_inner_new = data_pupil_inner_new
         self.actuators = np.zeros(nact**2)
         # Store masks for later use when recomputing the pupil
         self.pupil_mask = pupil_mask
         self.small_pupil_mask = small_pupil_mask
         self.dm_flat = dm_flat
-        self.data_slm = compute_data_slm()
+        self.data_slm = compute_data_slm(setup=self)
 
     def _recompute_dm(self):
         """(Re)compute DM contribution and assemble the pupil."""
@@ -271,7 +269,6 @@ class PupilSetup:
                              offset_width:offset_width + npix_small_pupil_grid])
         self.data_pupil_inner[~self.small_pupil_mask] = 0
 
-        self.data_pupil_inner_new = self.data_pupil_inner + self.data_dm
 
 
     def update_pupil(self, new_tt_amplitudes=None, new_othermodes_amplitudes=None,
