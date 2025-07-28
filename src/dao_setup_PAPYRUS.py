@@ -52,19 +52,33 @@ def set_dm_actuators(actuators=None, dm_flat=None, setup=None, **kwargs):
         dm_flat = setup.dm_flat
 
     actuators = np.asarray(actuators)
+    
+    if testplace==GENEVA:
 
-    deformable_mirror = kwargs.get("deformable_mirror", getattr(setup, "deformable_mirror", None))
-    if deformable_mirror is None:
-        raise ValueError("Deformable mirror instance must be provided")
-
-    deformable_mirror.actuators = actuators + dm_flat
-
-    dm_act_shm = shm.dm_act_shm
-    dm_act_shm.set_data(
-        np.asarray(deformable_mirror.actuators).astype(np.float64).reshape(
-            setup.nact, setup.nact
+        deformable_mirror = kwargs.get("deformable_mirror", getattr(setup, "deformable_mirror", None))
+        if deformable_mirror is None:
+            raise ValueError("Deformable mirror instance must be provided")
+    
+        deformable_mirror.actuators = actuators + dm_flat
+    
+        dm_act_shm = shm.dm_act_shm
+        dm_act_shm.set_data(
+            np.asarray(deformable_mirror.actuators).astype(np.float64).reshape(
+                setup.nact, setup.nact
+            )
         )
-    )
+        
+    else:
+        
+        dm_act_shm = shm.dm_act_shm
+        dm_act_shm.set_data(
+            np.asarray(actuators + dm_flat).astype(np.float64).reshape(
+                setup.nact, setup.nact
+            )
+        )
+
+        
+        
 
 
 def set_data_dm(actuators=None, *, setup=None, dm_flat=None, **kwargs):
@@ -74,32 +88,37 @@ def set_data_dm(actuators=None, *, setup=None, dm_flat=None, **kwargs):
         if DEFAULT_SETUP is None:
             raise ValueError("No setup provided and no default registered.")
         setup = DEFAULT_SETUP
+        
+    if testplace==GENEVA:
 
-    slm = kwargs.get("slm", getattr(setup, "slm", None))
-    if slm is None:
-        raise ValueError("SLM instance must be provided")
-
-    deformable_mirror = kwargs.get("deformable_mirror", getattr(setup, "deformable_mirror", None))
-    if deformable_mirror is None:
-        raise ValueError("Deformable mirror instance must be provided")
-
-    npix_small_pupil_grid = kwargs.get(
-        "npix_small_pupil_grid", getattr(setup, "npix_small_pupil_grid", None)
-    )
-    wait_time = kwargs.get("wait_time", getattr(setup, "wait_time", 0))
-    pupil_setup = kwargs.get("pupil_setup", getattr(setup, "pupil_setup", None))
-
-    deformable_mirror.flatten()
-    set_dm_actuators(actuators, dm_flat=dm_flat, setup=setup)
-
-    data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
-    data_dm[:, :] = deformable_mirror.opd.shaped / 2
-
-    data_slm = compute_data_slm(data_dm=data_dm, setup=pupil_setup)
-    slm.set_data(data_slm)
-    time.sleep(wait_time)
-
-    return actuators, data_dm, data_slm
+        slm = kwargs.get("slm", getattr(setup, "slm", None))
+        if slm is None:
+            raise ValueError("SLM instance must be provided")
+    
+        deformable_mirror = kwargs.get("deformable_mirror", getattr(setup, "deformable_mirror", None))
+        if deformable_mirror is None:
+            raise ValueError("Deformable mirror instance must be provided")
+    
+        npix_small_pupil_grid = kwargs.get(
+            "npix_small_pupil_grid", getattr(setup, "npix_small_pupil_grid", None)
+        )
+        wait_time = kwargs.get("wait_time", getattr(setup, "wait_time", 0))
+        pupil_setup = kwargs.get("pupil_setup", getattr(setup, "pupil_setup", None))
+    
+        deformable_mirror.flatten()
+        set_dm_actuators(actuators, dm_flat=dm_flat, setup=setup)
+    
+        data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
+        data_dm[:, :] = deformable_mirror.opd.shaped / 2
+    
+        data_slm = compute_data_slm(data_dm=data_dm, setup=pupil_setup)
+        slm.set_data(data_slm)
+        time.sleep(wait_time)
+    
+        return actuators, data_dm, data_slm
+    
+    else:
+        set_dm_actuators(actuators, dm_flat=dm_flat, setup=setup)
 
 #%% Configuration Camera
 
