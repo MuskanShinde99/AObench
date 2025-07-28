@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""
+Created on Mon Jul 28 09:56:36 2025
+
+@author: ristretto-dao
+"""
+
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """Module initializing AO bench hardware and pupil configuration."""
 
 # Import Libraries
@@ -28,14 +36,6 @@ folder_transformation_matrices = config.folder_transformation_matrices
 folder_closed_loop_tests = config.folder_closed_loop_tests
 folder_turbulence = config.folder_turbulence
 folder_gui = config.folder_gui
-
-#%% Start the laser
-
-channel = 1
-las = Laser("/dev/ttyUSB0", channel)
-# las.enable(1)  # 1 to turn on laser, 0 to turn off
-las.set_current(49)  # 55mA is a good value for pyramid images
-print('Laser is Accessible')
   
 #%% Configuration Camera
 
@@ -59,82 +59,13 @@ img_size_fp_cam = img_fp.shape[0]
 # camera_wfs.get_data()
 # camera_fp.get_data()
 
-#%% Configuration SLM
-
-# Initializes the SLM library
-slm = SLM('/tmp/slm.im.shm')
-print('SLM is open')
-
-# Get SLM dimensions
-dataWidth, dataHeight = slm.get_data().shape[1], slm.get_data().shape[0]
-pixel_size = 8e-3  # Pixel size in mm
-
-wait_time = 0.15
-
-# dataWidth = slm.width_px
-# dataHeight = slm.height_px
-# pixel_size = slm.pixelsize_m * 1e3  # Pixel size in mm
-
-
-#%% Create Pupil grid
-
-# Parameters for the circular pupil
-pupil_size = 4  # [mm]
-npix_pupil = int(pupil_size / pixel_size)   # Convert pupil size to pixels
-blaze_period_outer = 20
-blaze_period_inner = 15
-tilt_amp_outer = 150
-tilt_amp_inner = -70.5  # -70.5 -67 -40
-
-# Create the circular pupil mask
-pupil_grid = make_pupil_grid([dataWidth, dataHeight], [dataWidth * pixel_size, dataHeight * pixel_size])
-vlt_aperture_generator = make_obstructed_circular_aperture(pupil_size, 0, 0, 0)
-pupil_mask = evaluate_supersampled(vlt_aperture_generator, pupil_grid, 1)
-pupil_mask =pupil_mask.reshape(dataHeight, dataWidth)
-pupil_mask = pupil_mask.astype(bool)
-
-#%% Create a pupil grid for a smaller pupil area
-
-# Set up pupil grid dimensions with size 1.1 times the pupil size
-oversizing = 1.1
-npix_small_pupil_grid = int(npix_pupil * oversizing) 
-small_pupil_grid = make_pupil_grid(npix_small_pupil_grid, npix_small_pupil_grid * pixel_size)
-# print('New  small pupil grid created')
-# print('Pupil grid shape:', npix_small_pupil_grid, npix_small_pupil_grid)
-
-# Calculate offsets to center the pupil grid with respect to the SLM grid
-offset_height = (dataHeight - npix_small_pupil_grid) // 2
-offset_width = (dataWidth - npix_small_pupil_grid) // 2
-
-# Create a grid mask 
-small_pupil_grid_mask = np.zeros((dataHeight, dataWidth), dtype=bool)
-small_pupil_grid_mask[offset_height:offset_height + npix_small_pupil_grid, offset_width:offset_width + npix_small_pupil_grid] = 1
-
-# Create the circular pupil mask for small square grid
-small_pupil_mask = pupil_mask[offset_height:offset_height + npix_small_pupil_grid, 
-                               offset_width:offset_width + npix_small_pupil_grid]
-# plt.figure()
-# plt.imshow(small_pupil_mask)
-# plt.colorbar()
-# plt.title('Small Pupil Mask')
-# plt.show()
 
 #%% Configuration deformable mirror
 
 # Number of actuators
 nact = 17
 
-deformable_mirror = DM(
-    small_pupil_grid,
-    small_pupil_mask,
-    pupil_size,
-    nact,
-)
-
-dm_modes_full = deformable_mirror.dm_modes_full
-dm_modes = deformable_mirror.dm_modes
-nmodes_dm = deformable_mirror.nmodes_dm
-nact_total = deformable_mirror.nact_total
+nact_total = dnact**2
 nact_valid = deformable_mirror.nact_valid
 
 dm_flat = np.zeros(nact**2)
