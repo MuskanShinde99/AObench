@@ -10,6 +10,7 @@ but you can override them using environment variables:
 ```
 export OPT_LAB_ROOT=/path/to/optlab-master
 export PROJECT_ROOT=/path/to/project
+export PLACE_OF_TEST=Geneva  # or OHP
 ```
 
 These variables allow running the code from different locations without
