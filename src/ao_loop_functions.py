@@ -267,7 +267,6 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
         # deformable_mirror.actuators = (1 - leakage) * deformable_mirror.actuators - gain * delayed_act_pos
         new_act_pos = (1 - leakage) * deformable_mirror.actuators - gain * delayed_act_pos
         set_dm_actuators(
-            deformable_mirror,
             new_act_pos,
             setup=setup,
         )
