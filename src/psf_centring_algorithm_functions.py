@@ -14,7 +14,7 @@ from src.dao_setup import init_setup, ROOT_DIR
 
 
 setup = init_setup()
-wait_time = setup.wait_time
+# wait_time = setup.wait_time
 pupil_setup = setup.pupil_setup
 camera_wfs = setup.camera_wfs
 

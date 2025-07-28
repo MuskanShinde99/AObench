@@ -4,7 +4,6 @@ import numpy as np
 from src.dao_setup import init_setup, ROOT_DIR
 
 setup = init_setup()
-wait_time = setup.wait_time
 pupil_setup = setup.pupil_setup
 camera_fp = setup.camera_fp
 camera_wfs = setup.camera_wfs
@@ -13,7 +12,7 @@ import re
 from src.dao_setup import set_data_dm
 
 
-def scan_othermode_amplitudes(test_values, mode_index, wait=wait_time,
+def scan_othermode_amplitudes(test_values, mode_index,
                               update_setup_file=False):
     """Iterate over amplitude values for a specified othermode.
 
@@ -26,8 +25,6 @@ def scan_othermode_amplitudes(test_values, mode_index, wait=wait_time,
         Amplitude values to test.
     mode_index : int
         Index in ``othermodes_amplitudes`` to update.
-    wait : float, optional
-        Delay between successive SLM updates. Defaults to ``wait_time``.
     update_setup_file : bool, optional
         If True, update ``othermodes_amplitudes`` in ``dao_setup.py``
         with the best-performing amplitude. If multiple amplitudes
