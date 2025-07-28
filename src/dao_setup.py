@@ -12,6 +12,7 @@ from hcipy import (
 import numpy as np
 from astropy.io import fits
 from dataclasses import dataclass
+from types import SimpleNamespace
 
 
 # Import Specific Modules
@@ -139,15 +140,6 @@ nact_valid = deformable_mirror.nact_valid
 
 dm_flat = np.zeros(nact**2)
 
-# Flatten the DM surface and set actuator values
-# deformable_mirror.flatten()
-# deformable_mirror.actuators = np.ones(nact**2)
-# plt.figure()
-# plt.imshow(deformable_mirror.opd.shaped)
-# plt.colorbar()
-# plt.title('Deformable Mirror Surface OPD')
-# plt.show()
-
 #%% Define number of KL and Zernike modes
 
 nmodes_dm = nact_valid
@@ -190,11 +182,12 @@ othermodes_matrix = othermodes_amplitude_matrix @ KL2Act[2:10, :]  # Select mode
 data_othermodes = np.sum(othermodes_matrix, axis=0)
 
 #Put the modes on the dm
+dm_flat = data_tt + data_othermodes
 data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
 deformable_mirror.flatten()
-deformable_mirror.actuators = data_tt + data_othermodes  # Add TT and higher-order terms to pupil
-#set_dm_actuators(deformable_mirror, data_tt + data_othermodes, pupil_setup)
-data_dm[:, :] = deformable_mirror.opd.shaped/2 #divide by 2 is very important to get the proper phase. because for this phase to be applied the slm surface needs to half of it.
+_setup = SimpleNamespace(nact=nact, dm_flat=dm_flat)
+set_dm_actuators(deformable_mirror, data_tt + data_othermodes, setup=_setup)
+data_dm[:, :] = deformable_mirror.opd.shaped / 2  # divide by 2 is important to get the proper phase
 
 # Combine the DM surface with the pupil
 # ``data_dm`` is defined on the small pupil grid while ``data_pupil`` has the
@@ -252,7 +245,6 @@ class PupilSetup:
 
         self.data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
         deformable_mirror.flatten()
-        # deformable_mirror.actuators = data_tt + data_othermodes  # Add TT and higher-order terms to pupil
         actuators = data_tt + data_othermodes
         set_dm_actuators(deformable_mirror, actuators)
         self.actuators = actuators
