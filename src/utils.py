@@ -20,6 +20,32 @@ def set_default_setup(setup):
     """Register a default setup used when none is provided."""
     global DEFAULT_SETUP
     DEFAULT_SETUP = setup
+    
+    
+def _resolve_place_of_test(place_of_test):
+    """Return a test location string used by DM helper functions.
+
+    Raises an error if PLACE_OF_TEST is not defined in either the argument,
+    dao_setup module, or environment.
+    """
+    if place_of_test is not None:
+        return place_of_test
+
+    try:
+        from . import dao_setup  # type: ignore
+        place = getattr(dao_setup, "PLACE_OF_TEST", None)
+    except Exception:
+        place = None
+
+    if place is None:
+        place = os.environ.get("PLACE_OF_TEST", None)
+
+    if place is None:
+        raise RuntimeError("PLACE_OF_TEST is not defined. "
+                           "Set the environment variable or provide it explicitly.")
+
+    return place
+
 
 
 def compute_data_slm(data_dm=0, data_phase_screen=0, data_dm_flat=0, setup=None, **kwargs):
@@ -74,7 +100,7 @@ def set_dm_actuators(actuators=None, dm_flat=None, setup=None, *, place_of_test=
         setup = DEFAULT_SETUP
 
     if place_of_test is None:
-        place_of_test = os.environ.get("PLACE_OF_TEST", "Geneva")
+        place_of_test = _resolve_place_of_test(place_of_test)
 
     if actuators is None:
         actuators = np.zeros(setup.nact ** 2)
@@ -109,7 +135,7 @@ def set_data_dm(actuators=None, *, setup=None, dm_flat=None, place_of_test=None,
         setup = DEFAULT_SETUP
 
     if place_of_test is None:
-        place_of_test = os.environ.get("PLACE_OF_TEST", "Geneva")
+        place_of_test = _resolve_place_of_test(place_of_test)
 
     npix_small_pupil_grid = kwargs.get("npix_small_pupil_grid", getattr(setup, "npix_small_pupil_grid", 0))
     wait_time = kwargs.get("wait_time", getattr(setup, "wait_time", 0))
