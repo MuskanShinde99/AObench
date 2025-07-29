@@ -114,19 +114,20 @@ def set_dm_actuators(actuators=None, dm_flat=None, setup=None, *, place_of_test=
         deformable_mirror = kwargs.get("deformable_mirror", getattr(setup, "deformable_mirror", None))
         if deformable_mirror is None:
             raise ValueError("Deformable mirror instance must be provided")
-        deformable_mirror.actuators = actuators + dm_flat
-        actuators_to_store = deformable_mirror.actuators
+        deformable_mirror.actuators = actuators #+ dm_flat
+        actuators_to_apply = deformable_mirror.actuators
     else:
         # No DM hardware available
-        actuators_to_store = actuators + dm_flat
+        actuators_to_apply = actuators + dm_flat
 
     dm_act_shm = shm.dm_act_shm
     dm_act_shm.set_data(
-        np.asarray(actuators_to_store).astype(np.float64).reshape(setup.nact, setup.nact)
+        np.asarray(actuators_to_apply).astype(np.float64).reshape(setup.nact, setup.nact)
     )
 
 
-def set_data_dm(actuators=None, *, setup=None, dm_flat=None, place_of_test=None, **kwargs, ):
+def set_data_dm(actuators=None, *, setup=None, dm_flat=None, place_of_test=None, 
+                data_phase_screen=0, **kwargs, ):
     """Flatten the DM, apply ``actuators`` and update the SLM."""
 
     if setup is None:
@@ -157,7 +158,7 @@ def set_data_dm(actuators=None, *, setup=None, dm_flat=None, place_of_test=None,
         data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
         data_dm[:, :] = deformable_mirror.opd.shaped / 2
 
-        data_slm = compute_data_slm(data_dm=data_dm, setup=pupil_setup)
+        data_slm = compute_data_slm(data_dm=data_dm, data_phase_screen=data_phase_screen, setup=pupil_setup)
         slm.set_data(data_slm)
         time.sleep(wait_time)
         return actuators, data_dm, data_slm

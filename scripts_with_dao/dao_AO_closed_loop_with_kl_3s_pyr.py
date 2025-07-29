@@ -78,7 +78,6 @@ print(f"Shape of the response matrix: {RM_S2KL.shape}")
 #%% Load Reference Image and PSF
 
 # Load reference image
-time.sleep(wait_time)  # Wait for stabilization of SLM
 reference_image = fits.getdata(folder_calib / 'reference_image_raw.fits')
 normalized_reference_image = normalize_image(reference_image, mask, bias_image)
 pyr_img_shape = reference_image.shape
@@ -236,12 +235,12 @@ plt.show()
 plt.close('all')
 
 # Select KL mode and amplitude
-mode = 0
-amp = 1
+mode = 5
+amp = 0.5
 data_kl = KL2Phs_new[mode].reshape(setup.npix_small_pupil_grid, setup.npix_small_pupil_grid) * amp * setup.small_pupil_mask
 
 # Main loop parameters
-num_iterations = 1
+num_iterations = 10
 gain = 1
 leakage = 0
 delay=0
@@ -253,5 +252,5 @@ anim_title= f'KL mode {mode} amp {amp}'
 closed_loop_test(num_iterations, gain, leakage, delay, data_kl, anim_path, anim_name, anim_title,
                            RM_S2KL_new, KL2Act_new, Act2KL_new, Phs2KL_new, mask, bias_image, 
                            reference_image=reference_image, diffraction_limited_psf=diffraction_limited_psf,
-                           verbose=True, verbose_plot=True)
+                           verbose=True, verbose_plot=False)
 

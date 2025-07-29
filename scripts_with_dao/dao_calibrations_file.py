@@ -80,7 +80,7 @@ fits.writeto(os.path.join(folder_calib, f'binned_bias_image.fits'), np.asarray(b
 las.enable(1) 
 time.sleep(5)
 
-#%% Creating and Displaying a Circular Pupil on the SLM
+#%% Stting DM to flat
 
 # Compute and display Pupil Data on SLM
 # data_slm = compute_data_slm()
@@ -88,13 +88,7 @@ time.sleep(5)
 # time.sleep(wait_time)
 
 set_data_dm(setup=setup)
-
-print('Pupil created on the SLM.')
-
-#DM function for papyrus, and have a dm flat
-# for a dm flat put 10% of the total DM unit/
-# make setting the shared memory part of the DM function
-
+print('DM set to flat.')
 
 #%% Load transformation matrices
 
@@ -233,7 +227,7 @@ response_matrix_full, response_matrix_filtered = create_response_matrix(
 )
 
 #Reset the DM to flat
-#slm.set_data(data_slm)
+set_data_dm(setup=setup)
 
 #response_matrix_filtered = response_matrix_full[:, mask.ravel() > 0]
 

@@ -15,7 +15,7 @@ from matplotlib.colors import LogNorm
 from src.utils import *
 from collections import deque
 from src.dao_setup import init_setup
-from src.utils import set_dm_actuators, set_data_dm
+from src.utils import set_dm_actuators
 from .shm_loader import shm
 
 setup = init_setup()
@@ -28,7 +28,6 @@ normalized_psf_shm = shm.normalized_psf_shm
 computed_modes_shm = shm.computed_modes_shm
 commands_shm = shm.commands_shm
 dm_kl_modes_shm = shm.dm_kl_modes_shm
-dm_act_shm = shm.dm_act_shm
 
 
 def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, anim_path, aim_name, anim_title,
@@ -180,7 +179,12 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
 
     for i in tqdm.tqdm(range(num_iterations)):
         
-         
+        # Update deformable mirror surface
+        data_dm[:, :] = deformable_mirror.opd.shaped/2
+        data_dm = data_dm * small_pupil_mask
+        dm_phase_shm.set_data(data_dm.astype(np.float32))  # setting shared memory
+        fits.writeto(os.path.join(folder_gui, f'dm_phase.fits'), data_dm.astype(np.float32), overwrite=True)
+        
         # Determine current phase screen slice
         if data_phase_screen.ndim == 3:
             phase_slice = data_phase_screen[i, :, :]
@@ -192,10 +196,6 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
         # Update shared memory and image
         phase_screen_shm.set_data(phase_slice) # setting shared memory
         #fits.writeto(os.path.join(folder_gui, f'phase_screen.fits'), phase_slice, overwrite=True)
-        
-        #Set DM
-        actuators_to_apply = dm_act_shm.get_data().flatten()
-        _, data_dm, _ = set_data_dm(actuators=actuators_to_apply, data_phase_screen=phase_slice, setup=setup,)
         
         # Compute phase residuals 
         phase_residuals = (phase_slice + data_dm) * small_pupil_mask
@@ -210,6 +210,12 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
         residual_modes = phase_residuals.flatten() @ Phs2KL
         residual_modes_shm.set_data(residual_modes) # setting shared memory
 
+        # Compute and  set SLM command
+        data_slm = compute_data_slm(data_dm=data_dm, data_phase_screen=phase_slice, setup=setup.pupil_setup)
+        slm.set_data(data_slm) # setting shared memory
+        time.sleep(wait_time)
+        
+        
 
         # Capture and process WFS image
         slopes_image = get_slopes_image(
