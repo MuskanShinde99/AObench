@@ -77,7 +77,7 @@ wait_time = 0.05
 nact = 17
 
 nact_total = nact**2
-nact_valid = nact_total #195
+nact_valid = 241 #195
 
 dm_flat = np.zeros(nact**2)
 

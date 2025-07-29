@@ -120,23 +120,24 @@ def set_dm_actuators(actuators=None, dm_flat=None, setup=None, *, place_of_test=
 
     if place_of_test is None:
         place_of_test = _resolve_place_of_test(place_of_test)
-
-    # Default actuator vector
-    if actuators is None:
-        actuators = np.zeros(setup.nact ** 2)
-
-    if dm_flat is None:
-        dm_flat = setup.dm_flat
-
-    actuators = np.asarray(actuators)
-    act_pos = actuators #+ dm_flat
-
+        
     # Load actuator 2D map shared memory
     dm_act_shm = shm.dm_act_shm
 
 
+
     # GENEVA SETUP: use HCIpy deformable mirror
     if place_of_test == "Geneva":
+        
+        # Default actuator vector
+        if actuators is None:
+            actuators = np.zeros(setup.nact ** 2)
+        
+        if dm_flat is None:
+            dm_flat = setup.dm_flat
+        
+        actuators = np.asarray(actuators)
+        act_pos = actuators #+ dm_flat
         
         #Set 2D map shared memory
         dm_act_shm.set_data(act_pos.astype(np.float64).reshape(setup.nact, setup.nact))
@@ -151,6 +152,17 @@ def set_dm_actuators(actuators=None, dm_flat=None, setup=None, *, place_of_test=
 
     # NON-GENEVA: write filtered actuators to PAPYRUS DM shared memory
     else:
+        
+        # Default actuator vector
+        if actuators is None:
+            actuators = np.zeros(setup.nact_valid)
+        
+        if dm_flat is None:
+            dm_flat = np.zeros(setup.nact_valid)
+        
+        actuators = np.asarray(actuators)
+        act_pos = actuators #+ dm_flat
+        
         # Load dm_map
         dm_map = kwargs.get("dm_map", getattr(setup, "dm_map", None))
         if dm_map is None:
@@ -164,6 +176,7 @@ def set_dm_actuators(actuators=None, dm_flat=None, setup=None, *, place_of_test=
         act_pos_full = np.zeros((setup.nact, setup.nact))
         
         # Appy the map and have full 289 actuators
+        print('act_pos shape', act_pos.shape)
         act_pos_full[dm_map] = act_pos
         
         #Set 2D map shared memory
