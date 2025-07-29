@@ -136,13 +136,13 @@ plt.show()
 
 method='tip_tilt_modulation'
 flux_cutoff = 0.25
-modulation_angles = np.arange(0, 360, 1)  # angles of modulation
+modulation_angles = np.arange(0, 360, 5)  # angles of modulation
 modulation_amp = 15 # in lamda/D
 n_iter=500 # number of iternations for dm random commands
 
 mask = create_flux_filtering_mask(method, flux_cutoff, KL2Act_papy[0], KL2Act_papy[1],
                                modulation_angles, modulation_amp, n_iter,
-                               create_summed_image=True, verbose=False, verbose_plot=False)
+                               create_summed_image=True, verbose=False, verbose_plot=True)
 
 valid_pixels_mask_shm.set_data(mask)
 

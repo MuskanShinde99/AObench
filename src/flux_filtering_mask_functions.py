@@ -56,8 +56,6 @@ def create_summed_image_for_mask(modulation_angles, modulation_amp, tiltx, tilty
         modulation_step = apply_intensity_tilt_kl(tiltx, tilty, tilt_angle=angle)
         data_modulation = modulation_amp * modulation_step
         
-        print('data_modulation shape', data_modulation.shape)
-        
         # Put on DM
         actuators, _, _  = set_data_dm(data_modulation, setup=setup,)
 

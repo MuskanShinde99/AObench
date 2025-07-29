@@ -139,6 +139,7 @@ data_othermodes = np.sum(othermodes_matrix, axis=0)
 
 #Put the modes on the dm
 dm_flat = data_tt + data_othermodes
+
 _setup = SimpleNamespace(
     nact=nact,
     nact_valid=nact_valid,
@@ -146,7 +147,7 @@ _setup = SimpleNamespace(
     dm_map=dm_map,
     dm_papy_shm=dm_papy_shm,
 )
-set_dm_actuators(actuators=dm_flat[dm_map], setup=_setup)
+set_dm_actuators(actuators=dm_flat[dm_map.flatten()], setup=_setup)
 
 
 class PupilSetup:
