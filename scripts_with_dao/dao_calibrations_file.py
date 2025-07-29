@@ -54,11 +54,18 @@ reference_psf_shm = shm.reference_psf_shm
 # # Intialize DM
 # deformable_mirror = dao_setup.defomable_mirror
 
-#%% Take a bias image
+#%% Turn off laser
 
 # Turn off laser
-las.enable(0) 
-time.sleep(2)  # Allow some time for laser to turn off
+if las is not None:
+    las.enable(0)
+    time.sleep(2)  # Allow some time for laser to turn off
+    print("The laser is OFF")
+    
+else:
+    input("Turn OFF the laser and press Enter to continue")
+    
+#%% Take a bias image
 
 # Capture and average 1000 bias frames
 n_frames=1000
@@ -77,8 +84,13 @@ fits.writeto(os.path.join(folder_calib, f'binned_bias_image.fits'), np.asarray(b
 
 #%% Turn on laser
 
-las.enable(1) 
-time.sleep(2)
+if las is not None:
+    las.enable(1)
+    time.sleep(2)
+    print("The laser is ON")
+    
+else:
+    input("Turn ON the laser and press Enter to continue")
 
 #%% Setting DM to flat
 
