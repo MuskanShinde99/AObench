@@ -518,19 +518,68 @@ class MainWindow(QMainWindow):
         if(self.square_commands_checkbox.checkState()==Qt.CheckState.Checked):
             commands = np.sqrt(np.square(commands))
         self.commands_view.draw([(np.arange(commands.shape[0]), commands)])
+        
+    def update_fft_wiew(self):
+        f =  self.f_shm.get_data(check=False, semNb=self.sem_nb)
+        pol_fft = self.pol_fft_shm.get_data(check=False, semNb=self.sem_nb)
+        res_fft = self.modes_fft_shm.get_data(check=False, semNb=self.sem_nb)
+        command_fft = self.commands_fft_shm.get_data(check=False, semNb=self.sem_nb)
+        n_fft = self.n_fft_spinbox.value()
+        mode_n = self.mode_select_spinbox.value()
+        f_opti = self.f_opti_shm.get_data(check=False, semNb=self.sem_nb)
+        
+        match self.controller_select_dial.value():
+            case 0:
+                S = self.S_int_shm.get_data(check=False, semNb=self.sem_nb)
+            case 1:
+                S = self.S_dd_shm.get_data(check=False, semNb=self.sem_nb)[:n_fft,mode_n]
+            case 2:
+                S = self.S_omgi_shm.get_data(check=False, semNb=self.sem_nb)[:n_fft,mode_n]
+        val = np.interp(f_opti[int(n_fft/2)].squeeze(), f.squeeze(), pol_fft[:,mode_n])
+        S *= val/S[int(n_fft/2)]
+        self.fft_view.draw([(f, pol_fft[:,mode_n]), (f, command_fft[:,mode_n]), (f, res_fft[:,mode_n]),(f_opti[:n_fft],S)])
+
+    def update_time_wiew(self):
+        t =  self.t_shm.get_data(check=False, semNb=self.sem_nb)
+        pol = self.pol_shm.get_data(check=False, semNb=self.sem_nb)
+        res = self.modes_shm.get_data(check=False, semNb=self.sem_nb)
+        command = self.commands_shm.get_data(check=False, semNb=self.sem_nb)
+        mode_n = self.mode_select_spinbox.value()
+        self.time_view.draw([(t, pol[:,mode_n]), (t, command[:,mode_n]), (t, res[:,mode_n])])
+
+    def update_modes_amp_wiew(self):
+        res = self.modes_shm.get_data(check=False, semNb=self.sem_nb)
+        if(self.square_res_checkbox.checkState()==Qt.CheckState.Checked):
+            res = np.sqrt(np.square(res))
+        n_modes = res.shape[1]
+        self.modes_amp_view.draw([(np.arange(n_modes), res[-1,:])])
 
     def gain_changed(self,value):
-        # self.gain_shm.set_data(np.array([[value]],np.float32))
-        K_mat_int = self.K_mat_int_shm.get_data()
+        self.gain_shm.set_data(np.array([[value]],np.float32))
+        K_mat_int = self.K_mat_int_shm.get_data(check=False, semNb=self.sem_nb)
         K_mat_int[0,:] = value
         self.K_mat_int_shm.set_data(K_mat_int)
+        fs = self.fs_shm.get_data(check=False, semNb=self.sem_nb)[0][0]
+        delay = self.delay_shm.get_data(check=False, semNb=self.sem_nb)[0][0]
+        K = ct.tf(np.array([value, 0]), np.array([1, -0.99]), 1 /fs)
+        G = G_tf(delay,fs)
+        S = (1+G*K)
+        n_fft = self.n_fft_spinbox.value()
+        f =  self.f_opti_shm.get_data(check=False, semNb=self.sem_nb)[:n_fft]
+        S_resp = np.abs(freqresp(S, 2*np.pi*f))
+        self.S_int_shm.set_data(S_resp.astype(np.float32))
+
 
     def closed_loop_check(self,state):
-        print("zbra")
         if state == Qt.CheckState.Checked.value:
             self.closed_loop_flag_shm.set_data(np.array([[1]],np.uint32))
         elif state == Qt.CheckState.Unchecked.value:
             self.closed_loop_flag_shm.set_data(np.array([[0]],np.uint32))
+
+    def order_dd_changed(self,value):
+        self.dd_order_high_shm.set_data(np.array([[value]],np.uint32))
+        self.reset_dd_controller()
+
     def n_modes_changed(self,value):
         self.n_modes_int_shm.set_data(np.array([[value]],np.uint32))
 
@@ -566,6 +615,51 @@ class MainWindow(QMainWindow):
         fits.writeto('save/flat.fits',flat, overwrite = True)
         self.flat_dm_shm.set_data(flat)
 
+    def save_latency(self):
+        latency = self.latency_shm.get_data(check=False, semNb=self.sem_nb)
+        fs = self.fs_shm.get_data(check=False, semNb=self.sem_nb)
+        delay = self.delay_shm.get_data(check=False, semNb=self.sem_nb)
+        t = self.t_shm.get_data(check=False, semNb=self.sem_nb)
+        fits.writeto('save/latency.fits', latency, overwrite = True)
+        fits.writeto('save/fs.fits',fs, overwrite = True)
+        fits.writeto('save/delay.fits',delay, overwrite = True)
+        fits.writeto('save/t.fits',t, overwrite = True)
+        
+    def load_latency(self):
+        latency = fits.getdata('save/latency.fits')
+        fs = fits.getdata('save/fs.fits')
+        delay = fits.getdata('save/delay.fits')
+        t = fits.getdata('save/t.fits')
+        self.latency_shm.set_data(latency.astype(np.float32))
+        self.fs_shm.set_data(fs.astype(np.float32))
+        self.delay_shm.set_data(delay.astype(np.float32))
+        self.t_shm.set_data(t.astype(np.float32))
+        
+    def update_controller_select(self, value):
+        self.controller_select_shm.set_data(np.array([[value]],np.uint32))
+
+    def reset_dd_controller(self):
+        K_mat_int = self.K_mat_int_shm.get_data(check=False, semNb=self.sem_nb)
+        self.K_mat_dd_shm.set_data(K_mat_int)
+        self.K_mat_omgi_shm.set_data(K_mat_int)
+
+    def update_rate_dd_changed(self,value):
+        if value:
+            self.optimization_dd_timer.start(int(value*1e3))
+        else:
+            self.optimization_dd_timer.stop()
+
+    def update_rate_omgi_changed(self,value):
+        if value:
+            self.optimization_omgi_timer.start(int(value*1e3))
+        else:
+            self.optimization_omgi_timer.stop()  
+    def n_fft_changed(self,value):
+        self.n_fft_shm.set_data(np.array([[value]],np.uint32))
+
+    def gain_margin_changed(self,value):
+        self.gain_margin_shm.set_data(np.array([[value]],np.float32))
+
 
     def closeEvent(self, event):
         self.bias_process.stop_process()
@@ -586,7 +680,7 @@ def handle_sigint(signum, frame):
 
 if __name__ == "__main__":
 
-    # subprocess.run(["python", "setup.py"])
+    subprocess.run(["python", "init_control_shm.py"])
 
     # Launch the GUI
     app = QApplication(sys.argv)
