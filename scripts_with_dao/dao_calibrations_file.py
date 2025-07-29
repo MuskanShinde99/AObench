@@ -15,11 +15,10 @@ from astropy.io import fits
 from matplotlib import pyplot as plt
 
 # Import Specific Modules
-from src.config import config
-ROOT_DIR = config.root_dir
 import dao
+from src.config import config
 from src.dao_setup import init_setup, las, set_data_dm
-setup = init_setup()  # Import all variables from setup
+setup = init_setup()
 from src.utils import *
 from src.circular_pupil_functions import *
 from src.flux_filtering_mask_functions import *
@@ -29,14 +28,17 @@ from src.kl_basis_eigenmodes_functions import computeEigenModes, computeEigenMod
 from src.transformation_matrices_functions import * 
 from src.psf_centring_algorithm_functions import *
 from src.shm_loader import shm
+from src.scan_modes_functions import *
+from src.ao_loop_functions import *
+
+ROOT_DIR = config.root_dir
+
 bias_image_shm = shm.bias_image_shm
 valid_pixels_mask_shm = shm.valid_pixels_mask_shm
 npix_valid_shm = shm.npix_valid_shm
 reference_image_shm = shm.reference_image_shm
 normalized_ref_image_shm = shm.normalized_ref_image_shm
 reference_psf_shm = shm.reference_psf_shm
-from src.scan_modes_functions import *
-from src.ao_loop_functions import *
 
 
 # #%% Accessing Devices

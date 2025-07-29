@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Module initializing AO bench hardware and pupil configuration."""
 
 # Import Libraries
 from hcipy import (
@@ -16,9 +15,9 @@ from dataclasses import dataclass
 from types import SimpleNamespace
 
 # Import Specific Modules
+import dao
 from src.config import config
 from src.hardware import Camera, SLM, Laser, DM
-import dao
 from src.utils import compute_data_slm, set_default_setup, DEFAULT_SETUP
 from src.shm_loader import shm
 from src.circular_pupil_functions import create_slm_circular_pupil
@@ -30,6 +29,8 @@ folder_transformation_matrices = config.folder_transformation_matrices
 folder_closed_loop_tests = config.folder_closed_loop_tests
 folder_turbulence = config.folder_turbulence
 folder_gui = config.folder_gui
+
+#%%
 
 def set_dm_actuators(actuators=None, dm_flat=None, setup=None, **kwargs):
     """Set DM actuators and update the shared memory grid."""

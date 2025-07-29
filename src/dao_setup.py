@@ -1,7 +1,7 @@
 """Dispatch module for AO bench setup configuration."""
 import os
 
-PLACE_OF_TEST = os.environ.get("PLACE_OF_TEST", "Geneva").lower()
+PLACE_OF_TEST = os.environ.get("PLACE_OF_TEST", "Geneva")
 
 if PLACE_OF_TEST == "Geneva":
     from src.dao_setup_Geneva import *  # noqa: F401,F403
