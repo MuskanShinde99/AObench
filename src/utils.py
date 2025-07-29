@@ -83,17 +83,36 @@ def compute_data_slm(data_dm=0, data_phase_screen=0, data_dm_flat=0, setup=None,
     return data_slm.astype(np.uint8)
 
 
-def set_dm_actuators(actuators=None, dm_flat=None, setup=None, *, place_of_test=None, **kwargs,):
-    
-    """Update DM actuators and the corresponding shared memory grid.
+def set_dm_actuators(actuators=None, dm_flat=None, setup=None, *, place_of_test=None, **kwargs):
+    """
+    Update DM actuators and the corresponding shared memory grid.
 
-    When running on the Geneva bench the underlying ``deformable_mirror``
-    hardware is updated as well.  On setups outside Geneva, the
-    function simply writes the actuator pattern to the shared memory.
-    The ``PLACE_OF_TEST`` environment variable is inspected to determine
-    which behaviour to use (defaults to ``"Geneva"``).
+    On the Geneva bench, this also updates the HCIpy deformable mirror object.
+    On other setups (e.g., PAPYRUS), the actuator pattern is written to shared memory,
+    including a filtered version based on a valid actuator map (dm_map).
+
+    Parameters
+    ----------
+    actuators : array-like, optional
+        Actuator values to apply. Defaults to zeros if not provided.
+    dm_flat : array-like, optional
+        Flat DM pattern added to the actuators. Defaults to `setup.dm_flat`.
+    setup : object, optional
+        DAO setup object containing configuration and shared memory references.
+    place_of_test : str, optional
+        Location identifier (e.g. "Geneva", "Papyrus"). If None, resolved from env or setup.
+    **kwargs : dict
+        Optional overrides:
+            - deformable_mirror: DM instance (used in Geneva)
+            - dm_papy_shm: shared memory object for Papyrus DM
+            - dm_map: boolean mask of valid actuators (used outside Geneva)
+
+    Raises
+    ------
+    ValueError if required hardware or masks are missing.
     """
 
+    # Resolve setup and environment
     if setup is None:
         if DEFAULT_SETUP is None:
             raise ValueError("No setup provided and no default registered.")
@@ -102,28 +121,47 @@ def set_dm_actuators(actuators=None, dm_flat=None, setup=None, *, place_of_test=
     if place_of_test is None:
         place_of_test = _resolve_place_of_test(place_of_test)
 
+    # Default actuator vector
     if actuators is None:
         actuators = np.zeros(setup.nact ** 2)
-        
+
     if dm_flat is None:
         dm_flat = setup.dm_flat
 
     actuators = np.asarray(actuators)
+    act_pos = actuators #+ dm_flat
 
+    # Always update the shared memory actuator map
+    dm_act_shm = shm.dm_act_shm
+    dm_act_shm.set_data(
+        act_pos.astype(np.float64).reshape(setup.nact, setup.nact)
+    )
+
+    # GENEVA SETUP: use HCIpy deformable mirror
     if place_of_test == "Geneva":
         deformable_mirror = kwargs.get("deformable_mirror", getattr(setup, "deformable_mirror", None))
         if deformable_mirror is None:
-            raise ValueError("Deformable mirror instance must be provided")
-        deformable_mirror.actuators = actuators #+ dm_flat
-        actuators_to_apply = deformable_mirror.actuators
-    else:
-        # No DM hardware available
-        actuators_to_apply = actuators + dm_flat
+            raise ValueError("Deformable mirror instance must be provided for Geneva setup.")
+        
+        deformable_mirror.actuators = act_pos
 
-    dm_act_shm = shm.dm_act_shm
-    dm_act_shm.set_data(
-        np.asarray(actuators_to_apply).astype(np.float64).reshape(setup.nact, setup.nact)
-    )
+    # NON-GENEVA: write filtered actuators to PAPYRUS DM shared memory
+    else:
+        # Load dm_map
+        dm_map = kwargs.get("dm_map", getattr(setup, "dm_map", None))
+        if dm_map is None:
+            raise ValueError("dm_map must be provided via setup or kwargs")
+        dm_map = dm_map.astype(bool)
+
+        # Apply the map and write filtered actuators
+        filtered_act_pos = act_pos[dm_map]
+
+        dm_papy_shm = kwargs.get("dm_papy_shm", getattr(setup, "dm_papy_shm", None))
+        if dm_papy_shm is None:
+            raise ValueError("PAPYRUS DM shared memory is not connected or provided.")
+
+        dm_papy_shm.set_data(filtered_act_pos)
+
 
 
 def set_data_dm(actuators=None, *, setup=None, dm_flat=None, place_of_test=None, 

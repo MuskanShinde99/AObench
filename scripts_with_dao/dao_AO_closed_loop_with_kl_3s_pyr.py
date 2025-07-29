@@ -31,12 +31,13 @@ from src.kl_basis_eigenmodes_functions import computeEigenModes, computeEigenMod
 from src.transformation_matrices_functions import * 
 from src.psf_centring_algorithm_functions import *
 from src.shm_loader import shm
+from src.scan_modes_functions import scan_othermode_amplitudes
+from src.ao_loop_functions import *
+
 num_iterations_shm = shm.num_iterations_shm
 gain_shm = shm.gain_shm
 leakage_shm = shm.leakage_shm
 delay_shm = shm.delay_shm
-from src.scan_modes_functions import scan_othermode_amplitudes
-from src.ao_loop_functions import *
 
 #%% Creating and Displaying a Circular Pupil on the SLM
 
@@ -129,6 +130,8 @@ plt.show()
 
 #%% Defining the number of Kl modes used for Closed lop simulations
 
+plt.close('all')
+
 # Define KL modes to consider
 nmodes_kl = 175
 KL2Phs_new = KL2Phs[:nmodes_kl, :]
@@ -140,7 +143,6 @@ RM_S2KL_new = np.linalg.pinv(IM_KL2S_new, rcond=0.10)
 
 
 # %% Loading turbulence
-plt.close('all')
 
 setup.deformable_mirror.flatten() 
 
@@ -173,6 +175,8 @@ data_phase_screen = data_phase_screen.astype(np.float32)
 # have a shared memory for phase screens 
 
 #%% AO loop with turbulence
+
+plt.close('all')
    
 # Main loop parameters
 num_iterations = 100

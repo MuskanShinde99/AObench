@@ -14,6 +14,7 @@ from hcipy import (
     make_zernike_basis,
 )
 import numpy as np
+from matplotlib import pyplot as plt
 import time
 from astropy.io import fits
 from dataclasses import dataclass
@@ -75,6 +76,34 @@ nact_total = nact**2
 nact_valid = nact_total #195
 
 dm_flat = np.zeros(nact**2)
+
+dm_papy_shm = dao.shm('/tmp/dmCmd02.im.shm')
+# plt.figure()
+# plt.plot(dm_papy_shm.get_data())
+# plt.title("DM Command (Papyrus)")
+# plt.show()
+
+dm_map_shm = dao.shm('/tmp/dm241Map.im.shm')
+dm_map = dm_map_shm.get_data().astype(bool)
+dm_map = dm_map.flatten()
+# plt.figure()
+# plt.imshow(dm_map)
+# plt.title("dm_map (Valid Actuator Mask)")
+# plt.colorbar()
+# plt.show()
+
+dm_act_shm = shm.dm_act_shm
+dm_act = dm_act_shm.get_data()
+dm_act = dm_act.flatten()
+# plt.figure()
+# plt.imshow(dm_act)
+# plt.title("dm_act (Actuator Values)")
+# plt.colorbar()
+# plt.show()
+
+# Extract valid actuator values into a 1D array
+# dm_act_filtered = dm_act[dm_map]
+# print(f"Filtered actuator values (1D): shape = {dm_act_filtered.shape}")
 
 #%% Define number of KL and Zernike modes
 

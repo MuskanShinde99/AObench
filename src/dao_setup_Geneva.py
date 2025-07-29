@@ -9,6 +9,7 @@ from hcipy import (
     make_zernike_basis,
 )
 import numpy as np
+from matplotlib import pyplot as plt
 import time
 from astropy.io import fits
 from dataclasses import dataclass
