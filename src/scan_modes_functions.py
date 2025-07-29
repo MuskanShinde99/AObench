@@ -9,7 +9,7 @@ camera_fp = setup.camera_fp
 camera_wfs = setup.camera_wfs
 from pathlib import Path
 import re
-from src.dao_setup import set_data_dm
+from src.utils import set_data_dm
 
 
 def scan_othermode_amplitudes(test_values, mode_index,

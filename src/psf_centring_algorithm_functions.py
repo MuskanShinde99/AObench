@@ -6,7 +6,7 @@ import cv2
 import re
 
 from src.config import config
-from src.dao_setup import set_data_dm
+from src.utils import set_data_dm
 
 ROOT_DIR = config.root_dir
 

@@ -11,7 +11,7 @@ import dao
 from src.dao_setup import init_setup
 setup = init_setup()  # Import all variables from setup
 from src.utils import *
-from src.dao_setup import set_dm_actuators
+from src.utils import set_dm_actuators
 
 # Flatten the DM surface and set actuator values
 deformable_mirror.flatten()

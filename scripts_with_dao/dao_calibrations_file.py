@@ -17,7 +17,8 @@ from matplotlib import pyplot as plt
 # Import Specific Modules
 import dao
 from src.config import config
-from src.dao_setup import init_setup, las, set_data_dm
+from src.dao_setup import init_setup, las
+from src.utils import set_data_dm
 setup = init_setup()
 from src.utils import *
 from src.circular_pupil_functions import *

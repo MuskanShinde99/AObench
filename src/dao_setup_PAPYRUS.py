@@ -23,7 +23,13 @@ from types import SimpleNamespace
 import dao
 from src.config import config
 from src.hardware import Camera
-from src.utils import compute_data_slm, set_default_setup, DEFAULT_SETUP
+from src.utils import (
+    compute_data_slm,
+    set_default_setup,
+    DEFAULT_SETUP,
+    set_dm_actuators,
+    set_data_dm,
+)
 from src.shm_loader import shm
 
 ROOT_DIR = config.root_dir
@@ -35,58 +41,6 @@ folder_turbulence = config.folder_turbulence
 folder_gui = config.folder_gui
 
 #%%
-
-def set_dm_actuators(actuators=None, dm_flat=None, setup=None, **kwargs):
-    """Set DM actuators and update the shared memory grid.
-
-    If a deformable mirror instance is available it is updated as well.  When
-    running on a minimal setup (no DM hardware), the actuator pattern is simply
-    written to the shared memory segment.
-    """
-
-    if setup is None:
-        if DEFAULT_SETUP is None:
-            raise ValueError("No setup provided and no default registered.")
-        setup = DEFAULT_SETUP
-
-    if actuators is None:
-        actuators = np.zeros(setup.nact ** 2)
-    if dm_flat is None:
-        dm_flat = setup.dm_flat
-
-    actuators = np.asarray(actuators)
-
-    
-    actuators_to_apply = actuators + dm_flat
-
-    dm_act_shm = shm.dm_act_shm
-    dm_act_shm.set_data(
-        np.asarray(actuators_to_apply).astype(np.float64).reshape(
-            setup.nact, setup.nact
-        )
-    )
-
-
-def set_data_dm(actuators=None, *, setup=None, dm_flat=None, **kwargs):
-    """Flatten the DM, optionally apply ``actuators`` and, if available, update the SLM."""
-
-    if setup is None:
-        if DEFAULT_SETUP is None:
-            raise ValueError("No setup provided and no default registered.")
-        setup = DEFAULT_SETUP
-
-   
-    wait_time = kwargs.get("wait_time", getattr(setup, "wait_time", 0))
-    pupil_setup = kwargs.get("pupil_setup", getattr(setup, "pupil_setup", None))
-
-    set_dm_actuators(actuators, dm_flat=dm_flat, setup=setup, )
-
-    data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
-    
-    data_slm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
- 
-
-    return actuators, data_dm, None
 
 #%% Configuration Camera
 

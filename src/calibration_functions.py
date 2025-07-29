@@ -5,7 +5,7 @@ import time
 import matplotlib.pyplot as plt
 from datetime import datetime
 from src.utils import *
-from src.dao_setup import set_data_dm
+from src.utils import set_data_dm
 from src.dao_setup import init_setup
 from .shm_loader import shm
 

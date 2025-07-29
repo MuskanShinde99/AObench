@@ -14,7 +14,8 @@ from PIL import Image
 from matplotlib.colors import LogNorm
 from src.utils import *
 from collections import deque
-from src.dao_setup import init_setup, set_dm_actuators
+from src.dao_setup import init_setup
+from src.utils import set_dm_actuators
 from .shm_loader import shm
 
 setup = init_setup()
