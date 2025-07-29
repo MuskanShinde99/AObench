@@ -221,6 +221,7 @@ class DAOSetup:
     folder_gui: str
     img_size_wfs_cam: int
     img_size_fp_cam: int
+    npix_small_pupil_grid: int
     nact: int
     nact_valid: int
     nact_total: int
@@ -247,6 +248,7 @@ def init_setup() -> DAOSetup:
         folder_gui=str(folder_gui),
         img_size_wfs_cam=img_size_wfs_cam,
         img_size_fp_cam=img_size_fp_cam,
+        npix_small_pupil_grid=npix_small_pupil_grid,
         nact=nact,
         nact_valid=nact_valid,
         nact_total=nact_total,

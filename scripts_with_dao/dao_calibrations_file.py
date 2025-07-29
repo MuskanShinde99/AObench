@@ -92,6 +92,7 @@ if las is not None:
 else:
     input("Turn ON the laser and press Enter to continue")
 
+
 #%% Setting DM to flat
 
 # Compute and display Pupil Data on SLM
@@ -243,6 +244,7 @@ set_data_dm(setup=setup)
 
 #response_matrix_filtered = response_matrix_full[:, mask.ravel() > 0]
 
+#%%
 #saving the flattened push-pull images in shared memory
 KL2PWFS_cube_shm.set_data(response_matrix_full)
 KL2S_shm.set_data(response_matrix_filtered)
