@@ -114,7 +114,7 @@ def set_dm_actuators(actuators=None, dm_flat=None, setup=None, *, place_of_test=
         deformable_mirror = kwargs.get("deformable_mirror", getattr(setup, "deformable_mirror", None))
         if deformable_mirror is None:
             raise ValueError("Deformable mirror instance must be provided")
-        deformable_mirror.actuators = actuators + dm_flat
+        deformable_mirror.actuators = actuators #+ dm_flat
         actuators_to_apply = deformable_mirror.actuators
     else:
         # No DM hardware available

@@ -38,23 +38,25 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
     Performs a closed-loop adaptive optics simulation.
     
     --- Hardware Components ---
-    - camera_wfs: Wavefront Sensor (WFS) camera used for wavefront analysis
-    - camera_fp: Focal plane camera for capturing the PSF (Point Spread Function)
+    - camera_wfs: Wavefront Sensor (WFS) camera 
+    - camera_fp: Focal plane camera for capturing the PSF 
     
     --- Pupil Grid and Mask Parameters ---
     - npix_small_pupil_grid: Number of pixels in the small pupil grid
     - small_pupil_mask: Mask for the small pupil grid field of view
     
     --- Image Processing and Calibration ---
-    - mask: Mask for filtering unwanted parts of the image (e.g., noise)
+    - mask: Mask for filtering valid pixels
     - bias_image: Bias image used for normalization
+    - reference_image: Reference WFS image 
+    - diffraction_limited_psf: Ideal PSF used to compute the Strehl ratio
     - RM_S2KL: Matrix mapping PyWFS measurements to KL modes
     - KL2Act: Matrix mapping KL modes to actuator positions
     - Act2KL: Matrix mapping actuator positions back to KL modes
     - Phs2KL: Matrix mapping phase measurements to KL modes (not used in current code, but intended for future use)
 
     --- General Loop Parameters ---
-    - num_iterations: Number of iterations for the simulation loop
+    - num_iterations: Number of iterations for the AO loop
     - gain: The gain factor for the deformable mirror correction
     - leakage: Leakage term of the AO loop
     - delay: Number of frames of delay in the AO loop
@@ -63,7 +65,6 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
     - aim_name: Name for the saved animation file
     - anim_title: Title of the animation
     """
-    wait_time = setup.wait_time
 
     # Load hardware and configuration parameters
     camera_wfs = kwargs.get("camera_wfs", setup.camera_wfs)
