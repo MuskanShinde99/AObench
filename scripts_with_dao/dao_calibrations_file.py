@@ -78,9 +78,9 @@ fits.writeto(os.path.join(folder_calib, f'binned_bias_image.fits'), np.asarray(b
 #%% Turn on laser
 
 las.enable(1) 
-time.sleep(5)
+time.sleep(2)
 
-#%% Stting DM to flat
+#%% Setting DM to flat
 
 # Compute and display Pupil Data on SLM
 # data_slm = compute_data_slm()
