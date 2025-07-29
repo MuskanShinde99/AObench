@@ -57,18 +57,12 @@ def compute_data_slm(data_dm=0, data_phase_screen=0, data_dm_flat=0, setup=None,
     return data_slm.astype(np.uint8)
 
 
-def set_dm_actuators(
-    actuators=None,
-    dm_flat=None,
-    setup=None,
-    *,
-    place_of_test=None,
-    **kwargs,
-):
+def set_dm_actuators(actuators=None, dm_flat=None, setup=None, *, place_of_test=None, **kwargs,):
+    
     """Update DM actuators and the corresponding shared memory grid.
 
     When running on the Geneva bench the underlying ``deformable_mirror``
-    hardware is updated as well.  On setups without a physical DM the
+    hardware is updated as well.  On setups outside Geneva, the
     function simply writes the actuator pattern to the shared memory.
     The ``PLACE_OF_TEST`` environment variable is inspected to determine
     which behaviour to use (defaults to ``"Geneva"``).
@@ -84,15 +78,14 @@ def set_dm_actuators(
 
     if actuators is None:
         actuators = np.zeros(setup.nact ** 2)
+        
     if dm_flat is None:
         dm_flat = setup.dm_flat
 
     actuators = np.asarray(actuators)
 
     if place_of_test == "Geneva":
-        deformable_mirror = kwargs.get(
-            "deformable_mirror", getattr(setup, "deformable_mirror", None)
-        )
+        deformable_mirror = kwargs.get("deformable_mirror", getattr(setup, "deformable_mirror", None))
         if deformable_mirror is None:
             raise ValueError("Deformable mirror instance must be provided")
         deformable_mirror.actuators = actuators + dm_flat
@@ -107,15 +100,8 @@ def set_dm_actuators(
     )
 
 
-def set_data_dm(
-    actuators=None,
-    *,
-    setup=None,
-    dm_flat=None,
-    place_of_test=None,
-    **kwargs,
-):
-    """Flatten the DM, optionally apply ``actuators`` and update the SLM."""
+def set_data_dm(actuators=None, *, setup=None, dm_flat=None, place_of_test=None, **kwargs, ):
+    """Flatten the DM, apply ``actuators`` and update the SLM."""
 
     if setup is None:
         if DEFAULT_SETUP is None:
@@ -125,15 +111,11 @@ def set_data_dm(
     if place_of_test is None:
         place_of_test = os.environ.get("PLACE_OF_TEST", "Geneva")
 
-    npix_small_pupil_grid = kwargs.get(
-        "npix_small_pupil_grid", getattr(setup, "npix_small_pupil_grid", 0)
-    )
+    npix_small_pupil_grid = kwargs.get("npix_small_pupil_grid", getattr(setup, "npix_small_pupil_grid", 0))
     wait_time = kwargs.get("wait_time", getattr(setup, "wait_time", 0))
     pupil_setup = kwargs.get("pupil_setup", getattr(setup, "pupil_setup", None))
     slm = kwargs.get("slm", getattr(setup, "slm", None))
-    deformable_mirror = kwargs.get(
-        "deformable_mirror", getattr(setup, "deformable_mirror", None)
-    )
+    deformable_mirror = kwargs.get("deformable_mirror", getattr(setup, "deformable_mirror", None))
 
     if place_of_test == "Geneva":
         if slm is None:

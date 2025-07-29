@@ -1,6 +1,5 @@
 """Dispatch module for AO bench setup configuration."""
 import os
-from src.utils import set_dm_actuators, set_data_dm
 
 PLACE_OF_TEST = os.environ.get("PLACE_OF_TEST", "Geneva")
 

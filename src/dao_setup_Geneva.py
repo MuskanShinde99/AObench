@@ -36,7 +36,6 @@ folder_closed_loop_tests = config.folder_closed_loop_tests
 folder_turbulence = config.folder_turbulence
 folder_gui = config.folder_gui
 
-#%%
 
 #%% Start the laser
 

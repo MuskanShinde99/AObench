@@ -40,8 +40,6 @@ folder_closed_loop_tests = config.folder_closed_loop_tests
 folder_turbulence = config.folder_turbulence
 folder_gui = config.folder_gui
 
-#%%
-
 #%% Configuration Camera
 
 # To set camera
@@ -64,7 +62,7 @@ img_size_fp_cam = img_fp.shape[0]
 # camera_wfs.get_data()
 # camera_fp.get_data()
 
-#%% Configure fake pupil 
+#%% Configure the grid 
 
 npix_small_pupil_grid = 550
 
@@ -114,13 +112,6 @@ _setup = SimpleNamespace(
     dm_flat=dm_flat,
 )
 set_dm_actuators(dm_flat=dm_flat, setup=_setup)
-
-# Combine the DM surface with the pupil
-# ``data_dm`` is defined on the small pupil grid while ``data_pupil`` has the
-# full SLM dimensions.  To create a meaningful pattern for the SLM we first
-# split ``data_pupil`` into an outer (full size) and inner (small pupil sized)
-# part and then add ``data_dm`` to the inner part.  The result is wrapped and
-# inserted back into the full pupil.
 
 
 class PupilSetup:
