@@ -15,6 +15,7 @@ from matplotlib.colors import LogNorm
 from src.utils import *
 from collections import deque
 from src.dao_setup import init_setup
+from src.utils import set_dm_actuators, set_data_dm
 from .shm_loader import shm
 
 setup = init_setup()
@@ -27,6 +28,7 @@ normalized_psf_shm = shm.normalized_psf_shm
 computed_modes_shm = shm.computed_modes_shm
 commands_shm = shm.commands_shm
 dm_kl_modes_shm = shm.dm_kl_modes_shm
+dm_act_shm = shm.dm_act_shm
 
 
 def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, anim_path, aim_name, anim_title,
@@ -36,29 +38,25 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
     Performs a closed-loop adaptive optics simulation.
     
     --- Hardware Components ---
-    - deformable_mirror: The deformable mirror for wavefront correction
-    - slm: Spatial Light Modulator (SLM) for displaying the correction
-    - camera_wfs: Wavefront Sensor (WFS) camera used for wavefront analysis
-    - camera_fp: Focal plane camera for capturing the PSF (Point Spread Function)
+    - camera_wfs: Wavefront Sensor (WFS) camera 
+    - camera_fp: Focal plane camera for capturing the PSF 
     
     --- Pupil Grid and Mask Parameters ---
     - npix_small_pupil_grid: Number of pixels in the small pupil grid
-    - data_pupil: Data to create pupil on slm
-    - data_pupil_outer: Outer region of the pupil data
-    - data_pupil_inner: Inner region of the pupil data
-    - pupil_mask: Mask for the pupil region
     - small_pupil_mask: Mask for the small pupil grid field of view
     
     --- Image Processing and Calibration ---
-    - mask: Mask for filtering unwanted parts of the image (e.g., noise)
+    - mask: Mask for filtering valid pixels
     - bias_image: Bias image used for normalization
+    - reference_image: Reference WFS image 
+    - diffraction_limited_psf: Ideal PSF used to compute the Strehl ratio
     - RM_S2KL: Matrix mapping PyWFS measurements to KL modes
     - KL2Act: Matrix mapping KL modes to actuator positions
     - Act2KL: Matrix mapping actuator positions back to KL modes
     - Phs2KL: Matrix mapping phase measurements to KL modes (not used in current code, but intended for future use)
 
     --- General Loop Parameters ---
-    - num_iterations: Number of iterations for the simulation loop
+    - num_iterations: Number of iterations for the AO loop
     - gain: The gain factor for the deformable mirror correction
     - leakage: Leakage term of the AO loop
     - delay: Number of frames of delay in the AO loop
@@ -67,28 +65,20 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
     - aim_name: Name for the saved animation file
     - anim_title: Title of the animation
     """
-    wait_time = setup.wait_time
 
     # Load hardware and configuration parameters
-    deformable_mirror = kwargs.get("deformable_mirror", setup.deformable_mirror)
-    slm = kwargs.get("slm", setup.slm)
     camera_wfs = kwargs.get("camera_wfs", setup.camera_wfs)
     camera_fp = kwargs.get("camera_fp", setup.camera_fp)
     npix_small_pupil_grid = kwargs.get("npix_small_pupil_grid", setup.npix_small_pupil_grid)
-    data_pupil = kwargs.get("data_pupil", setup.pupil_setup.data_pupil)
-    data_pupil_outer = kwargs.get("data_pupil_outer", setup.pupil_setup.data_pupil_outer)
-    data_pupil_inner = kwargs.get("data_pupil_inner", setup.pupil_setup.data_pupil_inner)
-    pupil_mask = kwargs.get("pupil_mask", setup.pupil_setup.pupil_mask)
     small_pupil_mask = kwargs.get("small_pupil_mask", setup.pupil_setup.small_pupil_mask)
     
     # Load the folder
     folder_gui = kwargs.get("folder_gui", setup.folder_gui)
     
-    # Display Pupil Data on SLM
-    data_slm = compute_data_slm(setup=setup.pupil_setup)
-    slm.set_data(data_slm)
-    time.sleep(wait_time)  # Wait for stabilization of SLM
-        
+    # Flatten the DM
+    set_data_dm(setup=setup)
+    #deformable_mirror.flatten()
+
     # Reference image 
     normalized_reference_image = normalize_image(reference_image, mask, bias_image)
     pyr_img_shape = reference_image.shape
@@ -119,11 +109,10 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
         
     # Initialize queue to store past actuator commands
     max_buffer = delay + 1
-    act_pos_queue = deque([np.zeros(deformable_mirror.num_actuators)] * max_buffer, maxlen=max_buffer)
+    act_pos_queue = deque([np.zeros(setup.nact_total)] * max_buffer, maxlen=max_buffer)
         
     # Initialize variables
     images = []
-    deformable_mirror.flatten()
     data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
     
     # Initialize arrays to store Strehl ratio and total residual phase
@@ -155,7 +144,7 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
         cbar_psf = plt.colorbar(im_psf, ax=axs[1, 1])
         
         # Initialize additional plots
-        line_act, = axs[3, 0].plot(np.zeros(deformable_mirror.num_actuators))
+        line_act, = axs[3, 0].plot(np.zeros(setup.nact_total))
         axs[3, 0].set_title('Commands')
         axs[3, 0].set_xlabel('Actuator Index')
         axs[3, 0].set_ylabel('Amplitude')
@@ -188,12 +177,7 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
 
     for i in tqdm.tqdm(range(num_iterations)):
         
-        # Update deformable mirror surface
-        data_dm[:, :] = deformable_mirror.opd.shaped/2
-        data_dm = data_dm * small_pupil_mask
-        dm_phase_shm.set_data(data_dm.astype(np.float32))  # setting shared memory
-        fits.writeto(os.path.join(folder_gui, f'dm_phase.fits'), data_dm.astype(np.float32), overwrite=True)
-        
+         
         # Determine current phase screen slice
         if data_phase_screen.ndim == 3:
             phase_slice = data_phase_screen[i, :, :]
@@ -206,6 +190,10 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
         phase_screen_shm.set_data(phase_slice) # setting shared memory
         #fits.writeto(os.path.join(folder_gui, f'phase_screen.fits'), phase_slice, overwrite=True)
         
+        #Set DM
+        current_act_pos = dm_act_shm.get_data().flatten()
+        current_act_pos, data_dm, _ = set_data_dm(actuators=current_act_pos, data_phase_screen=phase_slice, setup=setup,)
+                
         # Compute phase residuals 
         phase_residuals = (phase_slice + data_dm) * small_pupil_mask
         phase_residuals_shm.set_data(phase_residuals) # setting shared memory
@@ -219,10 +207,6 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
         residual_modes = phase_residuals.flatten() @ Phs2KL
         residual_modes_shm.set_data(residual_modes) # setting shared memory
 
-        # Compute and  set SLM command
-        data_slm = compute_data_slm(data_dm=data_dm, data_phase_screen=phase_slice, setup=setup.pupil_setup)
-        slm.set_data(data_slm) # setting shared memory
-        time.sleep(wait_time)
 
         # Capture and process WFS image
         slopes_image = get_slopes_image(
@@ -265,15 +249,11 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
         
         # Apply delayed actuator command
         # deformable_mirror.actuators = (1 - leakage) * deformable_mirror.actuators - gain * delayed_act_pos
-        new_act_pos = (1 - leakage) * deformable_mirror.actuators - gain * delayed_act_pos
-        set_dm_actuators(
-            deformable_mirror,
-            new_act_pos,
-            setup=setup,
-        )
+        new_act_pos = (1 - leakage) * current_act_pos - gain * delayed_act_pos
+        set_dm_actuators(new_act_pos, setup=setup,)
         
         # KL modes corresponding the total actuator postion or the DM shape
-        modes_act_pos_tot = deformable_mirror.actuators @ Act2KL
+        modes_act_pos_tot = current_act_pos @ Act2KL
         dm_kl_modes_shm.set_data(modes_act_pos_tot) # setting shared memory
 
 

@@ -248,8 +248,6 @@ def create_response_matrix(
         Mask for normalization and response extraction.
     folder_calib : str
         Path to folder for saving FITS files.
-    pupil_size : float
-        Pupil size (for filename metadata).
     nact : int
         Number of actuators (for filename metadata).
     verbose : bool
@@ -267,7 +265,6 @@ def create_response_matrix(
     pull_push : bool
         If True, perform a pull followed by a push ([phase_amp, -phase_amp]).
     kwargs:
-        - pupil_size
         - nact
         - folder_calib
 
@@ -277,7 +274,6 @@ def create_response_matrix(
         Flattened 2D response matrix for all modes.
     """
     
-    pupil_size = kwargs.get("pupil_size", setup.pupil_size)
     nact = kwargs.get("nact", setup.nact)
     folder_calib = kwargs.get("folder_calib", setup.folder_calib)
 
@@ -318,8 +314,8 @@ def create_response_matrix(
     push_pull_images = pp_sum / n_runs
 
     # Compute response matrices from the averaged push-pull images
-    response_matrix_full = compute_response_matrix(push_pull_images)
-    response_matrix_filtered = compute_response_matrix(push_pull_images, mask)
+    response_matrix_full = compute_response_matrix(push_pull_images).astype(np.float32)
+    response_matrix_filtered = compute_response_matrix(push_pull_images, mask).astype(np.float32)
 
     # Define output filenames
     pull_filename     = f'binned_processed_response_cube_KL2PWFS_only_pull_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'

@@ -20,7 +20,31 @@ def set_default_setup(setup):
     """Register a default setup used when none is provided."""
     global DEFAULT_SETUP
     DEFAULT_SETUP = setup
+    
+    
+def _resolve_place_of_test(place_of_test):
+    """Return a test location string used by DM helper functions.
 
+    Raises an error if PLACE_OF_TEST is not defined in either the argument,
+    dao_setup module, or environment.
+    """
+    if place_of_test is not None:
+        return place_of_test
+
+    try:
+        from . import dao_setup  # type: ignore
+        place = getattr(dao_setup, "PLACE_OF_TEST", None)
+    except Exception:
+        place = None
+
+    if place is None:
+        place = os.environ.get("PLACE_OF_TEST", None)
+
+    if place is None:
+        raise RuntimeError("PLACE_OF_TEST is not defined. "
+                           "Set the environment variable or provide it explicitly.")
+
+    return place
 
 
 
@@ -59,94 +83,130 @@ def compute_data_slm(data_dm=0, data_phase_screen=0, data_dm_flat=0, setup=None,
     return data_slm.astype(np.uint8)
 
 
-def set_dm_actuators(dm, actuators=None, dm_flat=None, setup=None):
-    """Set DM actuators and update the shared memory grid."""
+def set_dm_actuators(actuators=None, dm_flat=None, setup=None, *, place_of_test=None, **kwargs):
+    """
+    Update DM actuators and the corresponding shared memory grid.
 
+    On the Geneva bench, this also updates the HCIpy deformable mirror object.
+    On other setups (e.g., PAPYRUS), the actuator pattern is written to shared memory,
+    including a filtered version based on a valid actuator map (dm_map).
+
+    Parameters
+    ----------
+    actuators : array-like, optional
+        Actuator values to apply. Defaults to zeros if not provided.
+    dm_flat : array-like, optional
+        Flat DM pattern added to the actuators. Defaults to `setup.dm_flat`.
+    setup : object, optional
+        DAO setup object containing configuration and shared memory references.
+    place_of_test : str, optional
+        Location identifier (e.g. "Geneva", "Papyrus"). If None, resolved from env or setup.
+    **kwargs : dict
+        Optional overrides:
+            - deformable_mirror: DM instance (used in Geneva)
+            - dm_papy_shm: shared memory object for Papyrus DM
+            - dm_map: boolean mask of valid actuators (used outside Geneva)
+
+    Raises
+    ------
+    ValueError if required hardware or masks are missing.
+    """
+
+    # Resolve setup and environment
     if setup is None:
         if DEFAULT_SETUP is None:
             raise ValueError("No setup provided and no default registered.")
         setup = DEFAULT_SETUP
 
+    if place_of_test is None:
+        place_of_test = _resolve_place_of_test(place_of_test)
+
+    # Default actuator vector
     if actuators is None:
         actuators = np.zeros(setup.nact ** 2)
+
     if dm_flat is None:
         dm_flat = setup.dm_flat
 
     actuators = np.asarray(actuators)
-    if actuators.size != setup.nact ** 2:
-        raise ValueError(
-            f"Expected {setup.nact ** 2} actuators, got {actuators.size}"
-        )
+    act_pos = actuators + dm_flat
 
-    dm.actuators = actuators + dm_flat
-
+    # Always update the shared memory actuator map
     dm_act_shm = shm.dm_act_shm
-    dm_act_shm.set_data(np.asarray(dm.actuators).reshape(setup.nact, setup.nact))
-    
+    dm_act_shm.set_data(
+        act_pos.astype(np.float64).reshape(setup.nact, setup.nact)
+    )
 
-# ---------------------------------------------------------------------------
-def set_data_dm(actuators=None, *, setup=None, dm_flat=None, **kwargs):
-    """Flatten the DM, optionally apply ``actuators`` and show the resulting
-    phase on the SLM.
+    # GENEVA SETUP: use HCIpy deformable mirror
+    if place_of_test == "Geneva":
+        deformable_mirror = kwargs.get("deformable_mirror", getattr(setup, "deformable_mirror", None))
+        if deformable_mirror is None:
+            raise ValueError("Deformable mirror instance must be provided for Geneva setup.")
+        
+        deformable_mirror.actuators = act_pos
 
-    Parameters
-    ----------
-    actuators : array_like, optional
-        Actuator values to apply. Defaults to zeros.
-    dm_flat : array_like, optional
-        Flat map added to the actuators. Defaults to ``setup.dm_flat``.
-    setup : object, optional
-        DAO setup providing defaults for devices and dimensions.
-    kwargs : optional
-        ``dm``                 – DM instance. Defaults to ``setup.deformable_mirror``.
-        ``slm``                – SLM instance. Defaults to ``setup.slm``.
-        ``npix_small_pupil_grid`` – DM grid size. Defaults to ``setup.npix_small_pupil_grid``.
-        ``pupil_setup``        – Setup for ``compute_data_slm``. Defaults to ``setup.pupil_setup``.
-        ``wait_time``          – Delay after sending data. Defaults to ``setup.wait_time`` or ``0``.
+    # NON-GENEVA: write filtered actuators to PAPYRUS DM shared memory
+    else:
+        # Load dm_map
+        dm_map = kwargs.get("dm_map", getattr(setup, "dm_map", None))
+        if dm_map is None:
+            raise ValueError("dm_map must be provided via setup or kwargs")
+        dm_map = dm_map.astype(bool)
 
-    Returns
-    -------
-    tuple of ndarray
-        ``(data_dm, data_slm)`` arrays that were sent to the SLM.
-    """
+        # Apply the map and write filtered actuators
+        filtered_act_pos = act_pos[dm_map]
+
+        dm_papy_shm = kwargs.get("dm_papy_shm", getattr(setup, "dm_papy_shm", None))
+        if dm_papy_shm is None:
+            raise ValueError("PAPYRUS DM shared memory is not connected or provided.")
+
+        dm_papy_shm.set_data(filtered_act_pos)
+
+
+
+def set_data_dm(actuators=None, *, setup=None, dm_flat=None, place_of_test=None, 
+                data_phase_screen=0, **kwargs, ):
+    """Flatten the DM, apply ``actuators`` and update the SLM."""
 
     if setup is None:
         if DEFAULT_SETUP is None:
             raise ValueError("No setup provided and no default registered.")
         setup = DEFAULT_SETUP
 
-    slm = kwargs.get("slm", getattr(setup, "slm", None))
-    if slm is None:
-        raise ValueError("SLM instance must be provided")
+    if place_of_test is None:
+        place_of_test = _resolve_place_of_test(place_of_test)
 
-    npix_small_pupil_grid = kwargs.get(
-        "npix_small_pupil_grid",
-        getattr(setup, "npix_small_pupil_grid", None),
-    )
-    if npix_small_pupil_grid is None:
-        raise ValueError("npix_small_pupil_grid must be provided")
-
+    npix_small_pupil_grid = kwargs.get("npix_small_pupil_grid", getattr(setup, "npix_small_pupil_grid", 0))
     wait_time = kwargs.get("wait_time", getattr(setup, "wait_time", 0))
+    pupil_setup = kwargs.get("pupil_setup", getattr(setup, "pupil_setup", None))
+    slm = kwargs.get("slm", getattr(setup, "slm", None))
+    deformable_mirror = kwargs.get("deformable_mirror", getattr(setup, "deformable_mirror", None))
 
-    dm = kwargs.get("dm", getattr(setup, "deformable_mirror", None))
-    if dm is None:
-        raise ValueError("Deformable mirror instance must be provided")
+    if place_of_test == "Geneva":
+        if slm is None:
+            raise ValueError("SLM instance must be provided")
+        if deformable_mirror is None:
+            raise ValueError("Deformable mirror instance must be provided")
 
-    dm.flatten()
-    set_dm_actuators(dm, actuators, dm_flat=dm_flat, setup=setup)
+        deformable_mirror.flatten()
+        set_dm_actuators(
+            actuators, dm_flat=dm_flat, setup=setup, place_of_test=place_of_test, deformable_mirror=deformable_mirror
+        )
 
+        data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
+        data_dm[:, :] = deformable_mirror.opd.shaped / 2
+
+        data_slm = compute_data_slm(data_dm=data_dm, data_phase_screen=data_phase_screen, setup=pupil_setup)
+        slm.set_data(data_slm)
+        time.sleep(wait_time)
+        return actuators, data_dm, data_slm
+
+    # Minimal setup: only update shared memory
+    set_dm_actuators(
+        actuators, dm_flat=dm_flat, setup=setup, place_of_test=place_of_test
+    )
     data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
-    data_dm[:, :] = dm.opd.shaped / 2
-
-    pupil_setup = kwargs.get("pupil_setup", getattr(setup, "pupil_setup", setup))
-    data_slm = compute_data_slm(data_dm=data_dm, setup=pupil_setup)
-    slm.set_data(data_slm)
-    time.sleep(wait_time)
-
-    return data_dm, data_slm
-
-
-
+    return actuators, data_dm, None
 
 def create_psf_mask(psf, crop_size=100, radius=50):
     """
@@ -474,7 +534,7 @@ def crop_around_com(mask, com, crop_size=50):
 def crop_and_combine(image, coms, crop_size=50):
     """
     Crop regions around each center of mass and combine them into one image.
-
+z
     Parameters:
     - image: 2D numpy array representing the image.
     - coms: List of tuples, where each tuple contains the (y, x) center of mass coordinates.

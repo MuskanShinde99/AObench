@@ -20,6 +20,7 @@ ROOT_DIR = config.root_dir
 # Import Specific Modules
 import dao
 from src.dao_setup import init_setup
+from src.utils import set_data_dm
 setup = init_setup()  # Import all variables from setup
 from src.utils import *
 from src.circular_pupil_functions import *
@@ -36,8 +37,7 @@ from src.ao_loop_functions import *
 #%% Creating and Displaying a Circular Pupil on the SLM
 
 # Display Pupil Data on SLM
-data_slm = compute_data_slm()
-slm.set_data(data_slm)
+set_data_dm(setup=setup)
 
 #%% Load Transformation matrices
 
@@ -65,7 +65,7 @@ bias_image = fits.getdata(os.path.join(folder_calib, bias_filename))
 print(f"Bias image shape: {bias_image.shape}")
 
 # Load the calibration mask for processing images.
-mask_filename = f'binned_mask_pup_{setup.pupil_size}mm_3s_pyr.fits'
+mask_filename = f'binned_mask_3s_pyr.fits'
 mask = fits.getdata(os.path.join(folder_calib, mask_filename))
 print(f"Mask dimensions: {mask.shape}")
 
@@ -73,7 +73,7 @@ print(f"Mask dimensions: {mask.shape}")
 valid_pixels_indices = np.where(mask > 0)
 
 # Load the response matrix 
-IM_filename = f'binned_response_matrix_KL2S_filtered_pup_{setup.pupil_size}mm_nact_{setup.nact}_amp_0.1_3s_pyr.fits'
+IM_filename = f'binned_response_matrix_KL2S_filtered_nact_{setup.nact}_amp_0.1_3s_pyr.fits'
 IM_KL2S = fits.getdata(os.path.join(folder_calib, IM_filename))  # /0.1
 
 RM_S2KL = np.linalg.pinv(IM_KL2S, rcond=0.10)
@@ -126,6 +126,8 @@ for mode in range(num_modes):
             normalized_reference_image,
             setup=setup,
         )
+        slopes_image_shm.set_data(slopes_image) # setting the shared memory separately because setting inside the function is not working
+
         slopes = slopes_image[valid_pixels_indices].flatten()
 
         # Compute modes using the response matrix
@@ -146,65 +148,6 @@ for mode in range(num_modes):
     axes[mode].set_title(f'KL mode {mode}')
     axes[mode].legend()
     #axes[mode].set_ylim(-0.35, 0.35)
-    axes[mode].grid(True)
-
-plt.tight_layout()
-plt.show()
-
-
-#%% Linearity plot KL basis: Phase KL2Phs
-
-# Select the mode
-num_modes = 1
-applied_phase_amp = np.arange(-2, 2.1, 0.1) # 
-computed_phase_amp = np.zeros((num_modes, len(applied_phase_amp)))
-
-
-# Loop through each KL mode
-for mode in range(num_modes):
-    
-    print(f"Applying phase for mode: {mode}")
-    
-    for i, amp in enumerate(applied_phase_amp):
-
-        # Put the zernike mode 
-        deformable_mirror.flatten()
-        data_zernike = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
-        data_zernike[:, :] = amp*KL2Phs[mode].reshape(npix_small_pupil_grid, npix_small_pupil_grid)
-    
-        # Put data_dm on the SLM
-        data_slm = compute_data_slm(data_phase_screen=data_zernike)
-        slm.set_data(data_slm)
-        time.sleep(wait_time)
-
-        # Capture image and compute slopes
-        slopes_image = get_slopes_image(
-            mask,
-            bias_image,
-            normalized_reference_image,
-            setup=setup,
-            camera_wfs=camera_wfs,
-        )
-        slopes = slopes_image[valid_pixels_indices].flatten()
-
-        # Compute modes using the response matrix
-        computed_modes = slopes @ RM_S2KL # why this fac tor of 2???
-
-        # Store computed modes for this mode
-        computed_phase_amp[mode, i] = computed_modes[mode]
-
-# Plot the results in subplots
-fig, axes = plt.subplots(nrows=2, ncols=5, figsize=(20, 8))
-axes = axes.flatten()
-
-for mode in range(num_modes):
-    axes[mode].plot(applied_phase_amp, computed_phase_amp[mode], label='Computed Phase Amplitude')  # Adjust as needed
-    axes[mode].plot(applied_phase_amp, applied_phase_amp, label='y = x', linestyle='--')
-    axes[mode].set_xlabel('Applied Phase Amplitude [λ]')
-    axes[mode].set_ylabel('Reconstructed Phase Amplitude [λ]')
-    axes[mode].set_title(f'KL mode {mode}')
-    axes[mode].legend()
-    axes[mode].set_ylim(-0.35, 0.35)
     axes[mode].grid(True)
 
 plt.tight_layout()

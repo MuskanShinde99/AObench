@@ -31,18 +31,18 @@ from src.kl_basis_eigenmodes_functions import computeEigenModes, computeEigenMod
 from src.transformation_matrices_functions import * 
 from src.psf_centring_algorithm_functions import *
 from src.shm_loader import shm
+from src.scan_modes_functions import scan_othermode_amplitudes
+from src.ao_loop_functions import *
+
 num_iterations_shm = shm.num_iterations_shm
 gain_shm = shm.gain_shm
 leakage_shm = shm.leakage_shm
 delay_shm = shm.delay_shm
-from src.scan_modes_functions import scan_othermode_amplitudes
-from src.ao_loop_functions import *
 
 #%% Creating and Displaying a Circular Pupil on the SLM
 
 # Display Pupil Data on SLM
-data_slm = compute_data_slm()
-slm.set_data(data_slm)
+set_data_dm(setup=setup)
 
 #%% Load transformation matrices
 
@@ -62,7 +62,7 @@ bias_image = fits.getdata(os.path.join(folder_calib, bias_filename))
 print(f"Bias image shape: {bias_image.shape}")
 
 # Load the calibration mask for processing images.
-mask_filename = f'binned_mask_pup_{setup.pupil_size}mm_3s_pyr.fits'
+mask_filename = f'binned_mask_3s_pyr.fits'
 mask = fits.getdata(os.path.join(folder_calib, mask_filename))
 print(f"Mask dimensions: {mask.shape}")
 
@@ -70,17 +70,8 @@ print(f"Mask dimensions: {mask.shape}")
 valid_pixels_indices = np.where(mask > 0)
 
 # Load the response matrix 
-IM_filename = f'binned_response_matrix_KL2S_filtered_pup_{setup.pupil_size}mm_nact_{setup.nact}_amp_0.1_3s_pyr.fits'
+IM_filename = f'binned_response_matrix_KL2S_filtered_nact_{setup.nact}_amp_0.1_3s_pyr.fits'
 IM_KL2S = fits.getdata(os.path.join(folder_calib, IM_filename))  # /0.1
-
-#SVD
-# Compute SVD
-U, S, Vt = np.linalg.svd(IM_KL2S)
-S_matrix = np.diag(S)
-# plt.figure()
-# plt.imshow(S_matrix)
-# plt.colorbar()
-# plt.show()
 
 RM_S2KL = np.linalg.pinv(IM_KL2S, rcond=0.10)
 print(f"Shape of the response matrix: {RM_S2KL.shape}")
@@ -88,7 +79,6 @@ print(f"Shape of the response matrix: {RM_S2KL.shape}")
 #%% Load Reference Image and PSF
 
 # Load reference image
-time.sleep(wait_time)  # Wait for stabilization of SLM
 reference_image = fits.getdata(folder_calib / 'reference_image_raw.fits')
 normalized_reference_image = normalize_image(reference_image, mask, bias_image)
 pyr_img_shape = reference_image.shape
@@ -140,6 +130,8 @@ plt.show()
 
 #%% Defining the number of Kl modes used for Closed lop simulations
 
+plt.close('all')
+
 # Define KL modes to consider
 nmodes_kl = 175
 KL2Phs_new = KL2Phs[:nmodes_kl, :]
@@ -151,7 +143,6 @@ RM_S2KL_new = np.linalg.pinv(IM_KL2S_new, rcond=0.10)
 
 
 # %% Loading turbulence
-plt.close('all')
 
 setup.deformable_mirror.flatten() 
 
@@ -184,10 +175,8 @@ data_phase_screen = data_phase_screen.astype(np.float32)
 # have a shared memory for phase screens 
 
 #%% AO loop with turbulence
- 
-plt.figure()
-plt.imshow(data_phase_screen[0,:, :])
-plt.show()
+
+plt.close('all')
    
 # Main loop parameters
 num_iterations = 100
@@ -246,12 +235,12 @@ plt.show()
 plt.close('all')
 
 # Select KL mode and amplitude
-mode = 0
-amp = 1
+mode = 5
+amp = 0.5
 data_kl = KL2Phs_new[mode].reshape(setup.npix_small_pupil_grid, setup.npix_small_pupil_grid) * amp * setup.small_pupil_mask
 
 # Main loop parameters
-num_iterations = 1
+num_iterations = 10
 gain = 1
 leakage = 0
 delay=0
@@ -263,5 +252,5 @@ anim_title= f'KL mode {mode} amp {amp}'
 closed_loop_test(num_iterations, gain, leakage, delay, data_kl, anim_path, anim_name, anim_title,
                            RM_S2KL_new, KL2Act_new, Act2KL_new, Phs2KL_new, mask, bias_image, 
                            reference_image=reference_image, diffraction_limited_psf=diffraction_limited_psf,
-                           verbose=True, verbose_plot=True)
+                           verbose=True, verbose_plot=False)
 
