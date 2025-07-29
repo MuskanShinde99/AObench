@@ -129,7 +129,7 @@ def set_dm_actuators(actuators=None, dm_flat=None, setup=None, *, place_of_test=
         dm_flat = setup.dm_flat
 
     actuators = np.asarray(actuators)
-    act_pos = actuators #+ dm_flat
+    act_pos = actuators + dm_flat
 
     # Always update the shared memory actuator map
     dm_act_shm = shm.dm_act_shm
