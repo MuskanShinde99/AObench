@@ -38,8 +38,6 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
     Performs a closed-loop adaptive optics simulation.
     
     --- Hardware Components ---
-    - deformable_mirror: The deformable mirror for wavefront correction
-    - slm: Spatial Light Modulator (SLM) for displaying the correction
     - camera_wfs: Wavefront Sensor (WFS) camera used for wavefront analysis
     - camera_fp: Focal plane camera for capturing the PSF (Point Spread Function)
     
@@ -68,8 +66,6 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
     wait_time = setup.wait_time
 
     # Load hardware and configuration parameters
-    deformable_mirror = kwargs.get("deformable_mirror", setup.deformable_mirror)
-    slm = kwargs.get("slm", setup.slm)
     camera_wfs = kwargs.get("camera_wfs", setup.camera_wfs)
     camera_fp = kwargs.get("camera_fp", setup.camera_fp)
     npix_small_pupil_grid = kwargs.get("npix_small_pupil_grid", setup.npix_small_pupil_grid)
@@ -112,7 +108,7 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
         
     # Initialize queue to store past actuator commands
     max_buffer = delay + 1
-    act_pos_queue = deque([np.zeros(deformable_mirror.num_actuators)] * max_buffer, maxlen=max_buffer)
+    act_pos_queue = deque([np.zeros(setup.nact_total)] * max_buffer, maxlen=max_buffer)
         
     # Initialize variables
     images = []
@@ -147,7 +143,7 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
         cbar_psf = plt.colorbar(im_psf, ax=axs[1, 1])
         
         # Initialize additional plots
-        line_act, = axs[3, 0].plot(np.zeros(deformable_mirror.num_actuators))
+        line_act, = axs[3, 0].plot(np.zeros(setup.nact_total))
         axs[3, 0].set_title('Commands')
         axs[3, 0].set_xlabel('Actuator Index')
         axs[3, 0].set_ylabel('Amplitude')
@@ -194,8 +190,8 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
         #fits.writeto(os.path.join(folder_gui, f'phase_screen.fits'), phase_slice, overwrite=True)
         
         #Set DM
-        actuators_to_apply = dm_act_shm.get_data().flatten()
-        _, data_dm, _ = set_data_dm(actuators=actuators_to_apply, data_phase_screen=phase_slice, setup=setup,)
+        current_act_pos = dm_act_shm.get_data().flatten()
+        _, data_dm, _ = set_data_dm(actuators=current_act_pos, data_phase_screen=phase_slice, setup=setup,)
         
         # Compute phase residuals 
         phase_residuals = (phase_slice + data_dm) * small_pupil_mask
@@ -252,11 +248,11 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
         
         # Apply delayed actuator command
         # deformable_mirror.actuators = (1 - leakage) * deformable_mirror.actuators - gain * delayed_act_pos
-        new_act_pos = (1 - leakage) * deformable_mirror.actuators - gain * delayed_act_pos
+        new_act_pos = (1 - leakage) * current_act_pos - gain * delayed_act_pos
         set_dm_actuators(new_act_pos, setup=setup,)
         
         # KL modes corresponding the total actuator postion or the DM shape
-        modes_act_pos_tot = deformable_mirror.actuators @ Act2KL
+        modes_act_pos_tot = current_act_pos @ Act2KL
         dm_kl_modes_shm.set_data(modes_act_pos_tot) # setting shared memory
 
 

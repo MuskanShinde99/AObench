@@ -173,10 +173,6 @@ data_phase_screen = data_phase_screen.astype(np.float32)
 # have a shared memory for phase screens 
 
 #%% AO loop with turbulence
- 
-plt.figure()
-plt.imshow(data_phase_screen[0,:, :])
-plt.show()
    
 # Main loop parameters
 num_iterations = 100
