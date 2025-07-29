@@ -18,6 +18,7 @@ from matplotlib import pyplot as plt
 import time
 from astropy.io import fits
 from dataclasses import dataclass
+from typing import Any
 from types import SimpleNamespace
 
 # Import Specific Modules
@@ -139,6 +140,8 @@ dm_flat = data_tt + data_othermodes
 _setup = SimpleNamespace(
     nact=nact,
     dm_flat=dm_flat,
+    dm_map=dm_map,
+    dm_papy_shm=dm_papy_shm,
 )
 set_dm_actuators(dm_flat=dm_flat, setup=_setup)
 
@@ -157,6 +160,8 @@ class PupilSetup:
         self.actuators = np.zeros(nact**2)
         # Store masks for later use when recomputing the pupil
         self.dm_flat = dm_flat
+        self.dm_map = dm_map
+        self.dm_papy_shm = dm_papy_shm
 
     def _recompute_dm(self):
         """(Re)compute DM contribution and assemble the pupil."""
@@ -223,6 +228,8 @@ class DAOSetup:
     nmodes_KL: int
     nmodes_Znk: int
     dm_flat: np.ndarray
+    dm_map: np.ndarray
+    dm_papy_shm: Any
 
 
 def init_setup() -> DAOSetup:
@@ -247,6 +254,8 @@ def init_setup() -> DAOSetup:
         nmodes_KL=nmodes_KL,
         nmodes_Znk=nmodes_Znk,
         dm_flat=dm_flat,
+        dm_map=dm_map,
+        dm_papy_shm=dm_papy_shm,
     )
 
 
