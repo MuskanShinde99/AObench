@@ -36,7 +36,8 @@ from src.utils import *
 from src.dao_create_flux_filtering_mask import *
 from src.psf_centring_algorithm import *
 from src.calibration_functions import *
-from src.dao_setup import init_setup, set_dm_actuators
+from src.dao_setup import init_setup
+from src.utils import set_dm_actuators
 setup = init_setup()  # Import all variables from setup
 from src.kl_basis_eigenmodes import computeEigenModes, computeEigenModes_notsquarepupil
 from src.create_transformation_matrices import *

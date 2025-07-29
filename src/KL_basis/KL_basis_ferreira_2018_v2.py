@@ -13,7 +13,7 @@ from hcipy import (
 from src.hardware import DeformableMirror
 import numpy as np
 import matplotlib.pyplot as plt
-from src.dao_setup import set_dm_actuators
+from src.utils import set_dm_actuators
 get_ipython().run_line_magic('matplotlib', 'inline')
 from holoeye import detect_heds_module_path  # Move all the example files into the holoeye folder in Lib/site-packages 
 from holoeye import slmdisplaysdk
