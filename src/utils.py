@@ -131,18 +131,22 @@ def set_dm_actuators(actuators=None, dm_flat=None, setup=None, *, place_of_test=
     actuators = np.asarray(actuators)
     act_pos = actuators #+ dm_flat
 
-    # Always update the shared memory actuator map
-    # dm_act_shm = shm.dm_act_shm
-    # dm_act_shm.set_data(
-    #     act_pos.astype(np.float64).reshape(setup.nact, setup.nact)
-    # )
+    # Load actuator 2D map shared memory
+    dm_act_shm = shm.dm_act_shm
+
 
     # GENEVA SETUP: use HCIpy deformable mirror
     if place_of_test == "Geneva":
+        
+        #Set 2D map shared memory
+        dm_act_shm.set_data(act_pos.astype(np.float64).reshape(setup.nact, setup.nact))
+        
+        #Load the DM
         deformable_mirror = kwargs.get("deformable_mirror", getattr(setup, "deformable_mirror", None))
         if deformable_mirror is None:
             raise ValueError("Deformable mirror instance must be provided for Geneva setup.")
         
+        #Set the DM to actuator positions
         deformable_mirror.actuators = act_pos
 
     # NON-GENEVA: write filtered actuators to PAPYRUS DM shared memory
@@ -154,13 +158,22 @@ def set_dm_actuators(actuators=None, dm_flat=None, setup=None, *, place_of_test=
         dm_map = dm_map.astype(bool)
 
         # Apply the map and write filtered actuators
-        filtered_act_pos = act_pos[dm_map]
+        #act_pos_filtered = act_pos[dm_map]
+        
+        # Create array to store 17x17 actuators
+        act_pos_full = np.zeros((setup.nact, setup.nact))
+        
+        # Appy the map and have full 289 actuators
+        act_pos_full[dm_map] = act_pos
+        
+        #Set 2D map shared memory
+        dm_act_shm.set_data(act_pos.astype(np.float64))
 
         dm_papy_shm = kwargs.get("dm_papy_shm", getattr(setup, "dm_papy_shm", None))
         if dm_papy_shm is None:
             raise ValueError("PAPYRUS DM shared memory is not connected or provided.")
 
-        dm_papy_shm.set_data(filtered_act_pos.astype(np.float32))
+        dm_papy_shm.set_data(act_pos.astype(np.float32))
 
 
 

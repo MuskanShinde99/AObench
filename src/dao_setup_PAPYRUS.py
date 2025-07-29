@@ -89,7 +89,6 @@ dm_papy_shm = dao.shm('/tmp/dmCmd02.im.shm')
 
 dm_map_shm = dao.shm('/tmp/dm241Map.im.shm')
 dm_map = dm_map_shm.get_data().astype(bool)
-dm_map = dm_map.flatten()
 # plt.figure()
 # plt.imshow(dm_map)
 # plt.title("dm_map (Valid Actuator Mask)")

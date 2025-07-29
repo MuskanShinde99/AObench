@@ -134,7 +134,7 @@ plt.show()
 
 #%% Creating a Flux Filtering Mask
 
-method='dm_random'
+method='tip_tilt_modulation'
 flux_cutoff = 0.25
 modulation_angles = np.arange(0, 360, 1)  # angles of modulation
 modulation_amp = 15 # in lamda/D
