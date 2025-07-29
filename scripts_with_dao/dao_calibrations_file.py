@@ -15,11 +15,11 @@ from astropy.io import fits
 from matplotlib import pyplot as plt
 
 # Import Specific Modules
-from src.config import config
-ROOT_DIR = config.root_dir
 import dao
+from src.config import config
 from src.dao_setup import init_setup, las
-setup = init_setup()  # Import all variables from setup
+from src.utils import set_data_dm
+setup = init_setup()
 from src.utils import *
 from src.circular_pupil_functions import *
 from src.flux_filtering_mask_functions import *
@@ -29,14 +29,17 @@ from src.kl_basis_eigenmodes_functions import computeEigenModes, computeEigenMod
 from src.transformation_matrices_functions import * 
 from src.psf_centring_algorithm_functions import *
 from src.shm_loader import shm
+from src.scan_modes_functions import *
+from src.ao_loop_functions import *
+
+ROOT_DIR = config.root_dir
+
 bias_image_shm = shm.bias_image_shm
 valid_pixels_mask_shm = shm.valid_pixels_mask_shm
 npix_valid_shm = shm.npix_valid_shm
 reference_image_shm = shm.reference_image_shm
 normalized_ref_image_shm = shm.normalized_ref_image_shm
 reference_psf_shm = shm.reference_psf_shm
-from src.scan_modes_functions import *
-from src.ao_loop_functions import *
 
 
 # #%% Accessing Devices
@@ -51,11 +54,18 @@ from src.ao_loop_functions import *
 # # Intialize DM
 # deformable_mirror = dao_setup.defomable_mirror
 
-#%% Take a bias image
+#%% Turn off laser
 
 # Turn off laser
-las.enable(0) 
-time.sleep(2)  # Allow some time for laser to turn off
+if las is not None:
+    las.enable(0)
+    time.sleep(2)  # Allow some time for laser to turn off
+    print("The laser is OFF")
+    
+else:
+    input("Turn OFF the laser and press Enter to continue")
+    
+#%% Take a bias image
 
 # Capture and average 1000 bias frames
 n_frames=1000
@@ -74,10 +84,16 @@ fits.writeto(os.path.join(folder_calib, f'binned_bias_image.fits'), np.asarray(b
 
 #%% Turn on laser
 
-las.enable(1) 
-time.sleep(5)
+if las is not None:
+    las.enable(1)
+    time.sleep(2)
+    print("The laser is ON")
+    
+else:
+    input("Turn ON the laser and press Enter to continue")
 
-#%% Creating and Displaying a Circular Pupil on the SLM
+
+#%% Setting DM to flat
 
 # Compute and display Pupil Data on SLM
 # data_slm = compute_data_slm()
@@ -85,13 +101,7 @@ time.sleep(5)
 # time.sleep(wait_time)
 
 set_data_dm(setup=setup)
-
-print('Pupil created on the SLM.')
-
-#DM function for papyrus, and have a dm flat
-# for a dm flat put 10% of the total DM unit/
-# make setting the shared memory part of the DM function
-
+print('DM set to flat.')
 
 #%% Load transformation matrices
 
@@ -106,10 +116,10 @@ KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_
 #%% Creating a Flux Filtering Mask
 
 method='tip_tilt_modulation'
-flux_cutoff = 0.3
+flux_cutoff = 0.25
 modulation_angles = np.arange(0, 360, 5)  # angles of modulation
 modulation_amp = 15 # in lamda/D
-n_iter=50 # number of iternations for dm random commands
+n_iter=100 # number of iternations for dm random commands
 
 mask = create_flux_filtering_mask(method, flux_cutoff, KL2Act[0], KL2Act[1],
                                modulation_angles, modulation_amp, n_iter,
@@ -128,10 +138,11 @@ print(f'Number of valid pixels = {npix_valid}')
 set_data_dm(setup=setup)
 
 # Create shared memories that depends on number of valid pixels
-KL2PWFS_cube_shm = dao.shm('/tmp/KL2PWFS_cube.im.shm' , np.zeros((setup.nmodes_KL, setup.img_size_wfs_cam**2)).astype(np.float64)) 
-slopes_shm = dao.shm('/tmp/slopes.im.shm', np.zeros((npix_valid, 1)).astype(np.uint32)) 
-KL2S_shm = dao.shm('/tmp/KL2S.im.shm' , np.zeros((setup.nmodes_KL, npix_valid)).astype(np.float64)) 
-S2KL_shm = dao.shm('/tmp/S2KL.im.shm' , np.zeros((npix_valid, setup.nmodes_KL)).astype(np.float64)) 
+KL2PWFS_cube_shm = dao.shm('/tmp/KL2PWFS_cube.im.shm' , np.zeros((setup.nmodes_KL, setup.img_size_wfs_cam**2), dtype=np.float64))
+slopes_shm = dao.shm('/tmp/slopes.im.shm', np.zeros((npix_valid, 1), dtype=np.uint32))
+KL2S_shm = dao.shm('/tmp/KL2S.im.shm' , np.zeros((setup.nmodes_KL, npix_valid), dtype=np.float32))
+S2KL_shm = dao.shm('/tmp/S2KL.im.shm' , np.zeros((npix_valid, setup.nmodes_KL), dtype=np.float32))
+
 
 #%% Centering the PSF on the Pyramid Tip
 
@@ -224,15 +235,16 @@ response_matrix_full, response_matrix_filtered = create_response_matrix(
     verbose_plot=False,
     calibration_repetitions=calibration_repetitions,
     mode_repetitions=mode_repetitions,
-    push_pull=False,
+    push_pull=True,
     pull_push=True
 )
 
 #Reset the DM to flat
-#slm.set_data(data_slm)
+set_data_dm(setup=setup)
 
 #response_matrix_filtered = response_matrix_full[:, mask.ravel() > 0]
 
+#%%
 #saving the flattened push-pull images in shared memory
 KL2PWFS_cube_shm.set_data(response_matrix_full)
 KL2S_shm.set_data(response_matrix_filtered)

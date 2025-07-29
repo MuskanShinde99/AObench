@@ -41,6 +41,7 @@ from src.dao_create_flux_filtering_mask import *
 from src.psf_centring_algorithm import *
 from src.calibration_functions import *
 from src.dao_setup import init_setup
+from src.utils import set_dm_actuators
 setup = init_setup()  # Import all variables from setup
 from src.kl_basis_eigenmodes import computeEigenModes, computeEigenModes_notsquarepupil
 from src.create_transformation_matrices import *
@@ -81,7 +82,6 @@ print("Number of DM modes =", nmodes_dm)
 # Flatten the DM surface and set actuator values
 deformable_mirror.flatten()
 set_dm_actuators(
-    deformable_mirror,
     np.ones(deformable_mirror.num_actuators),
     setup=setup,
 )

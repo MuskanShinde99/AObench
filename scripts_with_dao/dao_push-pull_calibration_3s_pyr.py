@@ -33,6 +33,7 @@ from src.dao_create_flux_filtering_mask import *
 from src.psf_centring_algorithm import *
 from src.calibration_functions import *
 from src.dao_setup import init_setup
+from src.utils import set_dm_actuators
 setup = init_setup()  # Import all variables from setup
 
 #%% Accessing Devices
@@ -101,7 +102,7 @@ print(f"Time to create DM: {t1 - t0:.4f} s")
 # Flatten the deformable mirror surface
 deformable_mirror.flatten()
 deformable_mirror.actuators[10] = 1  # Set actuator 10 to 1
-set_dm_actuators(deformable_mirror, deformable_mirror.actuators, setup=setup)
+set_dm_actuators(deformable_mirror.actuators, setup=setup)
 plt.figure()
 plt.imshow(deformable_mirror.surface.shaped)
 plt.colorbar()

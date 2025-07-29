@@ -76,7 +76,7 @@ nmodes_dm = deformable_mirror.num_actuators
 print("number of modes =", nmodes_dm)
 
 initial_act = np.ones((nact, nact)).flatten()
-set_dm_actuators(deformable_mirror, initial_act)
+set_dm_actuators(initial_act)
 plt.imshow(deformable_mirror.surface.shaped)
 
 deformable_mirror.flatten()
