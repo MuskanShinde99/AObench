@@ -12,7 +12,7 @@ from astropy.io import fits
 from scipy.ndimage import center_of_mass
 from scipy.interpolate import interp2d
 
-from .shm_loader import shm
+from src.shm_loader import shm
 
 DEFAULT_SETUP = None
 
@@ -129,13 +129,13 @@ def set_dm_actuators(actuators=None, dm_flat=None, setup=None, *, place_of_test=
         dm_flat = setup.dm_flat
 
     actuators = np.asarray(actuators)
-    act_pos = actuators + dm_flat
+    act_pos = actuators #+ dm_flat
 
     # Always update the shared memory actuator map
-    dm_act_shm = shm.dm_act_shm
-    dm_act_shm.set_data(
-        act_pos.astype(np.float64).reshape(setup.nact, setup.nact)
-    )
+    # dm_act_shm = shm.dm_act_shm
+    # dm_act_shm.set_data(
+    #     act_pos.astype(np.float64).reshape(setup.nact, setup.nact)
+    # )
 
     # GENEVA SETUP: use HCIpy deformable mirror
     if place_of_test == "Geneva":
@@ -160,7 +160,7 @@ def set_dm_actuators(actuators=None, dm_flat=None, setup=None, *, place_of_test=
         if dm_papy_shm is None:
             raise ValueError("PAPYRUS DM shared memory is not connected or provided.")
 
-        dm_papy_shm.set_data(filtered_act_pos)
+        dm_papy_shm.set_data(filtered_act_pos.astype(np.float32))
 
 
 
@@ -205,6 +205,7 @@ def set_data_dm(actuators=None, *, setup=None, dm_flat=None, place_of_test=None,
     set_dm_actuators(
         actuators, dm_flat=dm_flat, setup=setup, place_of_test=place_of_test
     )
+    time.sleep(wait_time)
     data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
     return actuators, data_dm, None
 

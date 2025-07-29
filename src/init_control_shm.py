@@ -6,7 +6,7 @@ daoLogLevel = ctypes.c_int.in_dll(dao.daoLib, "daoLogLevel")
 daoLogLevel.value=0
 with open('control_config.toml', 'r') as f:
     config = toml.load(f)
-with open('shm_path.toml', 'r') as f:
+with open('shm_path_control.toml', 'r') as f:
     shm_path = toml.load(f)
 
 # load parameters
@@ -14,8 +14,9 @@ n_fft_display = config['visualizer']['n_fft']
 buf_size = config['visualizer']['buf_size']
 max_order = config['optimizer']['max_order']
 n_modes = config['common']['n_modes']
+n_modes = 185
 gain = config['integrator']['gain']
-dm_shm = shm_path['control']['dm']
+dm_shm = dao.shm(shm_path['control']['dm'])
 
 # create shm
 # time domain data
@@ -77,7 +78,7 @@ f_opti[:n_fft_optimizer[0][0]]= np.linspace(0.1,fs[0][0]/2,n_fft_optimizer[0][0]
 n_act = dm_shm.get_data().shape[0]
 flat = np.zeros((n_act,1),dtype = np.float32)
 
-dao.shm(shm_path['control']['flat'],flat)
+
 dao.shm(shm_path['control']['modes_buf'],modes_buf)
 dao.shm(shm_path['control']['modes_buf'],modes_buf)
 dao.shm(shm_path['control']['commands_buf'],commands_buf)

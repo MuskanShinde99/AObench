@@ -54,7 +54,7 @@ npix_valid_shm               = dao.shm('/tmp/npix_valid.im.shm',               n
 # S2KL_shm                   = dao.shm('/tmp/S2KL.im.shm',                     np.zeros((npix_valid, nmodes_KL), dtype=np.float64))
 
 # Control Parameters
-delay_shm                    = dao.shm('/tmp/delay.im.shm',                   np.zeros((1, 1), dtype=np.uint32))
+delay_set_shm                    = dao.shm('/tmp/delay_set.im.shm',                   np.zeros((1, 1), dtype=np.uint32))
 gain_shm                     = dao.shm('/tmp/gain.im.shm',                    np.zeros((1, 1), dtype=np.float32))
 leakage_shm                  = dao.shm('/tmp/leakage.im.shm',                 np.zeros((1, 1), dtype=np.float32))
 num_iterations_shm           = dao.shm('/tmp/num_iterations.im.shm',          np.zeros((1, 1), dtype=np.uint32))

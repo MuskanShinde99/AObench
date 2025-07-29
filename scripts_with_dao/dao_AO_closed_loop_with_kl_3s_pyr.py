@@ -37,7 +37,7 @@ from src.ao_loop_functions import *
 num_iterations_shm = shm.num_iterations_shm
 gain_shm = shm.gain_shm
 leakage_shm = shm.leakage_shm
-delay_shm = shm.delay_shm
+delay_set_shm = shm.delay_set_shm
 
 #%% Creating and Displaying a Circular Pupil on the SLM
 
@@ -179,16 +179,16 @@ data_phase_screen = data_phase_screen.astype(np.float32)
 plt.close('all')
    
 # Main loop parameters
-num_iterations = 100
-gain = 1
+num_iterations = 500
+gain = 0
 leakage = 0
 delay= 0
 
 # setting shared memories
-num_iterations_shm.set_data(np.array([[num_iterations]]))
-gain_shm.set_data(np.array([[gain]]))
-leakage_shm.set_data(np.array([[leakage]]))
-delay_shm.set_data(np.array([[delay_shm]]))
+# num_iterations_shm.set_data(np.array([[num_iterations]]))
+# gain_shm.set_data(np.array([[gain]]))
+# leakage_shm.set_data(np.array([[leakage]]))
+# delay_set_shm.set_data(np.array([[delay_set_shm]]))
 
 # # loading from shared memory
 # num_iterations = int(num_iterations_shm.get_data()[0][0])

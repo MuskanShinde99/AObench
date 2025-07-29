@@ -40,6 +40,7 @@ npix_valid_shm = shm.npix_valid_shm
 reference_image_shm = shm.reference_image_shm
 normalized_ref_image_shm = shm.normalized_ref_image_shm
 reference_psf_shm = shm.reference_psf_shm
+KL2Act_papy_shm = shm.KL2Act_papy_shm
 
 
 # #%% Accessing Devices
@@ -113,17 +114,35 @@ print('DM set to flat.')
 KL2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Act_nkl_{setup.nmodes_KL}_nact_{setup.nact}.fits'))
 KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_{setup.nmodes_KL}_npupil_{setup.npix_small_pupil_grid}.fits'))
 
+KL2Act_papy = KL2Act_papy_shm.get_data().T
+
+import numpy as np
+
+# Initialize the new matrix
+KL2Act_papy_full = np.zeros((195, 289))
+
+# Find the 1D indices of the active actuators (True positions)
+mask_indices = np.where(setup.dm_map.flatten())[0]  # shape (241,)
+
+# Fill in the correct values
+KL2Act_papy_full[:, mask_indices] = KL2Act_papy
+
+plt.figure()
+plt.plot(KL2Act_papy[1,:])
+plt.plot(KL2Act_papy_full[1,:])
+plt.show()
+
 #%% Creating a Flux Filtering Mask
 
-method='tip_tilt_modulation'
+method='dm_random'
 flux_cutoff = 0.25
-modulation_angles = np.arange(0, 360, 5)  # angles of modulation
+modulation_angles = np.arange(0, 360, 1)  # angles of modulation
 modulation_amp = 15 # in lamda/D
-n_iter=100 # number of iternations for dm random commands
+n_iter=500 # number of iternations for dm random commands
 
-mask = create_flux_filtering_mask(method, flux_cutoff, KL2Act[0], KL2Act[1],
+mask = create_flux_filtering_mask(method, flux_cutoff, KL2Act_papy[0], KL2Act_papy[1],
                                modulation_angles, modulation_amp, n_iter,
-                               create_summed_image=True, verbose=False, verbose_plot=True)
+                               create_summed_image=True, verbose=False, verbose_plot=False)
 
 valid_pixels_mask_shm.set_data(mask)
 

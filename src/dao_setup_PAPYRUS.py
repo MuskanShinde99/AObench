@@ -70,6 +70,9 @@ npix_small_pupil_grid = 550
 
 #%% Configuration deformable mirror
 
+#wait time
+wait_time = 0.05
+
 # Number of actuators
 nact = 17
 
@@ -222,6 +225,7 @@ class DAOSetup:
     img_size_wfs_cam: int
     img_size_fp_cam: int
     npix_small_pupil_grid: int
+    wait_time: float
     nact: int
     nact_valid: int
     nact_total: int
@@ -249,6 +253,7 @@ def init_setup() -> DAOSetup:
         img_size_wfs_cam=img_size_wfs_cam,
         img_size_fp_cam=img_size_fp_cam,
         npix_small_pupil_grid=npix_small_pupil_grid,
+        wait_time=wait_time,
         nact=nact,
         nact_valid=nact_valid,
         nact_total=nact_total,

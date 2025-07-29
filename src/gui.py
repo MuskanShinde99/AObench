@@ -16,7 +16,7 @@ from astropy.io import fits
 import subprocess
 import os
 import signal
-
+import control as ct
 import ctypes
 daoLogLevel = ctypes.c_int.in_dll(dao.daoLib, "daoLogLevel")
 daoLogLevel.value=0
@@ -296,26 +296,26 @@ class CustomChartView(QChartView):
 
     def resetZoom(self):
         axes = self.chart().axes()
-        if axes:
-            x_axis = axes[0]
-            y_axis = axes[1]
+        # if axes:
+        #     x_axis = axes[0]
+        #     y_axis = axes[1]
 
-            if self.x is not None and self.y_ranges:
-                xRange = np.min(self.x), (np.max(self.x))
-                yMin = min(y_range[0] for y_range in self.y_ranges)
-                yMax = max(y_range[1] for y_range in self.y_ranges)
-                y_abs_max = max([np.abs(yMin),yMax])
-                x_axis.setRange(xRange[0], xRange[1])
-                if self.y_scale_type == "linear":
-                    y_axis.setRange(-y_abs_max, y_abs_max)
-                else :
-                    if yMin.ndim > 0:
-                        yMin = yMin[0]
-                    if yMax.ndim > 0:
-                        yMax = yMax[0]
-                    y_axis.setRange(yMin, yMax)
+        #     if self.x is not None and self.y_ranges:
+        #         xRange = np.min(self.x), (np.max(self.x))
+        #         yMin = min(y_range[0] for y_range in self.y_ranges)
+        #         yMax = max(y_range[1] for y_range in self.y_ranges)
+        #         y_abs_max = max([np.abs(yMin),yMax])
+        #         x_axis.setRange(xRange[0], xRange[1])
+        #         if self.y_scale_type == "linear":
+        #             y_axis.setRange(-y_abs_max, y_abs_max)
+        #         else :
+        #             if yMin.ndim > 0:
+        #                 yMin = yMin[0]
+        #             if yMax.ndim > 0:
+        #                 yMax = yMax[0]
+        #             y_axis.setRange(yMin, yMax)
 
-        self.flag_reset_zoom = True
+        # self.flag_reset_zoom = True
         
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -372,6 +372,8 @@ class MainWindow(QMainWindow):
     def init_shm(self):
         with open('shm_path.toml', 'r') as f:
             shm_path = toml.load(f)
+        with open('shm_path_control.toml', 'r') as f:
+            shm_path_control = toml.load(f)
         self.slopes_image_shm             = dao.shm(shm_path['slopes_image'])
         self.phase_screen_shm             = dao.shm(shm_path['phase_screen'])
         self.dm_phase_shm                 = dao.shm(shm_path['dm_phase'])
@@ -381,7 +383,7 @@ class MainWindow(QMainWindow):
         self.residual_modes_shm           = dao.shm(shm_path['residual_modes'])
         self.computed_modes_shm           = dao.shm(shm_path['computed_modes'])
         self.dm_kl_modes_shm              = dao.shm(shm_path['dm_kl_modes'])
-        self.delay_shm                    = dao.shm(shm_path['delay'])             
+        self.delay_set_shm                    = dao.shm(shm_path['delay_set'])             
         self.gain_shm                     = dao.shm(shm_path['gain'])                
         self.leakage_shm                  = dao.shm(shm_path['leakage'])             
         self.num_iterations_shm           = dao.shm(shm_path['num_iterations'])
@@ -389,53 +391,53 @@ class MainWindow(QMainWindow):
         self.cam2_shm                     = dao.shm(shm_path['cam2'])
         self.dm_act_shm                   = dao.shm(shm_path['dm_act'])
 
-        self.modes_fft_shm = dao.shm(shm_path['control']['modes_fft'])
-        self.commands_fft_shm = dao.shm(shm_path['control']['commands_fft'])
-        self.pol_fft_shm = dao.shm(shm_path['control']['pol_fft'])
-        self.f_shm = dao.shm(shm_path['control']['f'])
+        self.modes_fft_shm = dao.shm(shm_path_control['control']['modes_fft'])
+        self.commands_fft_shm = dao.shm(shm_path_control['control']['commands_fft'])
+        self.pol_fft_shm = dao.shm(shm_path_control['control']['pol_fft'])
+        self.f_shm = dao.shm(shm_path_control['control']['f'])
 
-        self.modes_shm = dao.shm(shm_path['control']['modes_buf'])
-        self.commands_shm = dao.shm(shm_path['control']['commands_buf'])
-        self.pol_shm = dao.shm(shm_path['control']['pol_buf'])
-        self.t_shm = dao.shm(shm_path['control']['t'])    
+        self.modes_shm = dao.shm(shm_path_control['control']['modes_buf'])
+        self.commands_shm2 = dao.shm(shm_path_control['control']['commands_buf']) #TODO change name
+        self.pol_shm = dao.shm(shm_path_control['control']['pol_buf'])
+        self.t_shm = dao.shm(shm_path_control['control']['t'])    
 
-        self.closed_loop_flag_shm = dao.shm(shm_path['control']['closed_loop_flag']) 
+        self.closed_loop_flag_shm = dao.shm(shm_path_control['control']['closed_loop_flag']) 
 
-        self.n_modes_dd_high_shm = dao.shm(shm_path['control']['n_modes_dd_high'])  
-        self.n_modes_dd_low_shm = dao.shm(shm_path['control']['n_modes_dd_low']) 
-        self.n_modes_int_shm = dao.shm(shm_path['control']['n_modes_int'])
+        self.n_modes_dd_high_shm = dao.shm(shm_path_control['control']['n_modes_dd_high'])  
+        self.n_modes_dd_low_shm = dao.shm(shm_path_control['control']['n_modes_dd_low']) 
+        self.n_modes_int_shm = dao.shm(shm_path_control['control']['n_modes_int'])
 
-        self.dd_update_rate_low_shm = dao.shm(shm_path['control']['dd_update_rate_high']) 
-        self.dd_update_rate_high_shm = dao.shm(shm_path['control']['dd_update_rate_low'])
+        self.dd_update_rate_low_shm = dao.shm(shm_path_control['control']['dd_update_rate_high']) 
+        self.dd_update_rate_high_shm = dao.shm(shm_path_control['control']['dd_update_rate_low'])
 
-        self.K_mat_int_shm = dao.shm(shm_path['control']['K_mat_int']) 
+        self.K_mat_int_shm = dao.shm(shm_path_control['control']['K_mat_int']) 
 
-        self.state_mat_shm = dao.shm(shm_path['control']['state_mat']) 
-        self.K_mat_dd_shm = dao.shm(shm_path['control']['K_mat_dd']) 
-        self.K_mat_omgi_shm = dao.shm(shm_path['control']['K_mat_omgi']) 
+        self.state_mat_shm = dao.shm(shm_path_control['control']['state_mat']) 
+        self.K_mat_dd_shm = dao.shm(shm_path_control['control']['K_mat_dd']) 
+        self.K_mat_omgi_shm = dao.shm(shm_path_control['control']['K_mat_omgi']) 
 
-        self.dd_order_low_shm = dao.shm(shm_path['control']['dd_order_low']) 
-        self.dd_order_high_shm = dao.shm(shm_path['control']['dd_order_high']) 
+        self.dd_order_low_shm = dao.shm(shm_path_control['control']['dd_order_low']) 
+        self.dd_order_high_shm = dao.shm(shm_path_control['control']['dd_order_high']) 
 
-        self.latency_shm = dao.shm(shm_path['control']['latency']) 
-        self.fs_shm = dao.shm(shm_path['control']['fs']) 
-        self.delay_shm = dao.shm(shm_path['control']['delay']) 
-        self.S2M_shm = dao.shm(shm_path['control']['S2M']) 
-        self.controller_select_shm = dao.shm(shm_path['control']['controller_select']) 
-        self.gain_margin_shm = dao.shm(shm_path['control']['gain_margin']) 
-        self.record_time_shm = dao.shm(fixed_params['shm_path']['record_time'])
-        self.n_fft_shm = dao.shm(shm_path['control']['n_fft']) 
-        self.wait_time_shm = dao.shm(shm_path['control']['wait_time']) 
+        self.latency_shm = dao.shm(shm_path_control['control']['latency']) 
+        self.fs_shm = dao.shm(shm_path_control['control']['fs']) 
+        self.delay_shm = dao.shm(shm_path_control['control']['delay']) 
+        self.S2M_shm = dao.shm(shm_path_control['control']['S2M']) 
+        self.controller_select_shm = dao.shm(shm_path_control['control']['controller_select']) 
+        self.gain_margin_shm = dao.shm(shm_path_control['control']['gain_margin']) 
+        self.record_time_shm = dao.shm(shm_path_control['control']['record_time'])
+        self.n_fft_shm = dao.shm(shm_path_control['control']['n_fft']) 
+        self.wait_time_shm = dao.shm(shm_path_control['control']['wait_time']) 
         
-        self.S_dd_shm = dao.shm(shm_path['control']['S_dd']) 
-        self.S_omgi_shm = dao.shm(shm_path['control']['S_omgi']) 
-        self.S_int_shm = dao.shm(shm_path['control']['S_int']) 
-        self.f_opti_shm = dao.shm(shm_path['control']['f_opti']) 
+        self.S_dd_shm = dao.shm(shm_path_control['control']['S_dd']) 
+        self.S_omgi_shm = dao.shm(shm_path_control['control']['S_omgi']) 
+        self.S_int_shm = dao.shm(shm_path_control['control']['S_int']) 
+        self.f_opti_shm = dao.shm(shm_path_control['control']['f_opti']) 
 
-        self.reset_flag_shm = dao.shm(shm_path['control']['reset_flag']) 
+        self.reset_flag_shm = dao.shm(shm_path_control['control']['reset_flag']) 
 
-        self.dm_shm = dao.shm(shm_path['control']['dm']) 
-        self.flat_dm_shm = dao.shm(shm_path['control']['dm']) 
+        self.dm_shm = dao.shm(shm_path_control['control']['dm']) 
+        self.flat_dm_shm = dao.shm(shm_path_control['control']['flat_dm']) 
 
     def init_vector_plots(self):
         self.computed_KL_modes_view = CustomChartView(self.computed_KL_modes_widget,"mode","amplitude", n_lines = 2)
@@ -479,7 +481,6 @@ class MainWindow(QMainWindow):
             setattr(self, attr_name, view)
 
     def update_images(self):
-
         self.slopes_image_view.setImage(self.slopes_image_shm.get_data(check=False, semNb=self.sem_nb), autoLevels=(self.autoscale_slopes_image_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
         self.phase_screen_view.setImage(self.phase_screen_shm.get_data(check=False, semNb=self.sem_nb), autoLevels=(self.autoscale_phase_screen_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
         self.dm_phase_view.setImage(self.dm_phase_shm.get_data(check=False, semNb=self.sem_nb), autoLevels=(self.autoscale_dm_phase_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
@@ -543,7 +544,7 @@ class MainWindow(QMainWindow):
         t =  self.t_shm.get_data(check=False, semNb=self.sem_nb)
         pol = self.pol_shm.get_data(check=False, semNb=self.sem_nb)
         res = self.modes_shm.get_data(check=False, semNb=self.sem_nb)
-        command = self.commands_shm.get_data(check=False, semNb=self.sem_nb)
+        command = self.commands_shm2.get_data(check=False, semNb=self.sem_nb) #TODO change name
         mode_n = self.mode_select_spinbox.value()
         self.time_view.draw([(t, pol[:,mode_n]), (t, command[:,mode_n]), (t, res[:,mode_n])])
 
@@ -562,12 +563,12 @@ class MainWindow(QMainWindow):
         fs = self.fs_shm.get_data(check=False, semNb=self.sem_nb)[0][0]
         delay = self.delay_shm.get_data(check=False, semNb=self.sem_nb)[0][0]
         K = ct.tf(np.array([value, 0]), np.array([1, -0.99]), 1 /fs)
-        G = G_tf(delay,fs)
-        S = (1+G*K)
-        n_fft = self.n_fft_spinbox.value()
-        f =  self.f_opti_shm.get_data(check=False, semNb=self.sem_nb)[:n_fft]
-        S_resp = np.abs(freqresp(S, 2*np.pi*f))
-        self.S_int_shm.set_data(S_resp.astype(np.float32))
+        # G = G_tf(delay,fs)
+        # S = (1+G*K)
+        # n_fft = self.n_fft_spinbox.value()
+        # f =  self.f_opti_shm.get_data(check=False, semNb=self.sem_nb)[:n_fft]
+        # S_resp = np.abs(freqresp(S, 2*np.pi*f))
+        # self.S_int_shm.set_data(S_resp.astype(np.float32))
 
 
     def closed_loop_check(self,state):
@@ -587,7 +588,7 @@ class MainWindow(QMainWindow):
         self.reset_flag_shm.set_data(np.ones((1,1),dtype = np.uint32))
 
     def delay_changed(self,value):
-        self.delay_shm.set_data(np.array([[value]],np.uint32))
+        self.delay_set_shm.set_data(np.array([[value]],np.uint32))
 
     def num_iterations_changed(self,value):
         self.num_iterations_shm.set_data(np.array([[value]],np.uint32))

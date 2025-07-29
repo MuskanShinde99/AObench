@@ -193,7 +193,8 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
         #Set DM
         current_act_pos = dm_act_shm.get_data().flatten()
         current_act_pos, data_dm, _ = set_data_dm(actuators=current_act_pos, data_phase_screen=phase_slice, setup=setup,)
-                
+        dm_phase_shm.set_data(data_dm.astype(np.float32)* small_pupil_mask)  # setting shared memory
+     
         # Compute phase residuals 
         phase_residuals = (phase_slice + data_dm) * small_pupil_mask
         phase_residuals_shm.set_data(phase_residuals) # setting shared memory

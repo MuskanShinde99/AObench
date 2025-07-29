@@ -34,7 +34,7 @@ os.makedirs(full_path, exist_ok=True)
 
 with open('control_config.toml', 'r') as f:
     config = toml.load(f)
-with open('shm_path.toml', 'r') as f:
+with open('shm_path_control.toml', 'r') as f:
     shm_path = toml.load(f)
 
 sem_nb = config['sem_nb']['rec']

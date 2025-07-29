@@ -1,5 +1,5 @@
 [common]
-n_modes = 195
+n_modes = 289
 n_voltages = 241
 fs = 500 #[Hz]
 delay = 2 
@@ -15,7 +15,7 @@ gain = 0.3
 [optimizer]
 order = 10
 max_order = 20
-n_modes = 195
+n_modes = 289
 # training_size = 10000
 n_fft = 150
 n_fft_max = 1000
