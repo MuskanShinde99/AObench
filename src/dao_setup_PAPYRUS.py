@@ -187,6 +187,8 @@ class PupilSetup:
             self.dm_flat[:] = actuators
         else:
             self.dm_flat = np.asarray(actuators)
+            
+        
 
 
     def update_pupil(self, tt_amplitudes=None, othermodes_amplitudes=None,):

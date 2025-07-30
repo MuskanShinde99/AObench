@@ -177,7 +177,7 @@ data_pupil = data_pupil + data_focus
 
 # [-1.6510890005150187, 0.14406016044318903]
 # Create a Tip-Tilt (TT) matrix with specified amplitudes as the diagonal elements
-tt_amplitudes = [-1.6561758672953513, 0.053487215450722214] # Tip and Tilt amplitudes
+tt_amplitudes = [-1.6408742230175315, 0.10897547606850466] # Tip and Tilt amplitudes
 tt_amplitude_matrix = np.diag(tt_amplitudes)
 tt_matrix = tt_amplitude_matrix @ KL2Act[0:2, :]  # Select modes 1 (tip) and 2 (tilt)
 
@@ -244,6 +244,7 @@ class PupilSetup:
         self.pupil_mask = pupil_mask
         self.small_pupil_mask = small_pupil_mask
         self.dm_flat = dm_flat
+        self.dm_flat_phase = dm_flat_phase
         self.data_slm = compute_data_slm()
 
     def _recompute_dm(self):
@@ -266,6 +267,11 @@ class PupilSetup:
             self.dm_flat[:] = actuators
         else:
             self.dm_flat = np.asarray(actuators)
+            
+        # Update the DM phase representation so that external modules relying
+        self.dm_flat_phase = self.dm_flat @ dm_modes_full
+        global dm_flat_phase
+        dm_flat_phase = self.dm_flat_phase
 
         # ``data_dm`` is reset to zero because the DM is not physically updated
         # at this stage. ``set_data_dm`` will generate the actual DM phase when
@@ -345,6 +351,7 @@ class DAOSetup:
     small_pupil_mask: np.ndarray
     pupil_mask: np.ndarray
     dm_flat: np.ndarray
+    dm_flat_phase: np.ndarray
 
 
 def init_setup() -> DAOSetup:
@@ -357,6 +364,7 @@ def init_setup() -> DAOSetup:
         slm=slm,
         deformable_mirror=deformable_mirror,
         dm_flat=dm_flat,
+        dm_flat_phase=dm_flat_phase,
         pupil_setup=pupil_setup,
         wait_time=wait_time,
         dataWidth=dataWidth,

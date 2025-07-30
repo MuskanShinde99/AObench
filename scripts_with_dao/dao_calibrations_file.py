@@ -159,6 +159,21 @@ center_psf_on_pyramid_tip(mask=mask,
                           bounds = [(-2.0, 2.0), (-2.0, 2.0)], variance_threshold=0.01, 
                           update_setup_file=True, verbose=True, verbose_plot=True)
 
+#%%
+
+plt.figure()
+plt.imshow(setup.dm_flat_phase.reshape(setup.npix_small_pupil_grid, setup.npix_small_pupil_grid)*setup.small_pupil_mask)
+plt.colorbar()
+plt.show()
+
+plt.figure()
+plt.imshow(setup.dm_flat.reshape(setup.nact, setup.nact))
+plt.colorbar()
+plt.show()
+
+
+
+
 #%% Scanning modes to find zero of the pyramid
 
 test_values = np.arange(-0.5, 0.5, 0.05)
