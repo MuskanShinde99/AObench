@@ -116,9 +116,9 @@ print('DM set to flat.')
 
 KL2Act_papy = KL2Act_papy_shm.get_data().T
 
-plt.figure()
-plt.plot(KL2Act_papy[1,:])
-plt.show()
+# plt.figure()
+# plt.plot(KL2Act_papy[1,:])
+# plt.show()
 
 #%% Creating a Flux Filtering Mask
 
@@ -130,7 +130,7 @@ n_iter=500 # number of iternations for dm random commands
 
 mask = create_flux_filtering_mask(method, flux_cutoff, KL2Act_papy[0], KL2Act_papy[1],
                                modulation_angles, modulation_amp, n_iter,
-                               create_summed_image=True, verbose=False, verbose_plot=True)
+                               create_summed_image=False, verbose=False, verbose_plot=True)
 
 valid_pixels_mask_shm.set_data(mask)
 

@@ -148,7 +148,7 @@ plt.show()
 plt.close('all')
 
 # Define KL modes to consider
-nmodes_kl = 175
+nmodes_kl = 195
 KL2Act_papy_new = KL2Act_papy[:nmodes_kl, :]
 Act2KL_papy_new = scipy.linalg.pinv(KL2Act_papy_new)
 IM_KL2S_new = IM_KL2S[:nmodes_kl, :]

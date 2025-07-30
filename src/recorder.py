@@ -36,6 +36,9 @@ with open('control_config.toml', 'r') as f:
     config = toml.load(f)
 with open('shm_path_control.toml', 'r') as f:
     shm_path = toml.load(f)
+    
+with open('shm_path.toml', 'r') as f:
+    shm_path_flux = toml.load(f)
 
 sem_nb = config['sem_nb']['rec']
 n_modes = config['common']['n_modes']
@@ -62,7 +65,7 @@ delay = dao.shm(shm_path['control']['delay']).get_data()[0][0]
 M2V = dao.shm(shm_path['control']['M2V']).get_data()
 S2M = dao.shm(shm_path['control']['S2M']).get_data()
 
-norm_flux_pyr_img_shm = dao.shm(shm_path['norm_flux_pyr_img'])
+norm_flux_pyr_img_shm = dao.shm(shm_path_flux['norm_flux_pyr_img'])
 
 record_its = int(record_time*fs)
 

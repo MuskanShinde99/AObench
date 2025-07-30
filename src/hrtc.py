@@ -38,6 +38,7 @@ telemetry = np.zeros((2,n_modes),np.float32)
 old_time = time.time()
 print_rate = 1 # [s]
 time_at_last_print = time.perf_counter()
+time_at_last_error_print = time.perf_counter()
 last_loop_time = time.perf_counter()
 counter = 0
 read_time = 0
@@ -97,7 +98,7 @@ while True:
         voltage = np.zeros_like(voltage)
         if time.perf_counter() - time_at_last_print > print_rate:
             print("unstability detected")
-            time_at_last_print = time.perf_counter()
+            time_at_last_error_print = time.perf_counter()
 
 
     elif np.max(np.abs(voltage)) >= max_voltage:
@@ -105,7 +106,7 @@ while True:
         command = V2M@voltage
         if time.perf_counter() - time_at_last_print > print_rate:
             print("saturation detected")
-            time_at_last_print = time.perf_counter()
+            time_at_last_error_print = time.perf_counter()
 
 
     state_mat[max_order, :] = command

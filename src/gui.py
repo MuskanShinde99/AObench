@@ -530,20 +530,19 @@ class MainWindow(QMainWindow):
         self.cam2_view.setImage(cam2_log, autoLevels=(self.autoscale_normalized_psf_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
         update_histogram_axis_to_log(self.cam2_view, cam2, eps)
 
-        residual_modes = self.residual_modes_buf_shm.get_data(check=False, semNb=self.sem_nb)
-        computed_modes = self.computed_modes_buf_shm.get_data(check=False, semNb=self.sem_nb)
+        residual_modes = self.residual_modes_buf_shm.get_data(check=False, semNb=self.sem_nb).squeeze()
+        computed_modes = self.computed_modes_buf_shm.get_data(check=False, semNb=self.sem_nb).squeeze()
         if(self.square_computed_KL_modes_checkbox.checkState()==Qt.CheckState.Checked):
             residual_modes = np.sqrt(np.square(residual_modes))
             computed_modes = np.sqrt(np.square(computed_modes))
         self.computed_KL_modes_view.draw([(np.arange(residual_modes.shape[0]), residual_modes),(np.arange(computed_modes.shape[0]), computed_modes)])
 
-        
-        dm_kl_modes = self.dm_kl_modes_buf_shm.get_data(check=False, semNb=self.sem_nb)
+        dm_kl_modes = self.dm_kl_modes_buf_shm.get_data(check=False, semNb=self.sem_nb).squeeze()
         if(self.square_computed_act_pos_checkbox.checkState()==Qt.CheckState.Checked):
             dm_kl_modes = np.sqrt(np.square(dm_kl_modes))
         self.computed_act_pos_view.draw([(np.arange(dm_kl_modes.shape[0]), dm_kl_modes)])
 
-        commands = self.commands_shm.get_data(check=False, semNb=self.sem_nb)
+        commands = self.commands_shm.get_data(check=False, semNb=self.sem_nb).squeeze()
         if(self.square_commands_checkbox.checkState()==Qt.CheckState.Checked):
             commands = np.sqrt(np.square(commands))
         self.commands_view.draw([(np.arange(commands.shape[0]), commands)])

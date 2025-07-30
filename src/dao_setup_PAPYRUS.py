@@ -81,6 +81,8 @@ nact_valid = 241 #195
 
 dm_flat = np.zeros(nact**2)
 
+dm_flat_papy_shm = dao.shm('/tmp/dmCmd00.im.shm')
+
 dm_papy_shm = dao.shm('/tmp/dmCmd02.im.shm')
 # plt.figure()
 # plt.plot(dm_papy_shm.get_data())
@@ -132,14 +134,16 @@ tt_matrix = tt_amplitude_matrix @ KL2Act_papy[0:2, :]  # Select modes 1 (tip) an
 
 data_tt = (tt_matrix[0] + tt_matrix[1])#.reshape(nmodes_dm)
 
-othermodes_amplitudes = [-0.0, 0.0, -0.0, 0.0, 0.0, 0.0, 0.0, 0.0]  # Focus (mode 3) + modes 4 to 10
+othermodes_amplitudes = [0.5, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]  # Focus (mode 3) + modes 4 to 10
 othermodes_amplitude_matrix = np.diag(othermodes_amplitudes)
 othermodes_matrix = othermodes_amplitude_matrix @ KL2Act_papy[2:10, :]  # Select modes 3 (focus) to 10
 
 data_othermodes = np.sum(othermodes_matrix, axis=0)
 
 #Put the modes on the dm
-dm_flat = data_tt + data_othermodes
+dm_flat = data_tt + data_othermodes - 0.0 * np.ones(nmodes_dm)
+
+dm_flat_papy_shm.set_data(dm_flat.astype(np.float32))
 
 _setup = SimpleNamespace(
     nact=nact,

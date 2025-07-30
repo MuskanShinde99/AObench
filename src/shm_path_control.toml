@@ -46,13 +46,15 @@ f_opti = '/tmp/f_opti.shm'
 
 mutex_opti = '/tmp/mutex_opti.shm'
 slopes = '/tmp/papyrus_slopes.im.shm'
+M2S = '/tmp/KL2S.im.shm'
 S2M = '/tmp/S2M.shm'
 reset_flag = '/tmp/reset_flag.shm'
 
 telemetry = '/tmp/telemetry.shm'
 
 # modes = '/tmp/modes.shm'
-modes = '/tmp/papyrus_modes.im.shm'
+#modes = '/tmp/papyrus_modes.im.shm'
+modes = '/tmp/computed_modes.im.shm'
 dm = '/tmp/dmCmd02.im.shm' 
 M2V = '/tmp/m2c.im.shm'
 
