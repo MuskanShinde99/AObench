@@ -236,11 +236,11 @@ plt.close('all')
 
 # Select KL mode and amplitude
 mode = 5
-amp = 0.5
+amp = 0.25
 data_kl = KL2Phs_new[mode].reshape(setup.npix_small_pupil_grid, setup.npix_small_pupil_grid) * amp * setup.small_pupil_mask
 
 # Main loop parameters
-num_iterations = 10
+num_iterations = 3
 gain = 1
 leakage = 0
 delay=0
