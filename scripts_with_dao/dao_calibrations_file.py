@@ -153,7 +153,6 @@ S2KL_shm = dao.shm('/tmp/S2KL.im.shm' , np.zeros((npix_valid, setup.nmodes_KL), 
 
 #%% Centering the PSF on the Pyramid Tip
 
-plt.close('all')
 
 center_psf_on_pyramid_tip(mask=mask, 
                           bounds = [(-2.0, 2.0), (-2.0, 2.0)], variance_threshold=0.01, 

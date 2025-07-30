@@ -177,7 +177,7 @@ data_pupil = data_pupil + data_focus
 
 # [-1.6510890005150187, 0.14406016044318903]
 # Create a Tip-Tilt (TT) matrix with specified amplitudes as the diagonal elements
-tt_amplitudes = [-1.6408742230175315, 0.10897547606850466] # Tip and Tilt amplitudes
+tt_amplitudes = [-1.6388112498315095, 0.12169183658435712] # Tip and Tilt amplitudes
 tt_amplitude_matrix = np.diag(tt_amplitudes)
 tt_matrix = tt_amplitude_matrix @ KL2Act[0:2, :]  # Select modes 1 (tip) and 2 (tilt)
 
@@ -193,6 +193,7 @@ data_othermodes = np.sum(othermodes_matrix, axis=0)
 dm_flat = data_tt + data_othermodes
 
 dm_flat_phase = dm_flat @ dm_modes_full
+
 # plt.figure()
 # plt.imshow(dm_flat_phase.reshape(npix_small_pupil_grid, npix_small_pupil_grid)*small_pupil_mask)
 # plt.colorbar()
@@ -243,6 +244,7 @@ class PupilSetup:
         # Store masks for later use when recomputing the pupil
         self.pupil_mask = pupil_mask
         self.small_pupil_mask = small_pupil_mask
+        self.npix_small_pupil_grid = npix_small_pupil_grid
         self.dm_flat = dm_flat
         self.dm_flat_phase = dm_flat_phase
         self.data_slm = compute_data_slm()

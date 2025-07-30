@@ -77,7 +77,7 @@ def compute_data_slm(data_dm=0, data_phase_screen=0, data_dm_flat=0, setup=None,
     small_pupil_mask = kwargs.get("small_pupil_mask", setup.small_pupil_mask)
 
     data_slm = data_pupil_outer.copy()
-    data_inner = (((data_pupil_inner + data_dm + data_phase_screen) * 256) % 256)
+    data_inner = (((data_pupil_inner + data_dm + data_phase_screen + data_dm_flat) * 256) % 256)
     data_slm[pupil_mask] = data_inner[small_pupil_mask]
 
     return data_slm.astype(np.uint8)
@@ -137,7 +137,7 @@ def set_dm_actuators(actuators=None, dm_flat=None, setup=None, *, place_of_test=
             dm_flat = setup.dm_flat
         
         actuators = np.asarray(actuators)
-        act_pos = actuators + dm_flat
+        act_pos = actuators #+ dm_flat
         
         #Set 2D map shared memory
         dm_act_shm.set_data(act_pos.astype(np.float64).reshape(setup.nact, setup.nact))
@@ -206,12 +206,15 @@ def set_data_dm(actuators=None, *, setup=None, dm_flat=None, place_of_test=None,
     pupil_setup = kwargs.get("pupil_setup", getattr(setup, "pupil_setup", None))
     slm = kwargs.get("slm", getattr(setup, "slm", None))
     deformable_mirror = kwargs.get("deformable_mirror", getattr(setup, "deformable_mirror", None))
+    dm_flat_phase = kwargs.get("dm_flat_phase", getattr(setup, "dm_flat_phase", None))
 
     if place_of_test == "Geneva":
         if slm is None:
             raise ValueError("SLM instance must be provided")
         if deformable_mirror is None:
             raise ValueError("Deformable mirror instance must be provided")
+        if dm_flat_phase is None:
+            raise ValueError("DM flat must be provided")
 
         deformable_mirror.flatten()
         set_dm_actuators(
@@ -220,8 +223,15 @@ def set_data_dm(actuators=None, *, setup=None, dm_flat=None, place_of_test=None,
 
         data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
         data_dm[:, :] = deformable_mirror.opd.shaped / 2
+        
+        dm_flat_phase = np.asanyarray(dm_flat_phase)
 
-        data_slm = compute_data_slm(data_dm=data_dm, data_phase_screen=data_phase_screen, setup=pupil_setup)
+        data_slm = compute_data_slm(
+            data_dm=data_dm,
+            data_phase_screen=data_phase_screen,
+            data_dm_flat=dm_flat_phase,  # <-- passed to compute_data_slm
+            setup=pupil_setup
+        )
         slm.set_data(data_slm)
         time.sleep(wait_time)
         return actuators, data_dm, data_slm
