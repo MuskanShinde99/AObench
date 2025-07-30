@@ -26,7 +26,7 @@ from src.utils import (
     set_dm_actuators,
     set_data_dm,
 )
-from src.shm_loader import shm
+#from src.shm_loader import shm
 from src.circular_pupil_functions import create_slm_circular_pupil
 
 ROOT_DIR = config.root_dir
