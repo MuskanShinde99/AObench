@@ -3,17 +3,16 @@ import numpy as np
 import os
 
 from src.config import config
-
 ROOT_DIR = config.root_dir
 
 # Explicit imports from dao_setup
 from src.dao_setup import init_setup
-
 setup = init_setup()
 
+
 # Pupil / Grids
-small_pupil_mask_shm = dao.shm('/tmp/small_pupil_mask.im.shm', np.zeros((setup.npix_small_pupil_grid, setup.npix_small_pupil_grid), dtype=np.float32))
-pupil_mask_shm       = dao.shm('/tmp/pupil_mask.im.shm',       np.zeros((setup.dataHeight, setup.dataWidth), dtype=np.float32))
+# small_pupil_mask_shm = dao.shm('/tmp/small_pupil_mask.im.shm', np.zeros((setup.npix_small_pupil_grid, setup.npix_small_pupil_grid), dtype=np.float32))
+# pupil_mask_shm       = dao.shm('/tmp/pupil_mask.im.shm',       np.zeros((setup.dataHeight, setup.dataWidth), dtype=np.float32))
 
 # WFS
 slopes_img_shm       = dao.shm('/tmp/slopes_img.im.shm',       np.zeros((setup.img_size_wfs_cam, setup.img_size_wfs_cam), dtype=np.float64))
@@ -54,7 +53,7 @@ npix_valid_shm               = dao.shm('/tmp/npix_valid.im.shm',               n
 # S2KL_shm                   = dao.shm('/tmp/S2KL.im.shm',                     np.zeros((npix_valid, nmodes_KL), dtype=np.float64))
 
 # Control Parameters
-delay_set_shm                    = dao.shm('/tmp/delay_set.im.shm',                   np.zeros((1, 1), dtype=np.uint32))
+delay_set_shm                = dao.shm('/tmp/delay_set.im.shm',                   np.zeros((1, 1), dtype=np.uint32))
 gain_shm                     = dao.shm('/tmp/gain.im.shm',                    np.zeros((1, 1), dtype=np.float32))
 leakage_shm                  = dao.shm('/tmp/leakage.im.shm',                 np.zeros((1, 1), dtype=np.float32))
 num_iterations_shm           = dao.shm('/tmp/num_iterations.im.shm',          np.zeros((1, 1), dtype=np.uint32))

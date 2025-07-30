@@ -45,7 +45,7 @@ folder_gui = config.folder_gui
 #%% Configuration Camera
 
 # To set camera
-camera_wfs = Camera('/tmp/cam1.im.shm') #change to CRED3
+camera_wfs = Camera('/tmp/ocam2.im.shm') #Camera('/tmp/cam1.im.shm') #change to CRED3
 camera_fp = Camera('/tmp/cam2.im.shm') #change to CBlue
 
 fps_wfs = dao.shm('/tmp/cam1Fps.im.shm')

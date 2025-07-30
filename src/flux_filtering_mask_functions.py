@@ -60,7 +60,10 @@ def create_summed_image_for_mask(modulation_angles, modulation_amp, tiltx, tilty
         actuators, _, _  = set_data_dm(data_modulation, setup=setup,)
 
         # Capture image using pylon SDK wrapper function
-        img = camera.get_data()
+        n_frames=50
+        img = (np.mean([camera.get_data() for i in range(n_frames)], axis=0))
+        #img = camera.get_data(check=True)
+        
         modulation_img_arr.append(img)
 
     summed_image = np.sum(np.asarray(modulation_img_arr), axis=0)
@@ -91,6 +94,7 @@ def create_summed_image_for_mask_dm_random(n_iter, verbose=False, **kwargs):
     # Use kwargs or defaults from the setup
     camera = kwargs.get("camera", setup.camera_wfs)
     nact_total = kwargs.get("nact_total", setup.nact_total)
+    nact_valid = kwargs.get("nact_valid", setup.nact_valid)
 
     img_arr = []
 
@@ -99,10 +103,12 @@ def create_summed_image_for_mask_dm_random(n_iter, verbose=False, **kwargs):
         if verbose:
             print(f"Iteration {i + 1}")
 
-        act_random = np.random.choice([0, 0.1], size=nact_total)
+        #act_random = np.random.choice([0, 0.1], size=nact_total)
+        act_random = np.random.choice([-1, 1], size=nact_valid)
         actuators, _, _  = set_data_dm(act_random, setup=setup,)
         
-        img = camera.get_data()
+        n_frames=20
+        img = (np.mean([camera.get_data() for i in range(n_frames)], axis=0))
         img_arr.append(img)
 
     summed_image = np.sum(np.asarray(img_arr), axis=0)
