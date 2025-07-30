@@ -268,10 +268,20 @@ class PupilSetup:
         else:
             self.dm_flat = np.asarray(actuators)
             
-        # Update the DM phase representation so that external modules relying
-        self.dm_flat_phase = self.dm_flat @ dm_modes_full
+        # Update the DM phase representation while preserving object identity
+        new_dm_flat_phase = self.dm_flat @ dm_modes_full
+        if isinstance(self.dm_flat_phase, np.ndarray) and \
+                self.dm_flat_phase.shape == new_dm_flat_phase.shape:
+            self.dm_flat_phase[:] = new_dm_flat_phase
+        else:
+            self.dm_flat_phase = new_dm_flat_phase
+
         global dm_flat_phase
-        dm_flat_phase = self.dm_flat_phase
+        if isinstance(dm_flat_phase, np.ndarray) and \
+                dm_flat_phase.shape == self.dm_flat_phase.shape:
+            dm_flat_phase[:] = self.dm_flat_phase
+        else:
+            dm_flat_phase = self.dm_flat_phase
 
         # ``data_dm`` is reset to zero because the DM is not physically updated
         # at this stage. ``set_data_dm`` will generate the actual DM phase when
