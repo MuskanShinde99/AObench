@@ -50,6 +50,7 @@ num_iterations_shm = shm.num_iterations_shm
 gain_shm = shm.gain_shm
 leakage_shm = shm.leakage_shm
 delay_set_shm = shm.delay_set_shm
+KL2Act_papy_shm = shm.KL2Act_papy_shm
 
 #%% Creating and Displaying a Circular Pupil on the SLM
 
@@ -59,12 +60,14 @@ set_data_dm(setup=setup)
 #%% Load transformation matrices
 
 # From folder 
-KL2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Act_nkl_{setup.nmodes_KL}_nact_{setup.nact}.fits'))
-KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_{setup.nmodes_KL}_npupil_{setup.npix_small_pupil_grid}.fits'))
+# KL2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Act_nkl_{setup.nmodes_KL}_nact_{setup.nact}.fits'))
+# KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_{setup.nmodes_KL}_npupil_{setup.npix_small_pupil_grid}.fits'))
 
 # # From shared memories
 # KL2Act = KL2Act_shm.get_data()
 # KL2Phs = KL2Phs_shm.get_data()
+
+KL2Act_papy = KL2Act_papy_shm.get_data()
 
 #%% Load Bias Image, Calibration Mask and Interaction Matrix
 
@@ -146,10 +149,8 @@ plt.close('all')
 
 # Define KL modes to consider
 nmodes_kl = 175
-KL2Phs_new = KL2Phs[:nmodes_kl, :]
-Phs2KL_new = scipy.linalg.pinv(KL2Phs_new)
-KL2Act_new = KL2Act[:nmodes_kl, :]
-Act2KL_new = scipy.linalg.pinv(KL2Act_new)
+KL2Act_papy_new = KL2Act_papy[:nmodes_kl, :]
+Act2KL_papy_new = scipy.linalg.pinv(KL2Act_papy_new)
 IM_KL2S_new = IM_KL2S[:nmodes_kl, :]
 RM_S2KL_new = np.linalg.pinv(IM_KL2S_new, rcond=0.10)
 
@@ -216,7 +217,7 @@ while True:
     computed_modes_shm.set_data(computed_modes) # setting shared memory
     
     # Compute actuator commands
-    act_pos = computed_modes @ KL2Act_new
+    act_pos = computed_modes @ KL2Act_papy_new
     commands_shm.set_data(act_pos) # setting shared memory
 
     # Capture PSF

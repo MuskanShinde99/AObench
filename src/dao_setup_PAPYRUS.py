@@ -118,22 +118,23 @@ nmodes_Znk = nact_valid
 #%% Load transformation matrices
 
 # From folder 
-KL2Act = fits.getdata(folder_transformation_matrices / f'KL2Act_nkl_{nmodes_KL}_nact_{nact}.fits')
+KL2Act_papy_shm = dao.shm('/tmp/m2c.im.shm')
+KL2Act_papy = KL2Act_papy_shm.get_data().T
 
 
 #%%
 
 # [-1.6510890005150187, 0.14406016044318903]
 # Create a Tip-Tilt (TT) matrix with specified amplitudes as the diagonal elements
-tt_amplitudes = [-1.647661297087426, 0.10306330000366959] # Tip and Tilt amplitudes
+tt_amplitudes = [0.0, 0.0] # Tip and Tilt amplitudes
 tt_amplitude_matrix = np.diag(tt_amplitudes)
-tt_matrix = tt_amplitude_matrix @ KL2Act[0:2, :]  # Select modes 1 (tip) and 2 (tilt)
+tt_matrix = tt_amplitude_matrix @ KL2Act_papy[0:2, :]  # Select modes 1 (tip) and 2 (tilt)
 
-data_tt = (tt_matrix[0] + tt_matrix[1]).reshape(nact**2)
+data_tt = (tt_matrix[0] + tt_matrix[1])#.reshape(nmodes_dm)
 
 othermodes_amplitudes = [-0.0, 0.0, -0.0, 0.0, 0.0, 0.0, 0.0, 0.0]  # Focus (mode 3) + modes 4 to 10
 othermodes_amplitude_matrix = np.diag(othermodes_amplitudes)
-othermodes_matrix = othermodes_amplitude_matrix @ KL2Act[2:10, :]  # Select modes 3 (focus) to 10
+othermodes_matrix = othermodes_amplitude_matrix @ KL2Act_papy[2:10, :]  # Select modes 3 (focus) to 10
 
 data_othermodes = np.sum(othermodes_matrix, axis=0)
 
@@ -147,8 +148,8 @@ _setup = SimpleNamespace(
     dm_map=dm_map,
     dm_papy_shm=dm_papy_shm,
 )
-set_dm_actuators(actuators=dm_flat[dm_map.flatten()], setup=_setup)
-
+#set_dm_actuators(actuators=dm_flat[dm_map.flatten()], setup=_setup)
+set_dm_actuators(setup=_setup)
 
 class PupilSetup:
     """Encapsulate pupil parameters and provide update utilities."""
@@ -169,10 +170,10 @@ class PupilSetup:
 
     def _recompute_dm(self):
         """(Re)compute DM contribution and assemble the pupil."""
-        tt_matrix = np.diag(self.tt_amplitudes) @ KL2Act[0:2, :]
+        tt_matrix = np.diag(self.tt_amplitudes) @ KL2Act_papy[0:2, :]
         data_tt = (tt_matrix[0] + tt_matrix[1])
 
-        othermodes_matrix = np.diag(self.othermodes_amplitudes) @ KL2Act[2:10, :]
+        othermodes_matrix = np.diag(self.othermodes_amplitudes) @ KL2Act_papy[2:10, :]
         data_othermodes = np.sum(othermodes_matrix, axis=0)
 
         # Compute the actuator pattern but do not apply it to the DM here.

@@ -188,7 +188,7 @@ def set_dm_actuators(actuators=None, dm_flat=None, setup=None, *, place_of_test=
         act_pos_full = np.zeros((setup.nact, setup.nact))
         
         # Appy the map and have full 289 actuators
-        act_pos_full[dm_map] = act_pos
+        act_pos_full = act_pos
         
         #Set 2D map shared memory
         dm_act_shm.set_data(act_pos.astype(np.float64))
