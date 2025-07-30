@@ -37,9 +37,9 @@ ROOT_DIR = config.root_dir
 bias_image_shm = shm.bias_image_shm
 valid_pixels_mask_shm = shm.valid_pixels_mask_shm
 npix_valid_shm = shm.npix_valid_shm
-reference_image_shm = shm.reference_image_shm
-normalized_ref_image_shm = shm.normalized_ref_image_shm
-reference_psf_shm = shm.reference_psf_shm
+# reference_image_shm = shm.reference_image_shm
+# normalized_ref_image_shm = shm.normalized_ref_image_shm
+# reference_psf_shm = shm.reference_psf_shm
 KL2Act_papy_shm = shm.KL2Act_papy_shm
 
 
@@ -116,29 +116,17 @@ KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_
 
 KL2Act_papy = KL2Act_papy_shm.get_data().T
 
-import numpy as np
-
-# Initialize the new matrix
-KL2Act_papy_full = np.zeros((195, 289))
-
-# Find the 1D indices of the active actuators (True positions)
-mask_indices = np.where(setup.dm_map.flatten())[0]  # shape (241,)
-
-# Fill in the correct values
-KL2Act_papy_full[:, mask_indices] = KL2Act_papy
-
 plt.figure()
 plt.plot(KL2Act_papy[1,:])
-plt.plot(KL2Act_papy_full[1,:])
 plt.show()
 
 #%% Creating a Flux Filtering Mask
 
 method='dm_random'
-flux_cutoff = 0.065
+flux_cutoff = 0.2 #0.065 papy dm random
 modulation_angles = np.arange(0, 360, 1)  # angles of modulation
 modulation_amp = 15 # in lamda/D
-n_iter=800 # number of iternations for dm random commands
+n_iter=200 # number of iternations for dm random commands
 
 mask = create_flux_filtering_mask(method, flux_cutoff, KL2Act_papy[0], KL2Act_papy[1],
                                modulation_angles, modulation_amp, n_iter,
@@ -195,13 +183,13 @@ set_data_dm(setup=setup)
 n_frames=20
 reference_image = (np.mean([camera_wfs.get_data().astype(np.float32) for i in range(n_frames)], axis=0)).astype(camera_wfs.get_data().dtype)
 # average over several frames
-reference_image_shm.set_data(reference_image)
+# reference_image_shm.set_data(reference_image)
 fits.writeto(folder_calib / 'reference_image_raw.fits', reference_image, overwrite=True)
 fits.writeto(folder_calib / f'reference_image_raw_{timestamp}.fits', reference_image, overwrite=True)
 
 # Normailzed refrence image
 normalized_reference_image = normalize_image(reference_image, mask, bias_img=np.zeros_like(reference_image))
-normalized_ref_image_shm.set_data(normalized_reference_image)
+# normalized_ref_image_shm.set_data(normalized_reference_image)
 fits.writeto(folder_calib / 'reference_image_normalized.fits', normalized_reference_image, overwrite=True)
 fits.writeto(folder_calib / f'reference_image_normalized_{timestamp}.fits', normalized_reference_image, overwrite=True)
 
@@ -215,7 +203,7 @@ plt.show()
 # Display the Focal plane image
 n_frames=20
 fp_image = (np.mean([camera_fp.get_data().astype(np.float32) for i in range(n_frames)], axis=0)).astype(camera_fp.get_data().dtype)
-reference_psf_shm.set_data(fp_image)
+# reference_psf_shm.set_data(fp_image)
 fits.writeto(folder_calib / 'reference_psf.fits', fp_image, overwrite=True)
 
 #Display the PSF
@@ -254,7 +242,7 @@ response_matrix_full, response_matrix_filtered = create_response_matrix(
     verbose_plot=False,
     calibration_repetitions=calibration_repetitions,
     mode_repetitions=mode_repetitions,
-    push_pull=True,
+    push_pull=False,
     pull_push=True
 )
 

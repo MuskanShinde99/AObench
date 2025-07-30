@@ -137,7 +137,7 @@ def set_dm_actuators(actuators=None, dm_flat=None, setup=None, *, place_of_test=
             dm_flat = setup.dm_flat
         
         actuators = np.asarray(actuators)
-        act_pos = actuators #+ dm_flat
+        act_pos = actuators + dm_flat
         
         #Set 2D map shared memory
         dm_act_shm.set_data(act_pos.astype(np.float64).reshape(setup.nact, setup.nact))
@@ -358,7 +358,7 @@ def get_slopes_image(mask, bias_image, normalized_reference_image, pyr_img=None,
         The computed slopes image.
     """
 
-    slopes_img_shm = shm.slopes_img_shm
+    slopes_image_shm = shm.slopes_image_shm
 
     if setup is None:
         if DEFAULT_SETUP is None:
@@ -374,7 +374,7 @@ def get_slopes_image(mask, bias_image, normalized_reference_image, pyr_img=None,
     slopes_image = compute_pyr_slopes(normalized_pyr_img, normalized_reference_image)
     # print('slopes_image data type', slopes_image.dtype)
     # print('slopes_image shape', slopes_image.shape)
-    slopes_img_shm.set_data(slopes_image)
+    slopes_image_shm.set_data(slopes_image)
     return slopes_image
 
 

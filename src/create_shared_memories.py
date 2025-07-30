@@ -24,11 +24,11 @@ dm_act_shm           = dao.shm('/tmp/dm_act.im.shm',           np.zeros((setup.n
 # slm_shm             = dao.shm('/tmp/slm.im.shm',              np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32))
 
 # Transformation Matrices
+KL2Act_shm           = dao.shm('/tmp/KL2Act.im.shm',           np.zeros((setup.nmodes_KL, setup.nact**2), dtype=np.float64))
+KL2Phs_shm           = dao.shm('/tmp/KL2Phs.im.shm',           np.zeros((setup.nmodes_KL, setup.npix_small_pupil_grid**2), dtype=np.float64))
 # Act2Phs_shm        = dao.shm('/tmp/Act2Phs.im.shm',          np.zeros((nact**2, npix_small_pupil_grid**2), dtype=np.float64))
 # Phs2Act_shm        = dao.shm('/tmp/Phs2Act.im.shm',          np.zeros((npix_small_pupil_grid**2, nact**2), dtype=np.float64))
-KL2Act_shm           = dao.shm('/tmp/KL2Act.im.shm',           np.zeros((setup.nmodes_KL, setup.nact**2), dtype=np.float64))
 # Act2KL_shm         = dao.shm('/tmp/Act2KL.im.shm',           np.zeros((nact**2, nmodes_KL), dtype=np.float64))
-KL2Phs_shm           = dao.shm('/tmp/KL2Phs.im.shm',           np.zeros((setup.nmodes_KL, setup.npix_small_pupil_grid**2), dtype=np.float64))
 # Phs2KL_shm         = dao.shm('/tmp/Phs2KL.im.shm',           np.zeros((npix_small_pupil_grid**2, nmodes_KL), dtype=np.float64))
 
 # Zernike 
@@ -37,13 +37,15 @@ KL2Phs_shm           = dao.shm('/tmp/KL2Phs.im.shm',           np.zeros((setup.n
 # Znk2Phs_shm        = dao.shm('/tmp/Znk2Phs.im.shm',          np.zeros((nmode_Znk, npix_small_pupil_grid**2), dtype=np.float32))
 # Phs2Znk_shm        = dao.shm('/tmp/Phs2Znk.im.shm',          np.zeros((npix_small_pupil_grid**2, nmode_Znk), dtype=np.float32))
 
+
 # Calibration / Reference
 valid_pixels_mask_shm        = dao.shm('/tmp/valid_pixels_mask.im.shm',        np.zeros((setup.img_size_wfs_cam, setup.img_size_wfs_cam), dtype=np.uint8))
 bias_image_shm               = dao.shm('/tmp/bias_image.im.shm',               np.zeros((setup.img_size_wfs_cam, setup.img_size_wfs_cam), dtype=np.float64))
-reference_psf_shm            = dao.shm('/tmp/reference_psf.im.shm',            np.zeros((setup.img_size_fp_cam, setup.img_size_fp_cam), dtype=np.uint16))
-normalized_ref_psf_shm       = dao.shm('/tmp/normalized_ref_psf.im.shm',       np.zeros((setup.img_size_wfs_cam, setup.img_size_wfs_cam), dtype=np.float64))
-reference_image_shm          = dao.shm('/tmp/reference_image.im.shm',          np.zeros((setup.img_size_wfs_cam, setup.img_size_wfs_cam), dtype=np.uint16))
+#reference_image_shm          = dao.shm('/tmp/reference_image.im.shm',          np.zeros((setup.img_size_wfs_cam, setup.img_size_wfs_cam), dtype=np.uint16))
 normalized_ref_image_shm     = dao.shm('/tmp/normalized_ref_image.im.shm',     np.zeros((setup.img_size_wfs_cam, setup.img_size_wfs_cam), dtype=np.float64))
+#reference_psf_shm            = dao.shm('/tmp/reference_psf.im.shm',            np.zeros((setup.img_size_fp_cam, setup.img_size_fp_cam), dtype=np.uint16))
+normalized_ref_psf_shm       = dao.shm('/tmp/normalized_ref_psf.im.shm',       np.zeros((setup.img_size_fp_cam, setup.img_size_fp_cam), dtype=np.float64))
+
 npix_valid_shm               = dao.shm('/tmp/npix_valid.im.shm',               np.zeros((1, 1), dtype=np.uint32))
 
 # KL ↔ Slopes

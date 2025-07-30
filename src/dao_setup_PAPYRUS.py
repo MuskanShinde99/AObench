@@ -111,7 +111,7 @@ dm_act = dm_act.flatten()
 #%% Define number of KL and Zernike modes
 
 nmodes_dm = nact_valid
-nmodes_KL = 185
+nmodes_KL = 195
 nmodes_Znk = nact_valid
 
 

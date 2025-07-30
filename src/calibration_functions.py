@@ -118,7 +118,7 @@ def perform_push_pull_calibration_with_phase_basis(
                 for amp in order:
                     # Compute Zernike phase pattern
                     t2 = time.time()
-                    kl_mode = amp * basis[mode].reshape(nact**2)
+                    kl_mode = amp * basis[mode]
                     t3 = time.time()
 
                     # Send DM data of kl mode to the SLM
