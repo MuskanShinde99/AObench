@@ -237,7 +237,6 @@ def set_data_dm(actuators=None, *, setup=None, dm_flat=None, place_of_test=None,
         data_dm[:, :] = deformable_mirror.opd.shaped / 2
         
         dm_flat_phase = np.asanyarray(dm_flat_phase)
-        print(dm_flat_phase.shape)
 
         data_slm = compute_data_slm(
             data_dm=data_dm,

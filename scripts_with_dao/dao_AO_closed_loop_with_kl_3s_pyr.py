@@ -180,7 +180,7 @@ plt.close('all')
    
 # Main loop parameters
 num_iterations = 500
-gain = 0
+gain = 1
 leakage = 0
 delay= 0
 

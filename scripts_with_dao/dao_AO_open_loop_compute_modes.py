@@ -154,14 +154,14 @@ IM_KL2S_new = IM_KL2S[:nmodes_kl, :]
 RM_S2KL_new = np.linalg.pinv(IM_KL2S_new, rcond=0.10)
 
 
-
+#%%
 # Load hardware and configuration parameters
-camera_wfs = kwargs.get("camera_wfs", setup.camera_wfs)
-camera_fp = kwargs.get("camera_fp", setup.camera_fp)
-npix_small_pupil_grid = kwargs.get("npix_small_pupil_grid", setup.npix_small_pupil_grid)
+camera_wfs = setup.camera_wfs
+camera_fp = setup.camera_fp
+npix_small_pupil_grid = setup.npix_small_pupil_grid
 
 # Load the folder
-folder_gui = kwargs.get("folder_gui", setup.folder_gui)
+folder_gui = setup.folder_gui
 
 # Flatten the DM
 set_data_dm(setup=setup)
@@ -170,27 +170,27 @@ set_data_dm(setup=setup)
 # Reference image 
 normalized_reference_image = normalize_image(reference_image, mask, bias_image)
 pyr_img_shape = reference_image.shape
-if verbose:
-    print('Reference image shape:', pyr_img_shape)
+
+print('Reference image shape:', pyr_img_shape)
 
 # Diffraction limited PSF
 diffraction_limited_psf = diffraction_limited_psf.astype(np.float32)
 diffraction_limited_psf /= diffraction_limited_psf.sum()
 fp_img_shape = diffraction_limited_psf.shape
-if verbose:
-    print('PSF shape:', fp_img_shape)
+
+print('PSF shape:', fp_img_shape)
 
 # Create the PSF mask 
 psf_mask, psf_center = create_psf_mask(diffraction_limited_psf, crop_size=100, radius=50)
 # Integrate the flux in that small region
 integrated_diff_psf = diffraction_limited_psf[psf_mask].sum()
-if verbose:
-    print('sum center PSF =', integrated_diff_psf)
+
+print('sum center PSF =', integrated_diff_psf)
 
 # Get valid pixel indices from the mask
 valid_pixels_indices = np.where(mask > 0)
 
-    
+ #%%   
 # Initialize arrays to store Strehl ratio and total residual phase
 # strehl_ratios = np.zeros(num_iterations)
 # residual_phase_stds = np.zeros(num_iterations)
@@ -211,12 +211,12 @@ while True:
     #fits.writeto(os.path.join(folder_gui, f'slopes_image.fits'), slopes_image, overwrite=True)
     
     # Compute KL modes present
-    computed_modes = slopes @ RM_S2KL 
+    computed_modes = slopes @ RM_S2KL_new
     # multiply by two because this mode is computed for DM surface and we want DM phase
     computed_modes_shm.set_data(computed_modes) # setting shared memory
     
     # Compute actuator commands
-    act_pos = computed_modes @ KL2Act
+    act_pos = computed_modes @ KL2Act_new
     commands_shm.set_data(act_pos) # setting shared memory
 
     # Capture PSF
