@@ -1,0 +1,16 @@
+
+[geneva]
+nact = 17
+img_size_wfs_cam = 124
+img_size_fp_cam = 600
+npix_small_pupil_grid = 550
+nmodes_KL = 289
+nmodes_dm = 289
+
+[ohp]
+nact = 17
+img_size_wfs_cam = 240
+img_size_fp_cam = 600
+npix_small_pupil_grid = 550
+nmodes_KL = 195
+nmodes_dm = 241

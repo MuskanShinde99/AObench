@@ -37,9 +37,9 @@ ROOT_DIR = config.root_dir
 bias_image_shm = shm.bias_image_shm
 valid_pixels_mask_shm = shm.valid_pixels_mask_shm
 npix_valid_shm = shm.npix_valid_shm
-# reference_image_shm = shm.reference_image_shm
-# normalized_ref_image_shm = shm.normalized_ref_image_shm
-# reference_psf_shm = shm.reference_psf_shm
+reference_image_shm = shm.reference_image_shm
+normalized_ref_image_shm = shm.normalized_ref_image_shm
+reference_psf_shm = shm.reference_psf_shm
 KL2Act_papy_shm = shm.KL2Act_papy_shm
 
 
@@ -111,8 +111,8 @@ print('DM set to flat.')
 # KL2Phs = KL2Phs_shm.get_data()
 
 # From folder 
-KL2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Act_nkl_{setup.nmodes_KL}_nact_{setup.nact}.fits'))
-KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_{setup.nmodes_KL}_npupil_{setup.npix_small_pupil_grid}.fits'))
+# KL2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Act_nkl_{setup.nmodes_KL}_nact_{setup.nact}.fits'))
+# KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_{setup.nmodes_KL}_npupil_{setup.npix_small_pupil_grid}.fits'))
 
 KL2Act_papy = KL2Act_papy_shm.get_data().T
 
@@ -123,14 +123,14 @@ plt.show()
 #%% Creating a Flux Filtering Mask
 
 method='dm_random'
-flux_cutoff = 0.2 #0.065 papy dm random
+flux_cutoff = 0.06 # 0.06 - papy dm random; 0.2 - geneva dm random
 modulation_angles = np.arange(0, 360, 1)  # angles of modulation
 modulation_amp = 15 # in lamda/D
-n_iter=200 # number of iternations for dm random commands
+n_iter=500 # number of iternations for dm random commands
 
 mask = create_flux_filtering_mask(method, flux_cutoff, KL2Act_papy[0], KL2Act_papy[1],
                                modulation_angles, modulation_amp, n_iter,
-                               create_summed_image=False, verbose=False, verbose_plot=True)
+                               create_summed_image=True, verbose=False, verbose_plot=True)
 
 valid_pixels_mask_shm.set_data(mask)
 
@@ -146,14 +146,12 @@ set_data_dm(setup=setup)
 
 # Create shared memories that depends on number of valid pixels
 KL2PWFS_cube_shm = dao.shm('/tmp/KL2PWFS_cube.im.shm' , np.zeros((setup.nmodes_KL, setup.img_size_wfs_cam**2), dtype=np.float64))
-slopes_shm = dao.shm('/tmp/slopes.im.shm', np.zeros((npix_valid, 1), dtype=np.uint32))
-KL2S_shm = dao.shm('/tmp/KL2S.im.shm' , np.zeros((setup.nmodes_KL, npix_valid), dtype=np.float32))
-S2KL_shm = dao.shm('/tmp/S2KL.im.shm' , np.zeros((npix_valid, setup.nmodes_KL), dtype=np.float32))
+slopes_shm = dao.shm('/tmp/slopes.im.shm', np.zeros((npix_valid, 1), dtype=np.uint64))
+KL2S_shm = dao.shm('/tmp/KL2S.im.shm' , np.zeros((setup.nmodes_KL, npix_valid), dtype=np.float64))
+S2KL_shm = dao.shm('/tmp/S2KL.im.shm' , np.zeros((npix_valid, setup.nmodes_KL), dtype=np.float64))
 
 
 #%% Centering the PSF on the Pyramid Tip
-
-plt.close('all')
 
 center_psf_on_pyramid_tip(mask=mask, 
                           bounds = [(-2.0, 2.0), (-2.0, 2.0)], variance_threshold=0.01, 
@@ -183,13 +181,13 @@ set_data_dm(setup=setup)
 n_frames=20
 reference_image = (np.mean([camera_wfs.get_data().astype(np.float32) for i in range(n_frames)], axis=0)).astype(camera_wfs.get_data().dtype)
 # average over several frames
-# reference_image_shm.set_data(reference_image)
+reference_image_shm.set_data(reference_image)
 fits.writeto(folder_calib / 'reference_image_raw.fits', reference_image, overwrite=True)
 fits.writeto(folder_calib / f'reference_image_raw_{timestamp}.fits', reference_image, overwrite=True)
 
 # Normailzed refrence image
 normalized_reference_image = normalize_image(reference_image, mask, bias_img=np.zeros_like(reference_image))
-# normalized_ref_image_shm.set_data(normalized_reference_image)
+normalized_ref_image_shm.set_data(normalized_reference_image)
 fits.writeto(folder_calib / 'reference_image_normalized.fits', normalized_reference_image, overwrite=True)
 fits.writeto(folder_calib / f'reference_image_normalized_{timestamp}.fits', normalized_reference_image, overwrite=True)
 
@@ -203,7 +201,7 @@ plt.show()
 # Display the Focal plane image
 n_frames=20
 fp_image = (np.mean([camera_fp.get_data().astype(np.float32) for i in range(n_frames)], axis=0)).astype(camera_fp.get_data().dtype)
-# reference_psf_shm.set_data(fp_image)
+reference_psf_shm.set_data(fp_image)
 fits.writeto(folder_calib / 'reference_psf.fits', fp_image, overwrite=True)
 
 #Display the PSF
@@ -234,7 +232,7 @@ mode_repetitions = {0: 10, 1: 10, 10: 5}
 # Run calibration and compute matrices
 # use the ref img, mask directly from shared memories 
 response_matrix_full, response_matrix_filtered = create_response_matrix(
-    KL2Act,
+    KL2Act_papy,
     phase_amp,
     reference_image,
     mask,
@@ -251,11 +249,6 @@ set_data_dm(setup=setup)
 
 #response_matrix_filtered = response_matrix_full[:, mask.ravel() > 0]
 
-#%%
-#saving the flattened push-pull images in shared memory
-KL2PWFS_cube_shm.set_data(response_matrix_full)
-KL2S_shm.set_data(response_matrix_filtered)
-
 # Print shapes ---
 print("Full response matrix shape:    ", response_matrix_full.shape)
 print("Filtered response matrix shape:", response_matrix_filtered.shape)
@@ -268,4 +261,8 @@ plt.xlabel('Slopes')
 plt.ylabel('Modes')
 plt.colorbar()
 plt.show()
+
+#saving the flattened push-pull images in shared memory
+KL2PWFS_cube_shm.set_data(np.asanyarray(response_matrix_full).astype(np.float64))
+KL2S_shm.set_data(np.asanyarray(response_matrix_filtered).astype(np.float64))
 

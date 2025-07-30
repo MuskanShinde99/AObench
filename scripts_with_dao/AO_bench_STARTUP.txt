@@ -32,20 +32,27 @@ System Setup Procedure
 - Run:
     daoShmViewer.py &
   (Opens shared memories viewer)
-
-5. Start the GUI
-----------------
-- Open a new terminal
-- cd /home/ristretto-dao/optlab-master/PROJECTS_3/RISTRETTO/Banc AO/src
-- Run:
-    python gui.py
+  
+4. Run Papyrus SIM
+------------------------------
+- Open new terminal
+- cd ~/dao/daoPapyrus/
+- daoPapyrusSimStart -b 1
 
 6. Create Shared Memories
 -------------------------
 - Open a new terminal
-- cd /home/ristretto-dao/optlab-master/PROJECTS_3/RISTRETTO/Banc AO
+- cd /home/ristretto-dao/optlab-master/PROJECTS_3/RISTRETTO/Banc\ AO
 - Open src/create_shared_memories.py in Spyder
 - Run the file
+
+
+5. Start the GUI
+----------------
+- Open a new terminal
+- cd /home/ristretto-dao/optlab-master/PROJECTS_3/RISTRETTO/Banc\ AO/src
+- Run:
+    python gui.py
 
 7. Create Transformation Matrices
 ---------------------------------

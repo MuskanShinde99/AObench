@@ -231,7 +231,7 @@ def center_psf_on_pyramid_tip(
 
     # Update the dao_setup.py file with the new optimized amplitudes
     if update_setup_file:
-        dao_setup_path = Path(ROOT_DIR) / "src/dao_setup.py"
+        dao_setup_path = Path(ROOT_DIR) / "src/dao_setup_Geneva.py"
 
         # Read the existing file content
         with open(dao_setup_path, "r") as file:
