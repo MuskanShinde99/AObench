@@ -51,13 +51,13 @@ reset_flag = '/tmp/reset_flag.shm'
 
 telemetry = '/tmp/telemetry.shm'
 
-#modes = '/tmp/modes.shm'
-#modes = '/tmp/papyrus_modes.im.shm'
-#dm = '/tmp/dmCmd02.im.shm' 
-#M2V = '/tmp/m2c.im.shm'
+# modes = '/tmp/modes.shm'
+modes = '/tmp/papyrus_modes.im.shm'
+dm = '/tmp/dmCmd02.im.shm' 
+M2V = '/tmp/m2c.im.shm'
 
-modes = '/tmp/computed_modes.im.shm'
-dm = '/tmp/dm_act.im.shm'
-M2V = '/tmp/KL2Act.im.shm'
+# modes = '/tmp/computed_modes.im.shm'
+# dm = '/tmp/dm_act.im.shm'
+# M2V = '/tmp/KL2Act.im.shm'
 
 flat_dm = '/tmp/dmCmd00.im.shm'

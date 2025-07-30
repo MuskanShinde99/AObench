@@ -296,26 +296,26 @@ class CustomChartView(QChartView):
 
     def resetZoom(self):
         axes = self.chart().axes()
-        # if axes:
-        #     x_axis = axes[0]
-        #     y_axis = axes[1]
+        if axes:
+            x_axis = axes[0]
+            y_axis = axes[1]
 
-        #     if self.x is not None and self.y_ranges:
-        #         xRange = np.min(self.x), (np.max(self.x))
-        #         yMin = min(y_range[0] for y_range in self.y_ranges)
-        #         yMax = max(y_range[1] for y_range in self.y_ranges)
-        #         y_abs_max = max([np.abs(yMin),yMax])
-        #         x_axis.setRange(xRange[0], xRange[1])
-        #         if self.y_scale_type == "linear":
-        #             y_axis.setRange(-y_abs_max, y_abs_max)
-        #         else :
-        #             if yMin.ndim > 0:
-        #                 yMin = yMin[0]
-        #             if yMax.ndim > 0:
-        #                 yMax = yMax[0]
-        #             y_axis.setRange(yMin, yMax)
+            if self.x is not None and self.y_ranges:
+                xRange = np.min(self.x), (np.max(self.x))
+                yMin = min(y_range[0] for y_range in self.y_ranges)
+                yMax = max(y_range[1] for y_range in self.y_ranges)
+                y_abs_max = max([np.abs(yMin),yMax])
+                x_axis.setRange(xRange[0], xRange[1])
+                if self.y_scale_type == "linear":
+                    y_axis.setRange(-y_abs_max, y_abs_max)
+                else :
+                    if yMin.ndim > 0:
+                        yMin = yMin[0]
+                    if yMax.ndim > 0:
+                        yMax = yMax[0]
+                    y_axis.setRange(yMin, yMax)
 
-        # self.flag_reset_zoom = True
+        self.flag_reset_zoom = True
         
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -328,9 +328,12 @@ class MainWindow(QMainWindow):
         self.init_shm()
         self.init_process()
         self.init_spinboxes()
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.update_images)
-        self.timer.start(100) # ms 
+        self.view_update_timer = QTimer()
+        self.view_update_timer.timeout.connect(self.update_images)
+        self.view_update_timer.timeout.connect(self.update_fft_wiew)
+        self.view_update_timer.timeout.connect(self.update_time_wiew)
+        self.view_update_timer.timeout.connect(self.update_modes_amp_wiew)
+        self.view_update_timer.start(100) # ms 
 
         print("init done")
     def init_spinboxes(self):
@@ -358,6 +361,8 @@ class MainWindow(QMainWindow):
         self.save_flat_button.clicked.connect(self.save_flat)
         self.load_flat_button.clicked.connect(self.load_flat)
         self.reset_flat_button.clicked.connect(self.reset_flat)
+        self.save_latency_button.clicked.connect(self.save_latency)
+        self.load_latency_button.clicked.connect(self.load_latency)
 
 
     def init_process(self):
@@ -368,6 +373,9 @@ class MainWindow(QMainWindow):
         self.scan_modes_process = ProcessManager("calibration_bias.py",self.start_scan_modes_button, self.stop_scan_modes_button, self.scan_modes_output)
         self.im_process = ProcessManager("calibration_bias.py",self.start_im_button, self.stop_im_button, self.im_output)
         self.record_process = ProcessManager("recorder.py",self.start_record_button, None, self.record_output)
+        self.pol_reconstructor_process = ProcessManager("pol_reconstructor.py",self.start_pol_reconstructor_button, self.stop_pol_reconstructor_button, self.pol_reconstructor_output)
+        self.freq_mag_estimator_process = ProcessManager("freq_mag_estimator.py",self.start_freq_mag_estimator_button, self.stop_freq_mag_estimator_button, self.freq_mag_estimator_output)
+        self.identify_latency_frequency_process = ProcessManager("identify_latency_frequency.py",self.start_latency_identification_button, None, self.latency_identification_output)
 
     def init_shm(self):
         with open('shm_path.toml', 'r') as f:
@@ -380,9 +388,9 @@ class MainWindow(QMainWindow):
         self.phase_residuals_shm          = dao.shm(shm_path['phase_residuals'])
         self.normalized_psf_shm           = dao.shm(shm_path['normalized_psf'])
         self.commands_shm                 = dao.shm(shm_path['commands'])
-        self.residual_modes_shm           = dao.shm(shm_path['residual_modes'])
-        self.computed_modes_shm           = dao.shm(shm_path['computed_modes'])
-        self.dm_kl_modes_shm              = dao.shm(shm_path['dm_kl_modes'])
+        self.residual_modes_buf_shm           = dao.shm(shm_path['residual_modes'])
+        self.computed_modes_buf_shm           = dao.shm(shm_path['computed_modes'])
+        self.dm_kl_modes_buf_shm              = dao.shm(shm_path['dm_kl_modes'])
         self.delay_set_shm                    = dao.shm(shm_path['delay_set'])             
         self.gain_shm                     = dao.shm(shm_path['gain'])                
         self.leakage_shm                  = dao.shm(shm_path['leakage'])             
@@ -396,9 +404,9 @@ class MainWindow(QMainWindow):
         self.pol_fft_shm = dao.shm(shm_path_control['control']['pol_fft'])
         self.f_shm = dao.shm(shm_path_control['control']['f'])
 
-        self.modes_shm = dao.shm(shm_path_control['control']['modes_buf'])
-        self.commands_shm2 = dao.shm(shm_path_control['control']['commands_buf']) #TODO change name
-        self.pol_shm = dao.shm(shm_path_control['control']['pol_buf'])
+        self.modes_buf_shm = dao.shm(shm_path_control['control']['modes_buf'])
+        self.commands_buf_shm = dao.shm(shm_path_control['control']['commands_buf']) 
+        self.pol_buf_shm = dao.shm(shm_path_control['control']['pol_buf'])
         self.t_shm = dao.shm(shm_path_control['control']['t'])    
 
         self.closed_loop_flag_shm = dao.shm(shm_path_control['control']['closed_loop_flag']) 
@@ -458,6 +466,26 @@ class MainWindow(QMainWindow):
         self.commands_view.set_legend(["commands"])
         self.reset_commands_view_button.clicked.connect(self.commands_view.resetZoom)
 
+        self.time_view = CustomChartView(self.time_widget,"t [s]","amplitude", n_lines = 3)
+        layout = QVBoxLayout(self.time_widget)
+        layout.addWidget(self.time_view)
+        self.time_view.set_legend(["pol","command","res"])
+        self.reset_time_view_button.clicked.connect(self.time_view.resetZoom)
+
+        ##------------------  FFT VIEW ------------------------##
+        self.fft_view = CustomChartView(self.fft_widget,"f [Hz]","amplitude",n_lines = 4)
+        layout = QVBoxLayout(self.fft_widget)
+        layout.addWidget(self.fft_view)
+        self.fft_view.set_log_scale()
+        self.fft_view.set_legend(["pol","command","res","sensitivity"])
+        self.reset_fft_view_button.clicked.connect(self.fft_view.resetZoom)
+
+        ##------------------  MODE VIEW ------------------------##
+        self.modes_amp_view = CustomChartView(self.modes_amp_widget,"mode","amplitude", plot_type = "stem")
+        layout = QVBoxLayout(self.modes_amp_widget)
+        layout.addWidget(self.modes_amp_view)
+        self.modes_amp_view.set_legend(["res"])
+        self.reset_modes_amp_view_button.clicked.connect(self.modes_amp_view.resetZoom)
 
     def init_images(self):
         # Generate LUT and ColorMap once
@@ -502,15 +530,15 @@ class MainWindow(QMainWindow):
         self.cam2_view.setImage(cam2_log, autoLevels=(self.autoscale_normalized_psf_checkbox.checkState()==Qt.CheckState.Checked),autoRange=False)
         update_histogram_axis_to_log(self.cam2_view, cam2, eps)
 
-        residual_modes = self.residual_modes_shm.get_data(check=False, semNb=self.sem_nb)
-        computed_modes = self.computed_modes_shm.get_data(check=False, semNb=self.sem_nb)
+        residual_modes = self.residual_modes_buf_shm.get_data(check=False, semNb=self.sem_nb)
+        computed_modes = self.computed_modes_buf_shm.get_data(check=False, semNb=self.sem_nb)
         if(self.square_computed_KL_modes_checkbox.checkState()==Qt.CheckState.Checked):
             residual_modes = np.sqrt(np.square(residual_modes))
             computed_modes = np.sqrt(np.square(computed_modes))
         self.computed_KL_modes_view.draw([(np.arange(residual_modes.shape[0]), residual_modes),(np.arange(computed_modes.shape[0]), computed_modes)])
 
         
-        dm_kl_modes = self.dm_kl_modes_shm.get_data(check=False, semNb=self.sem_nb)
+        dm_kl_modes = self.dm_kl_modes_buf_shm.get_data(check=False, semNb=self.sem_nb)
         if(self.square_computed_act_pos_checkbox.checkState()==Qt.CheckState.Checked):
             dm_kl_modes = np.sqrt(np.square(dm_kl_modes))
         self.computed_act_pos_view.draw([(np.arange(dm_kl_modes.shape[0]), dm_kl_modes)])
@@ -519,6 +547,8 @@ class MainWindow(QMainWindow):
         if(self.square_commands_checkbox.checkState()==Qt.CheckState.Checked):
             commands = np.sqrt(np.square(commands))
         self.commands_view.draw([(np.arange(commands.shape[0]), commands)])
+
+
         
     def update_fft_wiew(self):
         f =  self.f_shm.get_data(check=False, semNb=self.sem_nb)
@@ -542,21 +572,21 @@ class MainWindow(QMainWindow):
 
     def update_time_wiew(self):
         t =  self.t_shm.get_data(check=False, semNb=self.sem_nb)
-        pol = self.pol_shm.get_data(check=False, semNb=self.sem_nb)
-        res = self.modes_shm.get_data(check=False, semNb=self.sem_nb)
-        command = self.commands_shm2.get_data(check=False, semNb=self.sem_nb) #TODO change name
+        pol = self.pol_buf_shm.get_data(check=False, semNb=self.sem_nb)
+        res = self.modes_buf_shm.get_data(check=False, semNb=self.sem_nb)
+        command = self.commands_buf_shm.get_data(check=False, semNb=self.sem_nb) 
         mode_n = self.mode_select_spinbox.value()
         self.time_view.draw([(t, pol[:,mode_n]), (t, command[:,mode_n]), (t, res[:,mode_n])])
 
     def update_modes_amp_wiew(self):
-        res = self.modes_shm.get_data(check=False, semNb=self.sem_nb)
+        res = self.modes_buf_shm.get_data(check=False, semNb=self.sem_nb)
         if(self.square_res_checkbox.checkState()==Qt.CheckState.Checked):
             res = np.sqrt(np.square(res))
         n_modes = res.shape[1]
         self.modes_amp_view.draw([(np.arange(n_modes), res[-1,:])])
 
     def gain_changed(self,value):
-        self.gain_shm.set_data(np.array([[value]],np.float32))
+        # self.gain_shm.set_data(np.array([[value]],np.float32))
         K_mat_int = self.K_mat_int_shm.get_data(check=False, semNb=self.sem_nb)
         K_mat_int[0,:] = value
         self.K_mat_int_shm.set_data(K_mat_int)
@@ -602,19 +632,19 @@ class MainWindow(QMainWindow):
     def save_flat(self):
         flat = self.dm_shm.get_data(check=False, semNb=self.sem_nb)
         fits.writeto('save/flat.fits',flat, overwrite = True)
-        self.flat_dm_shm.set_data(flat)
+        self.flat_dm_shm.set_data(flat.astype(np.float32))
 
     def load_flat(self):
         try:
             flat = fits.getdata('save/flat.fits')
-            self.flat_dm_shm.set_data(flat)
+            self.flat_dm_shm.set_data(flat.astype(np.float32))
         except FileNotFoundError:
             print("File: 'save/flat.fits' not found")
 
     def reset_flat(self):
         flat = self.dm_shm.get_data(check=False, semNb=self.sem_nb)*0
         fits.writeto('save/flat.fits',flat, overwrite = True)
-        self.flat_dm_shm.set_data(flat)
+        self.flat_dm_shm.set_data(flat.astype(np.float32))
 
     def save_latency(self):
         latency = self.latency_shm.get_data(check=False, semNb=self.sem_nb)
@@ -670,7 +700,11 @@ class MainWindow(QMainWindow):
         self.scan_modes_process.stop_process()
         self.im_process.stop_process()
         self.record_process.stop_process()
-        self.timer.stop()
+        self.pol_reconstructor_process.stop_process()
+        self.freq_mag_estimator_process.stop_process()
+        self.view_update_timer.stop()
+        self.identify_latency_frequency_process.stop_process()
+
         print("All processes and timers stopped")
         event.accept()
 

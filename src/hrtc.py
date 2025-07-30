@@ -14,7 +14,6 @@ with open('shm_path_control.toml', 'r') as f:
 
 
 n_modes = config['common']['n_modes']
-n_modes = 185
 sem_nb = config['sem_nb']['hrtc']
 max_order = config['optimizer']['max_order']
 max_voltage = config['hrtc']['max_voltage']
@@ -31,7 +30,7 @@ telemetry_shm = dao.shm(shm_path['control']['telemetry'])
 reset_flag_shm = dao.shm(shm_path['control']['reset_flag']) 
 fs = dao.shm(shm_path['control']['fs']).get_data(check=False, semNb=sem_nb)[0][0]
 
-M2V = dao.shm(shm_path['control']['M2V']).get_data(check=False, semNb=sem_nb).T
+M2V = dao.shm(shm_path['control']['M2V']).get_data(check=False, semNb=sem_nb)
 V2M = np.linalg.pinv(M2V)
 state_mat = np.zeros((2*max_order+1, n_modes),np.float32)
 telemetry = np.zeros((2,n_modes),np.float32)
@@ -93,7 +92,6 @@ while True:
     command[n_modes_controlled:] = 0
     
     voltage = -M2V[:,:] @ command
-    stop
     if np.isnan(np.sum(voltage)):
         command = np.zeros_like(command)
         voltage = np.zeros_like(voltage)
@@ -121,7 +119,6 @@ while True:
     telemetry_shm.set_data(telemetry.astype(np.float32))
     # time.sleep(0.001)
     # time.sleep(0.002*np.random.rand())
-    voltage = voltage.reshape((17,17))
     dm_shm.set_data(voltage.astype(np.float32))
 
     write_time += time.perf_counter() - start_write_time

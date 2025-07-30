@@ -14,7 +14,6 @@ n_fft_display = config['visualizer']['n_fft']
 buf_size = config['visualizer']['buf_size']
 max_order = config['optimizer']['max_order']
 n_modes = config['common']['n_modes']
-n_modes = 185
 gain = config['integrator']['gain']
 dm_shm = dao.shm(shm_path['control']['dm'])
 
@@ -79,7 +78,7 @@ n_act = dm_shm.get_data().shape[0]
 flat = np.zeros((n_act,1),dtype = np.float32)
 
 
-dao.shm(shm_path['control']['modes_buf'],modes_buf)
+
 dao.shm(shm_path['control']['modes_buf'],modes_buf)
 dao.shm(shm_path['control']['commands_buf'],commands_buf)
 dao.shm(shm_path['control']['pol_buf'],pol_buf)
@@ -116,7 +115,8 @@ dao.shm(shm_path['control']['dd_order_high'],dd_order_high)
 dao.shm(shm_path['control']['dd_order_low'],dd_order_low)
 
 dao.shm(shm_path['control']['S2M'],S2M)
-dao.shm(shm_path['control']['modes'],modes)
+if config['common']['use_own_modes'] == 1:
+    dao.shm(shm_path['control']['modes'],modes)
 
 dao.shm(shm_path['control']['controller_select'],controller_select)
 dao.shm(shm_path['control']['gain_margin'],gain_margin)
