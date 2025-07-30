@@ -192,7 +192,9 @@ data_othermodes = np.sum(othermodes_matrix, axis=0)
 #Put the modes on the dm
 dm_flat = data_tt + data_othermodes
 
-dm_flat_phase = dm_flat @ dm_modes_full
+dm_flat_phase = (dm_flat @ dm_modes_full).reshape(
+    npix_small_pupil_grid, npix_small_pupil_grid
+)
 
 # plt.figure()
 # plt.imshow(dm_flat_phase.reshape(npix_small_pupil_grid, npix_small_pupil_grid)*small_pupil_mask)
@@ -246,7 +248,9 @@ class PupilSetup:
         self.small_pupil_mask = small_pupil_mask
         self.npix_small_pupil_grid = npix_small_pupil_grid
         self.dm_flat = dm_flat
-        self.dm_flat_phase = dm_flat_phase
+        self.dm_flat_phase = dm_flat_phase.reshape(
+            npix_small_pupil_grid, npix_small_pupil_grid
+        )
         self.data_slm = compute_data_slm()
 
     def _recompute_dm(self):
@@ -271,7 +275,9 @@ class PupilSetup:
             self.dm_flat = np.asarray(actuators)
             
         # Update the DM phase representation while preserving object identity
-        new_dm_flat_phase = self.dm_flat @ dm_modes_full
+        new_dm_flat_phase = (self.dm_flat @ dm_modes_full).reshape(
+            self.npix_small_pupil_grid, self.npix_small_pupil_grid
+        )
         if isinstance(self.dm_flat_phase, np.ndarray) and \
                 self.dm_flat_phase.shape == new_dm_flat_phase.shape:
             self.dm_flat_phase[:] = new_dm_flat_phase

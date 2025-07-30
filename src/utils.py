@@ -77,6 +77,18 @@ def compute_data_slm(data_dm=0, data_phase_screen=0, data_dm_flat=0, setup=None,
     small_pupil_mask = kwargs.get("small_pupil_mask", setup.small_pupil_mask)
 
     data_slm = data_pupil_outer.copy()
+
+    data_dm = np.asarray(data_dm)
+    data_phase_screen = np.asarray(data_phase_screen)
+    data_dm_flat = np.asarray(data_dm_flat)
+
+    if data_dm.ndim == 1 and data_dm.size == small_pupil_mask.size:
+        data_dm = data_dm.reshape(small_pupil_mask.shape)
+    if data_phase_screen.ndim == 1 and data_phase_screen.size == small_pupil_mask.size:
+        data_phase_screen = data_phase_screen.reshape(small_pupil_mask.shape)
+    if data_dm_flat.ndim == 1 and data_dm_flat.size == small_pupil_mask.size:
+        data_dm_flat = data_dm_flat.reshape(small_pupil_mask.shape)
+
     data_inner = (((data_pupil_inner + data_dm + data_phase_screen + data_dm_flat) * 256) % 256)
     data_slm[pupil_mask] = data_inner[small_pupil_mask]
 
