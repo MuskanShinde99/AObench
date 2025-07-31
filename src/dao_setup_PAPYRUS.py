@@ -134,7 +134,7 @@ tt_matrix = tt_amplitude_matrix @ KL2Act_papy[0:2, :]  # Select modes 1 (tip) an
 
 data_tt = (tt_matrix[0] + tt_matrix[1])#.reshape(nmodes_dm)
 
-othermodes_amplitudes = [0.0, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]  # Focus (mode 3) + modes 4 to 10
+othermodes_amplitudes = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]  # Focus (mode 3) + modes 4 to 10
 othermodes_amplitude_matrix = np.diag(othermodes_amplitudes)
 othermodes_matrix = othermodes_amplitude_matrix @ KL2Act_papy[2:10, :]  # Select modes 3 (focus) to 10
 

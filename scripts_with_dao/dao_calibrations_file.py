@@ -13,13 +13,36 @@ from datetime import datetime
 import numpy as np
 from astropy.io import fits
 from matplotlib import pyplot as plt
+import importlib
 
 # Import Specific Modules
 import dao
-from src.config import config
 from src.dao_setup import init_setup, las
 from src.utils import set_data_dm
 setup = init_setup()
+
+
+def reload_setup():
+    """Reload ``src.dao_setup`` and return a fresh setup instance."""
+    import importlib
+    import src.dao_setup as dao_setup
+
+    if dao_setup.PLACE_OF_TEST == "Geneva":
+        import src.dao_setup_Geneva as ds_mod
+    else:
+        import src.dao_setup_PAPYRUS as ds_mod
+
+    importlib.reload(ds_mod)
+    importlib.reload(dao_setup)
+
+    global setup, las
+    from src.dao_setup import init_setup as _init_setup, las as _las
+
+    setup = _init_setup()
+    las = _las
+    return setup
+
+from src.config import config
 from src.utils import *
 from src.circular_pupil_functions import *
 from src.flux_filtering_mask_functions import *
@@ -31,6 +54,8 @@ from src.psf_centring_algorithm_functions import *
 from src.shm_loader import shm
 from src.scan_modes_functions import *
 from src.ao_loop_functions import *
+
+setup = reload_setup()
 
 ROOT_DIR = config.root_dir
 
