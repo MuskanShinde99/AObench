@@ -41,6 +41,8 @@ reference_image_shm = shm.reference_image_shm
 normalized_ref_image_shm = shm.normalized_ref_image_shm
 reference_psf_shm = shm.reference_psf_shm
 KL2Act_papy_shm = shm.KL2Act_papy_shm
+dm_flat_papy_shm = shm.dm_flat_papy_shm
+dm_papy_shm = shm.dm_papy_shm
 
 
 # #%% Accessing Devices
@@ -101,8 +103,14 @@ else:
 # slm.set_data(data_slm)
 # time.sleep(wait_time)
 
-set_data_dm(setup=setup)
+#set_data_dm(setup=setup)
 print('DM set to flat.')
+dm_flat_papy_shm.set_data(setup.dm_flat.astype(np.float32))
+fits.writeto(folder_calib / 'papyrus_dm_flat.fits', setup.dm_flat.astype(np.float32), overwrite=True)
+
+plt.figure()
+plt.plot(setup.dm_flat)
+plt.show()
 
 #%% Load transformation matrices
 
@@ -123,7 +131,7 @@ KL2Act_papy = KL2Act_papy_shm.get_data().T
 #%% Creating a Flux Filtering Mask
 
 method='dm_random'
-flux_cutoff = 0.06 # 0.06 - papy dm random; 0.2 - geneva dm random
+flux_cutoff = 0.055 # 0.06 - papy dm random; 0.2 - geneva dm random
 modulation_angles = np.arange(0, 360, 1)  # angles of modulation
 modulation_amp = 15 # in lamda/D
 n_iter=500 # number of iternations for dm random commands
