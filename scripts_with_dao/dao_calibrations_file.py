@@ -19,7 +19,6 @@ import importlib
 import dao
 from src.dao_setup import init_setup, las
 from src.utils import set_data_dm, reload_setup
-setup = init_setup()
 
 from src.config import config
 from src.utils import *
@@ -34,10 +33,14 @@ from src.shm_loader import shm
 from src.scan_modes_functions import *
 from src.ao_loop_functions import *
 
+#Loading setup
+setup = init_setup()
 setup = reload_setup()
 
-ROOT_DIR = config.root_dir
+#Loading folder
+folder_calib = config.folder_calib
 
+#Loading shared memories
 bias_image_shm = shm.bias_image_shm
 valid_pixels_mask_shm = shm.valid_pixels_mask_shm
 npix_valid_shm = shm.npix_valid_shm
@@ -51,15 +54,12 @@ dm_papy_shm = shm.dm_papy_shm
 
 # #%% Accessing Devices
 
-# # Initialize Spatial Light Modulator (SLM)
-# slm = dao_setup.slm
-
 # # Initialize Cameras
-# camera_wfs = dao_setup.camera_wfs
-# camera_fp = dao_setup.camera_fp
+# camera_wfs = setup.camera_wfs
+# camera_fp = setup.camera_fp
 
 # # Intialize DM
-# deformable_mirror = dao_setup.defomable_mirror
+# deformable_mirror = setup.defomable_mirror
 
 #%% Turn off laser
 
