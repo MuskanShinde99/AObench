@@ -21,6 +21,7 @@ dm_shm = dao.shm(shm_path['control']['dm'])
 # time domain data
 modes_buf = np.zeros((buf_size,n_modes),np.float32)
 telemetry = np.zeros((2,n_modes),np.float32)
+telemetry_ts = np.zeros((2,1),dtype='datetime64[us]')
 commands_buf = np.zeros((buf_size,n_modes),np.float32)
 pol_buf = np.zeros((buf_size,n_modes),np.float32)
 state_mat = np.zeros((2*max_order+1, n_modes),np.float32)
@@ -65,6 +66,7 @@ n_slopes = slopes.shape[0]
 S2M =np.zeros((n_modes,n_slopes),dtype=np.float32)
 
 controller_select = np.zeros((1,1),dtype = np.uint32)
+pyramid_select = np.zeros((1,1),dtype = np.uint32)
 
 n_fft_max = config['optimizer']['n_fft_max']
 
@@ -116,9 +118,10 @@ dao.shm(shm_path['control']['dd_order_low'],dd_order_low)
 
 dao.shm(shm_path['control']['S2M'],S2M)
 if config['common']['use_own_modes'] == 1:
-    dao.shm(shm_path['control']['modes'],modes)
+    dao.shm(shm_path['control']['modes_4'],modes)
 
 dao.shm(shm_path['control']['controller_select'],controller_select)
+dao.shm(shm_path['control']['pyramid_select'],pyramid_select)
 dao.shm(shm_path['control']['gain_margin'],gain_margin)
 
 dao.shm(shm_path['control']['wait_time'],wait_time)
@@ -131,3 +134,4 @@ dao.shm(shm_path['control']['S_int'],S_int)
 dao.shm(shm_path['control']['f_opti'],f_opti)
 
 dao.shm(shm_path['control']['telemetry'],telemetry)
+dao.shm(shm_path['control']['telemetry_ts'],telemetry_ts)

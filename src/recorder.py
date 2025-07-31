@@ -49,6 +49,7 @@ modes_shm = dao.shm(shm_path['control']['modes'])
 dm_shm = dao.shm(shm_path['control']['dm'])
 slopes_shm = dao.shm(shm_path['control']['slopes'])
 telemetry_shm = dao.shm(shm_path['control']['telemetry'])
+telemetry_ts_shm = dao.shm(shm_path['control']['telemetry_ts']) 
 
 n_fft = dao.shm(shm_path['control']['n_fft']).get_data()[0][0]
 controller_select = dao.shm(shm_path['control']['controller_select']).get_data()[0][0]
@@ -99,22 +100,33 @@ command_buf = np.zeros((record_its,n_modes))
 voltages_buf = np.zeros((record_its,n_voltages))
 pyr_flux_buf = np.zeros((record_its,1))
 
+modes_ts_buf = np.zeros((record_its,1),dtype='datetime64[us]')
+command_ts_buf = np.zeros((record_its,1),dtype='datetime64[us]')
+
 for i in range(record_its):
 
     # modes = modes_shm.get_data(check=True, semNb=sem_nb).squeeze()
     telemetry = telemetry_shm.get_data(check=True, semNb=sem_nb)
+    telemetry_ts = telemetry_ts_shm.get_data(check=False, semNb=sem_nb)
     modes = telemetry[0, :]
     command =  telemetry[1, :]
+    modes_ts = telemetry_ts[0, :]
+    command_ts =  telemetry_ts[1, :]
+
     voltages = dm_shm.get_data(check=False, semNb=sem_nb).squeeze()
     pyr_flux = norm_flux_pyr_img_shm.get_data(check=False, semNb=sem_nb).squeeze()
 
     modes_buf = np.roll(modes_buf, -1, axis=0)
     voltages_buf = np.roll(voltages_buf, -1, axis=0)
+    modes_ts_buf = np.roll(modes_ts_buf, -1, axis=0)
+    command_ts_buf = np.roll(command_ts_buf, -1, axis=0)
     command_buf = np.roll(command_buf, -1, axis=0)
     pyr_flux_buf = np.roll(pyr_flux_buf, -1, axis=0)
 
     modes_buf[-1, :] = modes
     voltages_buf[-1, :] = voltages
+    modes_ts_buf[-1, :] = modes_ts
+    command_ts_buf[-1, :] = command_ts
     command_buf[-1, :] = command
     pyr_flux_buf[-1, :] = pyr_flux
 
@@ -123,8 +135,10 @@ rms = np.mean(np.sum(np.square(modes_buf),axis=1))
 results_file.add('rms',rms)
 
 fits.writeto(os.path.join(full_path, "modes.fits"), modes_buf, overwrite = True)
-fits.writeto(os.path.join(full_path, "voltages.fits"), voltages_buf, overwrite = True)
 fits.writeto(os.path.join(full_path, "commands.fits"), command_buf, overwrite = True)
+fits.writeto(os.path.join(full_path, "modes_ts.fits"), modes_ts_buf, overwrite = True)
+fits.writeto(os.path.join(full_path, "commands_ts.fits"), command_ts_buf, overwrite = True)
+fits.writeto(os.path.join(full_path, "voltages.fits"), voltages_buf, overwrite = True)
 fits.writeto(os.path.join(full_path, "pyr_fluxes.fits"), pyr_flux_buf, overwrite = True)
 fits.writeto(os.path.join(full_path, "M2V.fits"), M2V, overwrite = True)
 fits.writeto(os.path.join(full_path, "S2M.fits"), S2M, overwrite = True)

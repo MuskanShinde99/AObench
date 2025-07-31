@@ -11,22 +11,23 @@ with open('control_config.toml', 'r') as f:
 with open('shm_path_control.toml', 'r') as f:
     shm_path = toml.load(f)
 
-
-
 n_modes = config['common']['n_modes']
 sem_nb = config['sem_nb']['hrtc']
 max_order = config['optimizer']['max_order']
 max_voltage = config['hrtc']['max_voltage']
-modes_shm = dao.shm(shm_path['control']['modes'])
+modes_3_shm = dao.shm(shm_path['control']['modes_3'])
+modes_4_shm = dao.shm(shm_path['control']['modes_4'])
 dm_shm = dao.shm(shm_path['control']['dm'])
 K_mat_int_shm = dao.shm(shm_path['control']['K_mat_int'])
 K_mat_dd_shm = dao.shm(shm_path['control']['K_mat_dd'])
 K_mat_omgi_shm = dao.shm(shm_path['control']['K_mat_omgi'])
 closed_loop_flag_shm = dao.shm(shm_path['control']['closed_loop_flag'])
 controller_select_shm = dao.shm(shm_path['control']['controller_select'])
+pyramid_select_shm = dao.shm(shm_path['control']['pyramid_select'])
 n_modes_dd_high_shm = dao.shm(shm_path['control']['n_modes_dd_high'])
 n_modes_controlled_shm = dao.shm(shm_path['control']['n_modes_int'])
 telemetry_shm = dao.shm(shm_path['control']['telemetry']) 
+telemetry_ts_shm = dao.shm(shm_path['control']['telemetry_ts']) 
 reset_flag_shm = dao.shm(shm_path['control']['reset_flag']) 
 fs = dao.shm(shm_path['control']['fs']).get_data(check=False, semNb=sem_nb)[0][0]
 
@@ -34,6 +35,7 @@ M2V = dao.shm(shm_path['control']['M2V']).get_data(check=False, semNb=sem_nb)
 V2M = np.linalg.pinv(M2V)
 state_mat = np.zeros((2*max_order+1, n_modes),np.float32)
 telemetry = np.zeros((2,n_modes),np.float32)
+telemetry_ts = np.zeros((2,1),dtype='datetime64[us]')
 
 old_time = time.time()
 print_rate = 1 # [s]
@@ -58,7 +60,14 @@ while True:
     
 
     start_wfs_time = time.perf_counter()
-    modes = modes_shm.get_data(check=True, semNb=sem_nb).squeeze()
+    match pyramid_select_shm.get_data(check=False, semNb=sem_nb)[0][0]:
+        case 0:
+            modes = modes_4_shm.get_data(check=True, semNb=sem_nb).squeeze()
+            modes_ts = np.datetime64(modes_4_shm.get_timestamp(), 'us')
+        case 1:
+            modes = modes_3_shm.get_data(check=True, semNb=sem_nb).squeeze()
+            modes_ts = np.datetime64(modes_3_shm.get_timestamp(), 'us')
+
     wfs_time += time.perf_counter() - start_wfs_time
 
     start_read_time = time.perf_counter()
@@ -118,6 +127,11 @@ while True:
     telemetry[0,:] = modes
     telemetry[1,:] = command
     telemetry_shm.set_data(telemetry.astype(np.float32))
+    command_ts = np.datetime64(datetime.datetime.now(), 'us')
+    telemetry_ts[0,:] = modes_ts
+    telemetry_ts[1,:] = command_ts
+    telemetry_ts_shm.set_data(telemetry_ts)
+
     # time.sleep(0.001)
     # time.sleep(0.002*np.random.rand())
     dm_shm.set_data(voltage.astype(np.float32))

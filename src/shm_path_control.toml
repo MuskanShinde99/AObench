@@ -51,10 +51,13 @@ S2M = '/tmp/S2M.shm'
 reset_flag = '/tmp/reset_flag.shm'
 
 telemetry = '/tmp/telemetry.shm'
+telemetry_ts = '/tmp/telemetry_ts.shm'
 
 # modes = '/tmp/modes.shm'
 #modes = '/tmp/papyrus_modes.im.shm'
-modes = '/tmp/computed_modes.im.shm'
+pyramid_select = '/tmp/pyramid_select.shm'
+modes_4 = '/tmp/papyrus_modes.im.shm'
+modes_3 = '/tmp/computed_modes.im.shm'
 dm = '/tmp/dmCmd02.im.shm' 
 M2V = '/tmp/m2c.im.shm'
 

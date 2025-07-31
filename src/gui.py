@@ -364,6 +364,11 @@ class MainWindow(QMainWindow):
         self.save_latency_button.clicked.connect(self.save_latency)
         self.load_latency_button.clicked.connect(self.load_latency)
 
+        self.controller_select_dial.valueChanged.connect(self.update_controller_select)
+        self.update_controller_select(self.controller_select_dial.value())
+
+        self.pyramid_select_dial.valueChanged.connect(self.update_pyramid_select)
+        self.update_pyramid_select(self.pyramid_select_dial.value())
 
     def init_process(self):
         self.bias_process = ProcessManager("calibration_bias.py",self.start_bias_button, self.stop_bias_button, self.bias_output)
@@ -446,6 +451,7 @@ class MainWindow(QMainWindow):
 
         self.dm_shm = dao.shm(shm_path_control['control']['dm']) 
         self.flat_dm_shm = dao.shm(shm_path_control['control']['flat_dm']) 
+        self.pyramid_dm_shm = dao.shm(shm_path_control['control']['pyramid_select']) 
 
     def init_vector_plots(self):
         self.computed_KL_modes_view = CustomChartView(self.computed_KL_modes_widget,"mode","amplitude", n_lines = 2)
@@ -690,6 +696,8 @@ class MainWindow(QMainWindow):
     def gain_margin_changed(self,value):
         self.gain_margin_shm.set_data(np.array([[value]],np.float32))
 
+    def update_pyramid_select(self, value):
+        self.pyramid_select_shm.set_data(np.array([[value]],np.uint32))
 
     def closeEvent(self, event):
         self.bias_process.stop_process()
