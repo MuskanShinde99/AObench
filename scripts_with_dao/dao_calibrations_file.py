@@ -35,7 +35,6 @@ from src.ao_loop_functions import *
 
 #Loading setup
 setup = init_setup()
-setup = reload_setup()
 
 #Loading folder
 folder_calib = config.folder_calib
@@ -87,7 +86,7 @@ plt.colorbar()
 plt.show()
 
 # Save the Bias Image
-fits.writeto(os.path.join(folder_calib, f'binned_bias_image.fits'), np.asarray(bias_image), overwrite=True)
+fits.writeto(os.path.join(folder_calib, f'bias_image.fits'), np.asarray(bias_image), overwrite=True)
 
 #%% Turn on laser
 
@@ -107,6 +106,7 @@ else:
 # slm.set_data(data_slm)
 # time.sleep(wait_time)
 
+setup = reload_setup()
 # DM set to flat
 set_data_dm(setup=setup)
 dm_flat_papy_shm.set_data(setup.dm_flat.astype(np.float32))
@@ -131,14 +131,14 @@ KL2Act_papy = KL2Act_papy_shm.get_data().T
 #%% Creating a Flux Filtering Mask
 
 method='dm_random'
-flux_cutoff = 0.055 # 0.06 - papy dm random; 0.2 - geneva dm random
+flux_cutoff = 0.08 # 0.06 - papy dm random; 0.2 - geneva dm random
 modulation_angles = np.arange(0, 360, 1)  # angles of modulation
 modulation_amp = 15 # in lamda/D
 n_iter=800 # number of iternations for dm random commands
 
 mask = create_flux_filtering_mask(method, flux_cutoff, KL2Act_papy[0], KL2Act_papy[1],
                                modulation_angles, modulation_amp, n_iter,
-                               create_summed_image=False, verbose=False, verbose_plot=False)
+                               create_summed_image=False, verbose=False, verbose_plot=True)
 
 valid_pixels_mask_shm.set_data(mask)
 
@@ -178,7 +178,7 @@ scan_othermode_amplitudes_wfs_std(test_values, mode_index, mask,
 #%% Capture Reference Image
 
 #set bias image to zero for PAPY SIM tests
-bias_image=np.zeros_like(reference_image)
+bias_image=np.zeros_like(bias_image)
 
 #Timestamp
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -212,6 +212,8 @@ n_frames=20
 fp_image = (np.mean([camera_fp.get_data().astype(np.float32) for i in range(n_frames)], axis=0)).astype(camera_fp.get_data().dtype)
 reference_psf_shm.set_data(fp_image)
 fits.writeto(folder_calib / 'reference_psf.fits', fp_image, overwrite=True)
+fits.writeto(folder_calib / f'reference_psf_{timestamp}.fits', reference_image, overwrite=True)
+
 
 #Display the PSF
 plt.figure()
@@ -236,7 +238,7 @@ calibration_repetitions = 2
 #mode_repetitions = {0: 10, 3: 10} # Repeat the 0th mode ten times, the 3rd mode ten times, rest default to 1
 #mode_repetitions = [2, 3]  # Repeat the 0th mode twice, the 1st mode three times, beyond the 1st default to 1
 
-mode_repetitions = {0: 30, 1: 30, 10: 5}
+mode_repetitions = {0: 30, 1: 30}
 
 # Run calibration and compute matrices
 # use the ref img, mask directly from shared memories 

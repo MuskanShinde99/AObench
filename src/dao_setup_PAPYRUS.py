@@ -72,7 +72,7 @@ npix_small_pupil_grid = 550
 #%% Configuration deformable mirror
 
 #wait time
-wait_time = 0.05
+wait_time = 0.1
 
 # Number of actuators
 nact = 17

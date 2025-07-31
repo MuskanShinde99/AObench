@@ -414,7 +414,7 @@ def get_slopes_image(mask, bias_image, normalized_reference_image, pyr_img=None,
     slopes_image = compute_pyr_slopes(normalized_pyr_img, normalized_reference_image)
     # print('slopes_image data type', slopes_image.dtype)
     # print('slopes_image shape', slopes_image.shape)
-    slopes_image_shm.set_data(slopes_image)
+    slopes_image_shm.set_data(slopes_image.astype(np.float64))
     return slopes_image
 
 

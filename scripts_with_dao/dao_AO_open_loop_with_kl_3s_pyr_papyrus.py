@@ -62,7 +62,7 @@ KL2Act_papy = KL2Act_papy_shm.get_data().T
 #%% Load Bias Image, Calibration Mask and Interaction Matrix
 
 # Load the bias image
-bias_filename = f'binned_bias_image.fits'
+bias_filename = f'bias_image.fits'
 bias_image = fits.getdata(os.path.join(folder_calib, bias_filename))
 print(f"Bias image shape: {bias_image.shape}")
 
@@ -70,7 +70,7 @@ print(f"Bias image shape: {bias_image.shape}")
 bias_image=np.zeros_like(bias_image)
 
 # Load the calibration mask for processing images.
-mask_filename = f'binned_mask_3s_pyr.fits'
+mask_filename = f'mask_3s_pyr.fits'
 mask = fits.getdata(os.path.join(folder_calib, mask_filename))
 print(f"Mask dimensions: {mask.shape}")
 
@@ -78,7 +78,7 @@ print(f"Mask dimensions: {mask.shape}")
 valid_pixels_indices = np.where(mask > 0)
 
 # Load the response matrix 
-IM_filename = f'binned_response_matrix_KL2S_filtered_nact_{setup.nact}_amp_0.1_3s_pyr.fits'
+IM_filename = f'response_matrix_KL2S_filtered_nact_{setup.nact}_amp_0.1_3s_pyr.fits'
 IM_KL2S = fits.getdata(os.path.join(folder_calib, IM_filename))  # /0.1
 
 RM_S2KL = np.linalg.pinv(IM_KL2S, rcond=0.10)
@@ -148,8 +148,6 @@ plt.close('all')
 # RM_S2KL_new = np.linalg.pinv(IM_KL2S_new, rcond=0.10)
 
 
-dm_papy_shm.set_data(KL2Act_papy[0])
-
  #%%   
 # Initialize arrays to store Strehl ratio and total residual phase
 # strehl_ratios = np.zeros(num_iterations)
@@ -164,18 +162,17 @@ while True:
         normalized_reference_image,
         setup=setup,
     )
-
     slopes = slopes_image[valid_pixels_indices].flatten()
     #fits.writeto(os.path.join(folder_gui, f'slopes_image.fits'), slopes_image, overwrite=True)
     
     # Compute KL modes present
     computed_modes = slopes @ RM_S2KL
     # multiply by two because this mode is computed for DM surface and we want DM phase
-    computed_modes_shm.set_data(computed_modes) # setting shared memory
+    computed_modes_shm.set_data(np.asanyarray(computed_modes).astype(np.float32)) # setting shared memory
     
     # Compute actuator commands
     act_pos = computed_modes @ KL2Act_papy
-    commands_shm.set_data(act_pos) # setting shared memory
+    commands_shm.set_data(np.asanyarray(act_pos).astype(np.float32)) # setting shared memory
 
     # Capture PSF
     fp_img = camera_fp.get_data()
