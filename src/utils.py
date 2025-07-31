@@ -410,7 +410,7 @@ def get_slopes_image(mask, bias_image, normalized_reference_image, pyr_img=None,
     camera_wfs = kwargs.get("camera_wfs", setup.camera_wfs)
 
     if pyr_img is None:
-        pyr_img = camera_wfs.get_data(check = True, semNb = 9)
+        pyr_img = camera_wfs.get_data(check = True, semNb =10)
 
     normalized_pyr_img = normalize_image(pyr_img, mask, bias_image)
     slopes_image = compute_pyr_slopes(normalized_pyr_img, normalized_reference_image)

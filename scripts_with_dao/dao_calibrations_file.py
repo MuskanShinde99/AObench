@@ -110,7 +110,7 @@ else:
 #set_data_dm(setup=setup)
 print('DM set to flat.')
 dm_flat_papy_shm.set_data(setup.dm_flat.astype(np.float32))
-fits.writeto(folder_calib / 'papyrus_dm_flat.fits', setup.dm_flat.astype(np.float32), overwrite=True)
+fits.writeto(folder_calib / 'dm_flat_papy.fits', setup.dm_flat.astype(np.float32), overwrite=True)
 
 #%% Load transformation matrices
 
@@ -134,11 +134,11 @@ method='dm_random'
 flux_cutoff = 0.055 # 0.06 - papy dm random; 0.2 - geneva dm random
 modulation_angles = np.arange(0, 360, 1)  # angles of modulation
 modulation_amp = 15 # in lamda/D
-n_iter=500 # number of iternations for dm random commands
+n_iter=800 # number of iternations for dm random commands
 
 mask = create_flux_filtering_mask(method, flux_cutoff, KL2Act_papy[0], KL2Act_papy[1],
                                modulation_angles, modulation_amp, n_iter,
-                               create_summed_image=True, verbose=False, verbose_plot=True)
+                               create_summed_image=False, verbose=False, verbose_plot=True)
 
 valid_pixels_mask_shm.set_data(mask)
 
@@ -229,13 +229,13 @@ plt.show()
 phase_amp = 0.1
 
 # Number of times to repeat the whole calibration
-calibration_repetitions = 1
+calibration_repetitions = 2
 
 # Modes repition dictionary
 #mode_repetitions = {0: 10, 3: 10} # Repeat the 0th mode ten times, the 3rd mode ten times, rest default to 1
 #mode_repetitions = [2, 3]  # Repeat the 0th mode twice, the 1st mode three times, beyond the 1st default to 1
 
-mode_repetitions = {0: 10, 1: 10, 10: 5}
+mode_repetitions = {0: 30, 1: 30, 10: 5}
 
 # Run calibration and compute matrices
 # use the ref img, mask directly from shared memories 
