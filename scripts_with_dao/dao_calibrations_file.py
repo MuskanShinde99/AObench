@@ -18,29 +18,8 @@ import importlib
 # Import Specific Modules
 import dao
 from src.dao_setup import init_setup, las
-from src.utils import set_data_dm
+from src.utils import set_data_dm, reload_setup
 setup = init_setup()
-
-
-def reload_setup():
-    """Reload ``src.dao_setup`` and return a fresh setup instance."""
-    import importlib
-    import src.dao_setup as dao_setup
-
-    if dao_setup.PLACE_OF_TEST == "Geneva":
-        import src.dao_setup_Geneva as ds_mod
-    else:
-        import src.dao_setup_PAPYRUS as ds_mod
-
-    importlib.reload(ds_mod)
-    importlib.reload(dao_setup)
-
-    global setup, las
-    from src.dao_setup import init_setup as _init_setup, las as _las
-
-    setup = _init_setup()
-    las = _las
-    return setup
 
 from src.config import config
 from src.utils import *
