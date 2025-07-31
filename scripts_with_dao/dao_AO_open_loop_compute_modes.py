@@ -5,24 +5,17 @@ Created on Fri Mar 14 13:33:29 2025
 
 @author: laboptic
 """
+# Standard library
 import numpy as np
 import os
 import matplotlib.pyplot as plt
 from astropy.io import fits
 import scipy
 from matplotlib.colors import LogNorm
-from src.utils import *
-
 
 # Import Specific Modules
-from src.circular_pupil_functions import *
-from src.flux_filtering_mask_functions import *
-from src.tilt_functions import *
-from src.calibration_functions import *
-from src.transformation_matrices_functions import *
-from src.psf_centring_algorithm_functions import *
+from src.utils import *
 from src.shm_loader import shm
-from src.ao_loop_functions import *
 
 setup = init_setup()
 dm_phase_shm = shm.dm_phase_shm
@@ -35,11 +28,6 @@ computed_modes_shm = shm.computed_modes_shm
 commands_shm = shm.commands_shm
 dm_kl_modes_shm = shm.dm_kl_modes_shm
 dm_act_shm = shm.dm_act_shm
-
-num_iterations_shm = shm.num_iterations_shm
-gain_shm = shm.gain_shm
-leakage_shm = shm.leakage_shm
-delay_set_shm = shm.delay_set_shm
 KL2Act_papy_shm = shm.KL2Act_papy_shm
 
 #%% Creating and Displaying a Circular Pupil on the SLM
