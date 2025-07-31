@@ -1,8 +1,8 @@
 import toml
 import dao
 import numpy as np
-from dd_utils import *
-import dd4ao
+# from dd_utils import *
+# import dd4ao
 import time
 import ctypes
 daoLogLevel = ctypes.c_int.in_dll(dao.daoLib, "daoLogLevel")
@@ -15,7 +15,7 @@ with open('shm_path_control.toml', 'r') as f:
     shm_path = toml.load(f)
 
 sem_nb = config['sem_nb']['calib']
-modes_shm = dao.shm(shm_path['control']['modes'])
+modes_shm = dao.shm(shm_path['control']['modes_4']) # TODO check pyramid select
 n_modes = config['common']['n_modes']
 
 t_shm = dao.shm(shm_path['control']['t'])
@@ -31,7 +31,7 @@ M2V = M2V[:,:n_modes]
 
 amp = config['calibration']['amp']
 
-n_iter = 1000
+n_iter = 100
 
 latency_array = np.zeros(n_iter)
 frequency_array = np.zeros(n_iter)
