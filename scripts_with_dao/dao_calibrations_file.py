@@ -107,8 +107,8 @@ else:
 # slm.set_data(data_slm)
 # time.sleep(wait_time)
 
-#set_data_dm(setup=setup)
-print('DM set to flat.')
+# DM set to flat
+set_data_dm(setup=setup)
 dm_flat_papy_shm.set_data(setup.dm_flat.astype(np.float32))
 fits.writeto(folder_calib / 'dm_flat_papy.fits', setup.dm_flat.astype(np.float32), overwrite=True)
 
