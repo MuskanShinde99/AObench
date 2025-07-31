@@ -19,6 +19,7 @@ def perform_push_pull_calibration_with_phase_basis(
     phase_amp,
     ref_image,
     mask,
+    bias_image,
     verbose=False,
     verbose_plot=False,
     mode_repetitions=None,
@@ -130,7 +131,7 @@ def perform_push_pull_calibration_with_phase_basis(
                     t8 = time.time()
                     slopes_image = get_slopes_image(
                         mask,
-                        np.zeros_like(ref_image),
+                        bias_image,
                         normalized_reference_image,
                         setup=setup,
                     )

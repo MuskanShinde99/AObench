@@ -138,7 +138,7 @@ n_iter=800 # number of iternations for dm random commands
 
 mask = create_flux_filtering_mask(method, flux_cutoff, KL2Act_papy[0], KL2Act_papy[1],
                                modulation_angles, modulation_amp, n_iter,
-                               create_summed_image=False, verbose=False, verbose_plot=True)
+                               create_summed_image=False, verbose=False, verbose_plot=False)
 
 valid_pixels_mask_shm.set_data(mask)
 
@@ -177,7 +177,8 @@ scan_othermode_amplitudes_wfs_std(test_values, mode_index, mask,
 
 #%% Capture Reference Image
 
-# put functions to capture and average the frames from the camera
+#set bias image to zero for PAPY SIM tests
+bias_image=np.zeros_like(reference_image)
 
 #Timestamp
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -194,7 +195,7 @@ fits.writeto(folder_calib / 'reference_image_raw.fits', reference_image, overwri
 fits.writeto(folder_calib / f'reference_image_raw_{timestamp}.fits', reference_image, overwrite=True)
 
 # Normailzed refrence image
-normalized_reference_image = normalize_image(reference_image, mask, bias_img=np.zeros_like(reference_image))
+normalized_reference_image = normalize_image(reference_image, mask, bias_image)
 normalized_ref_image_shm.set_data(normalized_reference_image)
 fits.writeto(folder_calib / 'reference_image_normalized.fits', normalized_reference_image, overwrite=True)
 fits.writeto(folder_calib / f'reference_image_normalized_{timestamp}.fits', normalized_reference_image, overwrite=True)
@@ -244,6 +245,7 @@ response_matrix_full, response_matrix_filtered = create_response_matrix(
     phase_amp,
     reference_image,
     mask,
+    bias_image,
     verbose=True,
     verbose_plot=False,
     calibration_repetitions=calibration_repetitions,

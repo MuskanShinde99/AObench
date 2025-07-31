@@ -36,6 +36,7 @@ dm_kl_modes_shm = shm.dm_kl_modes_shm
 dm_act_shm = shm.dm_act_shm
 dm_flat_papy_shm = shm.dm_flat_papy_shm
 KL2Act_papy_shm = shm.KL2Act_papy_shm
+dm_papy_shm = shm.dm_papy_shm
 
 #Loading folder
 folder_calib = config.folder_calib
@@ -56,15 +57,7 @@ fits.writeto(folder_calib / 'dm_flat_papy.fits', setup.dm_flat.astype(np.float32
 
 #%% Load transformation matrices
 
-# From folder 
-# KL2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Act_nkl_{setup.nmodes_KL}_nact_{setup.nact}.fits'))
-# KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_{setup.nmodes_KL}_npupil_{setup.npix_small_pupil_grid}.fits'))
-
-# # From shared memories
-# KL2Act = KL2Act_shm.get_data()
-# KL2Phs = KL2Phs_shm.get_data()
-
-KL2Act_papy = KL2Act_papy_shm.get_data()
+KL2Act_papy = KL2Act_papy_shm.get_data().T
 
 #%% Load Bias Image, Calibration Mask and Interaction Matrix
 
@@ -72,6 +65,9 @@ KL2Act_papy = KL2Act_papy_shm.get_data()
 bias_filename = f'binned_bias_image.fits'
 bias_image = fits.getdata(os.path.join(folder_calib, bias_filename))
 print(f"Bias image shape: {bias_image.shape}")
+
+# Set bias image to zero for PAPY SIM tests
+bias_image=np.zeros_like(bias_image)
 
 # Load the calibration mask for processing images.
 mask_filename = f'binned_mask_3s_pyr.fits'
@@ -144,18 +140,20 @@ plt.show()
 
 plt.close('all')
 
-# Define KL modes to consider
-nmodes_kl = 195
-KL2Act_papy_new = KL2Act_papy[:nmodes_kl, :]
-Act2KL_papy_new = scipy.linalg.pinv(KL2Act_papy_new)
-IM_KL2S_new = IM_KL2S[:nmodes_kl, :]
-RM_S2KL_new = np.linalg.pinv(IM_KL2S_new, rcond=0.10)
+# # Define KL modes to consider
+# nmodes_kl = 195
+# KL2Act_papy_new = KL2Act_papy[:nmodes_kl, :]
+# Act2KL_papy_new = scipy.linalg.pinv(KL2Act_papy_new)
+# IM_KL2S_new = IM_KL2S[:nmodes_kl, :]
+# RM_S2KL_new = np.linalg.pinv(IM_KL2S_new, rcond=0.10)
+
+
+dm_papy_shm.set_data(KL2Act_papy[0])
 
  #%%   
 # Initialize arrays to store Strehl ratio and total residual phase
 # strehl_ratios = np.zeros(num_iterations)
 # residual_phase_stds = np.zeros(num_iterations)
-
 
 i = 0
 while True:
@@ -166,17 +164,17 @@ while True:
         normalized_reference_image,
         setup=setup,
     )
-    slopes_image_shm.set_data(slopes_image)
+
     slopes = slopes_image[valid_pixels_indices].flatten()
     #fits.writeto(os.path.join(folder_gui, f'slopes_image.fits'), slopes_image, overwrite=True)
     
     # Compute KL modes present
-    computed_modes = slopes @ RM_S2KL_new
+    computed_modes = slopes @ RM_S2KL
     # multiply by two because this mode is computed for DM surface and we want DM phase
     computed_modes_shm.set_data(computed_modes) # setting shared memory
     
     # Compute actuator commands
-    act_pos = computed_modes @ KL2Act_papy_new
+    act_pos = computed_modes @ KL2Act_papy
     commands_shm.set_data(act_pos) # setting shared memory
 
     # Capture PSF

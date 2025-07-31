@@ -200,18 +200,16 @@ def set_dm_actuators(actuators=None, dm_flat=None, setup=None, *, place_of_test=
         if dm_map is None:
             raise ValueError("dm_map must be provided via setup or kwargs")
         dm_map = dm_map.astype(bool)
-
-        # Apply the map and write filtered actuators
-        #act_pos_filtered = act_pos[dm_map]
         
         # Create array to store 17x17 actuators
-        act_pos_full = np.zeros((setup.nact, setup.nact))
-        
+        act_pos_full = np.zeros(setup.nact**2)
+    
         # Appy the map and have full 289 actuators
-        act_pos_full = act_pos
+        act_pos_full[dm_map.flatten()] = act_pos
+        act_pos_full = act_pos_full.reshape((setup.nact, setup.nact))
         
         #Set 2D map shared memory
-        dm_act_shm.set_data(act_pos.astype(np.float64))
+        dm_act_shm.set_data(act_pos_full.astype(np.float64))
 
         dm_papy_shm = kwargs.get("dm_papy_shm", getattr(setup, "dm_papy_shm", None))
         if dm_papy_shm is None:
@@ -410,7 +408,7 @@ def get_slopes_image(mask, bias_image, normalized_reference_image, pyr_img=None,
     camera_wfs = kwargs.get("camera_wfs", setup.camera_wfs)
 
     if pyr_img is None:
-        pyr_img = camera_wfs.get_data(check = True, semNb =10)
+        pyr_img = camera_wfs.get_data(check=True, semNb=5)
 
     normalized_pyr_img = normalize_image(pyr_img, mask, bias_image)
     slopes_image = compute_pyr_slopes(normalized_pyr_img, normalized_reference_image)
