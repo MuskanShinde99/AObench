@@ -8,9 +8,7 @@ import re
 from src.config import config
 from src.utils import set_data_dm
 
-ROOT_DIR = config.root_dir
-
-from src.dao_setup import init_setup, ROOT_DIR
+from src.dao_setup import init_setup, ROOT_DIR, PLACE_OF_TEST
 
 
 setup = init_setup()
@@ -231,9 +229,9 @@ def center_psf_on_pyramid_tip(
 
     # Update the dao_setup.py file with the new optimized amplitudes
     if update_setup_file:
-        dao_setup_path = Path(ROOT_DIR) / "src/dao_setup_Geneva.py"
-
-        # Read the existing file content
+        place = PLACE_OF_TEST
+        setup_name = "dao_setup_Geneva.py" if place == "Geneva" else "dao_setup_PAPYRUS.py"
+        dao_setup_path = Path(ROOT_DIR) / f"src/{setup_name}"
         with open(dao_setup_path, "r") as file:
             content = file.read()
 

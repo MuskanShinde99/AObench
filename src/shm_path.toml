@@ -36,13 +36,27 @@ delay_set               = '/tmp/delay_set.im.shm'
 gain                     = '/tmp/gain.im.shm'                
 leakage                  = '/tmp/leakage.im.shm'             
 num_iterations           = '/tmp/num_iterations.im.shm'
-cam1 = '/tmp/cam1.im.shm'
+
+
+cam1 = '/tmp/ocam2.im.shm' #'/tmp/cam1.im.shm'
 cam2 = '/tmp/cam2.im.shm'
 cam1Fps                 = '/tmp/cam1Fps.im.shm'
 cam2Fps                 = '/tmp/cam2Fps.im.shm'
 
 
+
+#KL modes for papyrus
 KL2Act_papy = '/tmp/m2c.im.shm'
+
+# shared memory to send commands to the DM papyrus
+dm_papy = '/tmp/dmCmd02.im.shm'
+
+#shared memory to set the dm flat for papyrus
+dm_flat_papy = '/tmp/dmCmd00.im.shm'
+
+# shared memory with the map of valid actuators for papyrus
+dm_map = '/tmp/dm241Map.im.shm'
+
 
 
 

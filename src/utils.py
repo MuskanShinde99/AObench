@@ -20,6 +20,26 @@ def set_default_setup(setup):
     """Register a default setup used when none is provided."""
     global DEFAULT_SETUP
     DEFAULT_SETUP = setup
+
+
+def reload_setup():
+    """Reload ``src.dao_setup`` and return a fresh setup instance."""
+    import importlib
+    import src.dao_setup as dao_setup
+
+    if dao_setup.PLACE_OF_TEST == "Geneva":
+        import src.dao_setup_Geneva as ds_mod
+    else:
+        import src.dao_setup_PAPYRUS as ds_mod
+
+    importlib.reload(ds_mod)
+    importlib.reload(dao_setup)
+
+    global DEFAULT_SETUP
+    from src.dao_setup import init_setup as _init_setup
+
+    DEFAULT_SETUP = _init_setup()
+    return DEFAULT_SETUP
     
     
 def _resolve_place_of_test(place_of_test):
@@ -180,18 +200,16 @@ def set_dm_actuators(actuators=None, dm_flat=None, setup=None, *, place_of_test=
         if dm_map is None:
             raise ValueError("dm_map must be provided via setup or kwargs")
         dm_map = dm_map.astype(bool)
-
-        # Apply the map and write filtered actuators
-        #act_pos_filtered = act_pos[dm_map]
         
         # Create array to store 17x17 actuators
-        act_pos_full = np.zeros((setup.nact, setup.nact))
-        
+        act_pos_full = np.zeros(setup.nact**2)
+    
         # Appy the map and have full 289 actuators
-        act_pos_full = act_pos
+        act_pos_full[dm_map.flatten()] = act_pos
+        act_pos_full = act_pos_full.reshape((setup.nact, setup.nact))
         
         #Set 2D map shared memory
-        dm_act_shm.set_data(act_pos.astype(np.float64))
+        dm_act_shm.set_data(act_pos_full.astype(np.float64))
 
         dm_papy_shm = kwargs.get("dm_papy_shm", getattr(setup, "dm_papy_shm", None))
         if dm_papy_shm is None:
@@ -390,13 +408,13 @@ def get_slopes_image(mask, bias_image, normalized_reference_image, pyr_img=None,
     camera_wfs = kwargs.get("camera_wfs", setup.camera_wfs)
 
     if pyr_img is None:
-        pyr_img = camera_wfs.get_data(check = True, semNb = 9)
+        pyr_img = camera_wfs.get_data(check=True, semNb=5)
 
     normalized_pyr_img = normalize_image(pyr_img, mask, bias_image)
     slopes_image = compute_pyr_slopes(normalized_pyr_img, normalized_reference_image)
     # print('slopes_image data type', slopes_image.dtype)
     # print('slopes_image shape', slopes_image.shape)
-    slopes_image_shm.set_data(slopes_image)
+    slopes_image_shm.set_data(slopes_image.astype(np.float64))
     return slopes_image
 
 
