@@ -112,10 +112,6 @@ print('DM set to flat.')
 dm_flat_papy_shm.set_data(setup.dm_flat.astype(np.float32))
 fits.writeto(folder_calib / 'papyrus_dm_flat.fits', setup.dm_flat.astype(np.float32), overwrite=True)
 
-plt.figure()
-plt.plot(setup.dm_flat)
-plt.show()
-
 #%% Load transformation matrices
 
 # # Load transformation matrices from shared memories
@@ -142,7 +138,7 @@ n_iter=500 # number of iternations for dm random commands
 
 mask = create_flux_filtering_mask(method, flux_cutoff, KL2Act_papy[0], KL2Act_papy[1],
                                modulation_angles, modulation_amp, n_iter,
-                               create_summed_image=False, verbose=False, verbose_plot=True)
+                               create_summed_image=True, verbose=False, verbose_plot=True)
 
 valid_pixels_mask_shm.set_data(mask)
 
@@ -166,7 +162,7 @@ S2KL_shm = dao.shm('/tmp/S2KL.im.shm' , np.zeros((npix_valid, setup.nmodes_KL), 
 #%% Centering the PSF on the Pyramid Tip
 
 center_psf_on_pyramid_tip(mask=mask, 
-                          bounds = [(-2.0, 2.0), (-2.0, 2.0)], variance_threshold=0.01, 
+                          bounds = [(-2.0, 2.0), (-2.0, 2.0)], variance_threshold=0.00001, 
                           update_setup_file=True, verbose=True, verbose_plot=True)
 
 #%% Scanning modes to find zero of the pyramid
