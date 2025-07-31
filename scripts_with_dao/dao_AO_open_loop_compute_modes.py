@@ -14,10 +14,16 @@ import scipy
 from matplotlib.colors import LogNorm
 
 # Import Specific Modules
+from src.config import config
+from src.dao_setup import init_setup
 from src.utils import *
 from src.shm_loader import shm
 
+#Loading setup
 setup = init_setup()
+setup = reload_setup()
+
+#Loading shared memories
 dm_phase_shm = shm.dm_phase_shm
 phase_screen_shm = shm.phase_screen_shm
 phase_residuals_shm = shm.phase_residuals_shm
@@ -28,12 +34,25 @@ computed_modes_shm = shm.computed_modes_shm
 commands_shm = shm.commands_shm
 dm_kl_modes_shm = shm.dm_kl_modes_shm
 dm_act_shm = shm.dm_act_shm
+dm_flat_papy_shm = shm.dm_flat_papy_shm
 KL2Act_papy_shm = shm.KL2Act_papy_shm
+
+#Loading folder
+folder_calib = config.folder_calib
+folder_gui = setup.folder_gui
+
+# Load hardware and configuration parameters
+camera_wfs = setup.camera_wfs
+camera_fp = setup.camera_fp
+npix_small_pupil_grid = setup.npix_small_pupil_grid
 
 #%% Creating and Displaying a Circular Pupil on the SLM
 
-# Display Pupil Data on SLM
+#DM set to flat
 set_data_dm(setup=setup)
+dm_flat_papy_shm.set_data(setup.dm_flat.astype(np.float32))
+fits.writeto(folder_calib / 'dm_flat_papy.fits', setup.dm_flat.astype(np.float32), overwrite=True)
+
 
 #%% Load transformation matrices
 
@@ -132,43 +151,6 @@ Act2KL_papy_new = scipy.linalg.pinv(KL2Act_papy_new)
 IM_KL2S_new = IM_KL2S[:nmodes_kl, :]
 RM_S2KL_new = np.linalg.pinv(IM_KL2S_new, rcond=0.10)
 
-
-#%%
-# Load hardware and configuration parameters
-camera_wfs = setup.camera_wfs
-camera_fp = setup.camera_fp
-npix_small_pupil_grid = setup.npix_small_pupil_grid
-
-# Load the folder
-folder_gui = setup.folder_gui
-
-# Flatten the DM
-set_data_dm(setup=setup)
-#deformable_mirror.flatten()
-
-# Reference image 
-normalized_reference_image = normalize_image(reference_image, mask, bias_image)
-pyr_img_shape = reference_image.shape
-
-print('Reference image shape:', pyr_img_shape)
-
-# Diffraction limited PSF
-diffraction_limited_psf = diffraction_limited_psf.astype(np.float32)
-diffraction_limited_psf /= diffraction_limited_psf.sum()
-fp_img_shape = diffraction_limited_psf.shape
-
-print('PSF shape:', fp_img_shape)
-
-# Create the PSF mask 
-psf_mask, psf_center = create_psf_mask(diffraction_limited_psf, crop_size=100, radius=50)
-# Integrate the flux in that small region
-integrated_diff_psf = diffraction_limited_psf[psf_mask].sum()
-
-print('sum center PSF =', integrated_diff_psf)
-
-# Get valid pixel indices from the mask
-valid_pixels_indices = np.where(mask > 0)
-
  #%%   
 # Initialize arrays to store Strehl ratio and total residual phase
 # strehl_ratios = np.zeros(num_iterations)
@@ -211,5 +193,6 @@ while True:
     # strehl_ratios[i] = strehl_ratio
 
     i += 1  # increment loop index
+
 
 
