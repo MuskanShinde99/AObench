@@ -131,7 +131,7 @@ KL2Act_papy = KL2Act_papy_shm.get_data().T
 #%% Creating a Flux Filtering Mask
 
 method='dm_random'
-flux_cutoff = 0.08 # 0.06 - papy dm random; 0.2 - geneva dm random
+flux_cutoff = 0.09 # 0.06 - papy dm random; 0.2 - geneva dm random
 modulation_angles = np.arange(0, 360, 1)  # angles of modulation
 modulation_amp = 15 # in lamda/D
 n_iter=800 # number of iternations for dm random commands

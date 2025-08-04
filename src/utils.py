@@ -356,6 +356,7 @@ def normalize_image(image, mask, bias_img=None):
     Returns:
     - numpy array: The normalized image.
     """
+    norm_flux_pyr_img_shm = shm.norm_flux_pyr_img_shm
     
     # If bias_img is not provided, initialize it as an array of zeros
     if bias_img is None:
@@ -368,7 +369,10 @@ def normalize_image(image, mask, bias_img=None):
     masked_image = bias_corrected_image * mask
     
     # Normalize the masked image by dividing by the absolute sum of the masked image
-    normalized_image = masked_image / np.abs(np.sum(masked_image))
+    norm_flux = np.abs(np.sum(masked_image))
+    normalized_image = masked_image / norm_flux
+    
+    norm_flux_pyr_img_shm.set_data(np.array([[norm_flux]]).astype(np.float32)) # setting shared memory
 
     return normalized_image
 

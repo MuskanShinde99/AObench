@@ -2,6 +2,7 @@ import dao
 import numpy as np
 import toml
 import time 
+import datetime
 import ctypes
 daoLogLevel = ctypes.c_int.in_dll(dao.daoLib, "daoLogLevel")
 daoLogLevel.value=0
@@ -27,7 +28,7 @@ pyramid_select_shm = dao.shm(shm_path['control']['pyramid_select'])
 n_modes_dd_high_shm = dao.shm(shm_path['control']['n_modes_dd_high'])
 n_modes_controlled_shm = dao.shm(shm_path['control']['n_modes_int'])
 telemetry_shm = dao.shm(shm_path['control']['telemetry']) 
-telemetry_ts_shm = dao.shm(shm_path['control']['telemetry_ts']) 
+# telemetry_ts_shm = dao.shm(shm_path['control']['telemetry_ts']) 
 reset_flag_shm = dao.shm(shm_path['control']['reset_flag']) 
 fs = dao.shm(shm_path['control']['fs']).get_data(check=False, semNb=sem_nb)[0][0]
 
@@ -130,7 +131,7 @@ while True:
     command_ts = np.datetime64(datetime.datetime.now(), 'us')
     telemetry_ts[0,:] = modes_ts
     telemetry_ts[1,:] = command_ts
-    telemetry_ts_shm.set_data(telemetry_ts)
+    # telemetry_ts_shm.set_data(telemetry_ts)
 
     # time.sleep(0.001)
     # time.sleep(0.002*np.random.rand())

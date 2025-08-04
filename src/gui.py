@@ -451,7 +451,7 @@ class MainWindow(QMainWindow):
 
         self.dm_shm = dao.shm(shm_path_control['control']['dm']) 
         self.flat_dm_shm = dao.shm(shm_path_control['control']['flat_dm']) 
-        self.pyramid_dm_shm = dao.shm(shm_path_control['control']['pyramid_select']) 
+        self.pyramid_select_shm = dao.shm(shm_path_control['control']['pyramid_select']) 
 
     def init_vector_plots(self):
         self.computed_KL_modes_view = CustomChartView(self.computed_KL_modes_widget,"mode","amplitude", n_lines = 2)

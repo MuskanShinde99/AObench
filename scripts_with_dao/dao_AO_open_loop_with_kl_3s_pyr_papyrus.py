@@ -32,6 +32,9 @@ slopes_image_shm = shm.slopes_image_shm
 normalized_psf_shm = shm.normalized_psf_shm
 computed_modes_shm = shm.computed_modes_shm
 commands_shm = shm.commands_shm
+strehl_ratio_shm = shm.strehl_ratio_shm
+norm_flux_pyr_img_shm = shm.norm_flux_pyr_img_shm
+
 dm_kl_modes_shm = shm.dm_kl_modes_shm
 dm_act_shm = shm.dm_act_shm
 dm_flat_papy_shm = shm.dm_flat_papy_shm
@@ -184,6 +187,7 @@ while True:
     observed_psf = fp_img / fp_img.sum()
     integrated_obs_psf = observed_psf[psf_mask].sum()
     strehl_ratio = integrated_obs_psf / integrated_diff_psf
+    strehl_ratio_shm.set_data(np.array([[strehl_ratio]]).astype(np.float32)) # setting shared memory
     # strehl_ratio = np.max(observed_psf) / np.max(diffraction_limited_psf)
     # strehl_ratios[i] = strehl_ratio
 
