@@ -13,13 +13,14 @@ from datetime import datetime
 import numpy as np
 from astropy.io import fits
 from matplotlib import pyplot as plt
+import importlib
 
 # Import Specific Modules
 import dao
-from src.config import config
 from src.dao_setup import init_setup, las
-from src.utils import set_data_dm
-setup = init_setup()
+from src.utils import set_data_dm, reload_setup
+
+from src.config import config
 from src.utils import *
 from src.circular_pupil_functions import *
 from src.flux_filtering_mask_functions import *
@@ -32,8 +33,13 @@ from src.shm_loader import shm
 from src.scan_modes_functions import *
 from src.ao_loop_functions import *
 
-ROOT_DIR = config.root_dir
+#Loading setup
+setup = init_setup()
 
+#Loading folder
+folder_calib = config.folder_calib
+
+#Loading shared memories
 bias_image_shm = shm.bias_image_shm
 valid_pixels_mask_shm = shm.valid_pixels_mask_shm
 npix_valid_shm = shm.npix_valid_shm
@@ -41,19 +47,18 @@ reference_image_shm = shm.reference_image_shm
 normalized_ref_image_shm = shm.normalized_ref_image_shm
 reference_psf_shm = shm.reference_psf_shm
 KL2Act_papy_shm = shm.KL2Act_papy_shm
+dm_flat_papy_shm = shm.dm_flat_papy_shm
+dm_papy_shm = shm.dm_papy_shm
 
 
 # #%% Accessing Devices
 
-# # Initialize Spatial Light Modulator (SLM)
-# slm = dao_setup.slm
-
 # # Initialize Cameras
-# camera_wfs = dao_setup.camera_wfs
-# camera_fp = dao_setup.camera_fp
+# camera_wfs = setup.camera_wfs
+# camera_fp = setup.camera_fp
 
 # # Intialize DM
-# deformable_mirror = dao_setup.defomable_mirror
+# deformable_mirror = setup.defomable_mirror
 
 #%% Turn off laser
 
@@ -81,7 +86,7 @@ plt.colorbar()
 plt.show()
 
 # Save the Bias Image
-fits.writeto(os.path.join(folder_calib, f'binned_bias_image.fits'), np.asarray(bias_image), overwrite=True)
+fits.writeto(os.path.join(folder_calib, f'bias_image.fits'), np.asarray(bias_image), overwrite=True)
 
 #%% Turn on laser
 
@@ -101,8 +106,11 @@ else:
 # slm.set_data(data_slm)
 # time.sleep(wait_time)
 
+setup = reload_setup()
+# DM set to flat
 set_data_dm(setup=setup)
-print('DM set to flat.')
+dm_flat_papy_shm.set_data(setup.dm_flat.astype(np.float32))
+fits.writeto(folder_calib / 'dm_flat_papy.fits', setup.dm_flat.astype(np.float32), overwrite=True)
 
 #%% Load transformation matrices
 
@@ -123,10 +131,10 @@ KL2Act_papy = KL2Act_papy_shm.get_data().T
 #%% Creating a Flux Filtering Mask
 
 method='dm_random'
-flux_cutoff = 0.06 # 0.06 - papy dm random; 0.2 - geneva dm random
+flux_cutoff = 0.08 # 0.06 - papy dm random; 0.2 - geneva dm random
 modulation_angles = np.arange(0, 360, 1)  # angles of modulation
 modulation_amp = 15 # in lamda/D
-n_iter=500 # number of iternations for dm random commands
+n_iter=800 # number of iternations for dm random commands
 
 mask = create_flux_filtering_mask(method, flux_cutoff, KL2Act_papy[0], KL2Act_papy[1],
                                modulation_angles, modulation_amp, n_iter,
@@ -154,7 +162,7 @@ S2KL_shm = dao.shm('/tmp/S2KL.im.shm' , np.zeros((npix_valid, setup.nmodes_KL), 
 #%% Centering the PSF on the Pyramid Tip
 
 center_psf_on_pyramid_tip(mask=mask, 
-                          bounds = [(-2.0, 2.0), (-2.0, 2.0)], variance_threshold=0.01, 
+                          bounds = [(-2.0, 2.0), (-2.0, 2.0)], variance_threshold=0.00001, 
                           update_setup_file=True, verbose=True, verbose_plot=True)
 
 #%% Scanning modes to find zero of the pyramid
@@ -169,7 +177,8 @@ scan_othermode_amplitudes_wfs_std(test_values, mode_index, mask,
 
 #%% Capture Reference Image
 
-# put functions to capture and average the frames from the camera
+#set bias image to zero for PAPY SIM tests
+bias_image=np.zeros_like(bias_image)
 
 #Timestamp
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -186,7 +195,7 @@ fits.writeto(folder_calib / 'reference_image_raw.fits', reference_image, overwri
 fits.writeto(folder_calib / f'reference_image_raw_{timestamp}.fits', reference_image, overwrite=True)
 
 # Normailzed refrence image
-normalized_reference_image = normalize_image(reference_image, mask, bias_img=np.zeros_like(reference_image))
+normalized_reference_image = normalize_image(reference_image, mask, bias_image)
 normalized_ref_image_shm.set_data(normalized_reference_image)
 fits.writeto(folder_calib / 'reference_image_normalized.fits', normalized_reference_image, overwrite=True)
 fits.writeto(folder_calib / f'reference_image_normalized_{timestamp}.fits', normalized_reference_image, overwrite=True)
@@ -203,6 +212,8 @@ n_frames=20
 fp_image = (np.mean([camera_fp.get_data().astype(np.float32) for i in range(n_frames)], axis=0)).astype(camera_fp.get_data().dtype)
 reference_psf_shm.set_data(fp_image)
 fits.writeto(folder_calib / 'reference_psf.fits', fp_image, overwrite=True)
+fits.writeto(folder_calib / f'reference_psf_{timestamp}.fits', reference_image, overwrite=True)
+
 
 #Display the PSF
 plt.figure()
@@ -221,13 +232,13 @@ plt.show()
 phase_amp = 0.1
 
 # Number of times to repeat the whole calibration
-calibration_repetitions = 1
+calibration_repetitions = 2
 
 # Modes repition dictionary
 #mode_repetitions = {0: 10, 3: 10} # Repeat the 0th mode ten times, the 3rd mode ten times, rest default to 1
 #mode_repetitions = [2, 3]  # Repeat the 0th mode twice, the 1st mode three times, beyond the 1st default to 1
 
-mode_repetitions = {0: 10, 1: 10, 10: 5}
+mode_repetitions = {0: 30, 1: 30}
 
 # Run calibration and compute matrices
 # use the ref img, mask directly from shared memories 
@@ -236,6 +247,7 @@ response_matrix_full, response_matrix_filtered = create_response_matrix(
     phase_amp,
     reference_image,
     mask,
+    bias_image,
     verbose=True,
     verbose_plot=False,
     calibration_repetitions=calibration_repetitions,

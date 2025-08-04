@@ -103,7 +103,7 @@ def create_summed_image_for_mask_dm_random(n_iter, verbose=False, **kwargs):
         if verbose:
             print(f"Iteration {i + 1}")
 
-        act_random = np.random.choice([-1, 1], size=nact_total)
+        act_random = np.random.choice([-0.3, 0.3], size=nact_valid)
         #act_random = np.random.choice([-0.3, 0.3], size=nact_valid)
         actuators, _, _  = set_data_dm(act_random, setup=setup,)
         
@@ -153,7 +153,7 @@ def create_flux_filtering_mask(method, flux_cutoff, tiltx, tilty,
     folder_pyr_mask = kwargs.get("folder_pyr_mask", setup.folder_pyr_mask)
     folder_calib = kwargs.get("folder_calib", setup.folder_calib)
 
-    summed_img_path = os.path.join(folder_calib, f'binned_summed_pyr_images_3s_pyr.fits')
+    summed_img_path = os.path.join(folder_calib, f'summed_pyr_images_3s_pyr.fits')
 
     if create_summed_image:
         if verbose:
@@ -217,11 +217,11 @@ def create_flux_filtering_mask(method, flux_cutoff, tiltx, tilty,
         print('Saving masked image and mask')
 
     fits.writeto(
-        os.path.join(folder_calib, f'binned_masked_pyr_images_3s_pyr.fits'),
+        os.path.join(folder_calib, f'masked_pyr_images_3s_pyr.fits'),
         masked_summed_image.astype(np.float32), overwrite=True
     )
     fits.writeto(
-        os.path.join(folder_calib, f'binned_mask_3s_pyr.fits'),
+        os.path.join(folder_calib, f'mask_3s_pyr.fits'),
         mask.astype(np.uint8), overwrite=True
     )
 

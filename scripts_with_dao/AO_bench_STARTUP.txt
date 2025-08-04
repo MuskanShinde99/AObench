@@ -17,14 +17,6 @@ System Setup Procedure
 - ./ristrettoStartBin
   (There are errors at startup; ignore them)
 
-3. Start Camera Displays
-------------------------
-- Open new terminals for each camera
-- cd ~/dao/daoRistretto/
-- Run:
-    daoImageRTD.py -s /tmp/cam2.im.shm
-    daoImageRTD.py -s /tmp/cam1.im.shm
-
 4. Open Shared Memories Viewer
 ------------------------------
 - Open a new terminal
@@ -38,6 +30,11 @@ System Setup Procedure
 - Open new terminal
 - cd ~/dao/daoPapyrus/
 - daoPapyrusSimStart -b 1
+- GUI: papyCtrl.py 
+- DM display: daoDmDisp.py -s dmCmd -m dm241Map
+
+5. Open Spyder
+set the working dir to banc ao
 
 6. Create Shared Memories
 -------------------------
@@ -45,7 +42,6 @@ System Setup Procedure
 - cd /home/ristretto-dao/optlab-master/PROJECTS_3/RISTRETTO/Banc\ AO
 - Open src/create_shared_memories.py in Spyder
 - Run the file
-
 
 5. Start the GUI
 ----------------
@@ -58,13 +54,13 @@ System Setup Procedure
 ---------------------------------
 - Open src/create_transformation_matrices.py in Spyder
 - Run the file
+- In case of papyrus alreading stored in shared memory KL2Act_papy
 
 8. Run Calibrations
 -------------------
 - Open scripts_with_dao/dao_calibrations_file.py
 - Run the following steps:
-  - Import libraries (especially: from src.dao_setup import init_setup
-setup = init_setup())
+  - Import libraries 
   - Take a bias frame
   - Turn on the laser
   - Create and set a circular pupil on the SLM
@@ -74,6 +70,7 @@ setup = init_setup())
   - Scan modes to find the pyramid's zero ??
   - lOAF transformation matrices
   - Capture a reference image
+  - Bias image was set to zero for PAPY SIM test, REMOVW that
   - Perform push-pull calibration
 
 9. Run Closed Loop Tests

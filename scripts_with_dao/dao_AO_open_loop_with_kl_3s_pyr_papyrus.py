@@ -5,36 +5,25 @@ Created on Fri Mar 14 13:33:29 2025
 
 @author: laboptic
 """
+# Standard library
 import numpy as np
-import time
 import os
 import matplotlib.pyplot as plt
-import tqdm
 from astropy.io import fits
-from PIL import Image
 import scipy
 from matplotlib.colors import LogNorm
-from src.utils import *
-from collections import deque
-
 
 # Import Specific Modules
 from src.config import config
-ROOT_DIR = config.root_dir
-import dao
+from src.dao_setup import init_setup
 from src.utils import *
-from src.circular_pupil_functions import *
-from src.flux_filtering_mask_functions import *
-from src.tilt_functions import *
-from src.calibration_functions import *
-from src.kl_basis_eigenmodes_functions import computeEigenModes, computeEigenModes_notsquarepupil
-from src.transformation_matrices_functions import * 
-from src.psf_centring_algorithm_functions import *
 from src.shm_loader import shm
-from src.scan_modes_functions import scan_othermode_amplitudes
-from src.ao_loop_functions import *
 
+#Loading setup
 setup = init_setup()
+setup = reload_setup()
+
+#Loading shared memories
 dm_phase_shm = shm.dm_phase_shm
 phase_screen_shm = shm.phase_screen_shm
 phase_residuals_shm = shm.phase_residuals_shm
@@ -45,39 +34,43 @@ computed_modes_shm = shm.computed_modes_shm
 commands_shm = shm.commands_shm
 dm_kl_modes_shm = shm.dm_kl_modes_shm
 dm_act_shm = shm.dm_act_shm
-
-num_iterations_shm = shm.num_iterations_shm
-gain_shm = shm.gain_shm
-leakage_shm = shm.leakage_shm
-delay_set_shm = shm.delay_set_shm
+dm_flat_papy_shm = shm.dm_flat_papy_shm
 KL2Act_papy_shm = shm.KL2Act_papy_shm
+dm_papy_shm = shm.dm_papy_shm
+
+#Loading folder
+folder_calib = config.folder_calib
+folder_gui = setup.folder_gui
+
+# Load hardware and configuration parameters
+camera_wfs = setup.camera_wfs
+camera_fp = setup.camera_fp
+npix_small_pupil_grid = setup.npix_small_pupil_grid
 
 #%% Creating and Displaying a Circular Pupil on the SLM
 
-# Display Pupil Data on SLM
+#DM set to flat
 set_data_dm(setup=setup)
+dm_flat_papy_shm.set_data(setup.dm_flat.astype(np.float32))
+fits.writeto(folder_calib / 'dm_flat_papy.fits', setup.dm_flat.astype(np.float32), overwrite=True)
+
 
 #%% Load transformation matrices
 
-# From folder 
-# KL2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Act_nkl_{setup.nmodes_KL}_nact_{setup.nact}.fits'))
-# KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_{setup.nmodes_KL}_npupil_{setup.npix_small_pupil_grid}.fits'))
-
-# # From shared memories
-# KL2Act = KL2Act_shm.get_data()
-# KL2Phs = KL2Phs_shm.get_data()
-
-KL2Act_papy = KL2Act_papy_shm.get_data()
+KL2Act_papy = KL2Act_papy_shm.get_data().T
 
 #%% Load Bias Image, Calibration Mask and Interaction Matrix
 
 # Load the bias image
-bias_filename = f'binned_bias_image.fits'
+bias_filename = f'bias_image.fits'
 bias_image = fits.getdata(os.path.join(folder_calib, bias_filename))
 print(f"Bias image shape: {bias_image.shape}")
 
+# Set bias image to zero for PAPY SIM tests
+bias_image=np.zeros_like(bias_image)
+
 # Load the calibration mask for processing images.
-mask_filename = f'binned_mask_3s_pyr.fits'
+mask_filename = f'mask_3s_pyr.fits'
 mask = fits.getdata(os.path.join(folder_calib, mask_filename))
 print(f"Mask dimensions: {mask.shape}")
 
@@ -85,7 +78,7 @@ print(f"Mask dimensions: {mask.shape}")
 valid_pixels_indices = np.where(mask > 0)
 
 # Load the response matrix 
-IM_filename = f'binned_response_matrix_KL2S_filtered_nact_{setup.nact}_amp_0.1_3s_pyr.fits'
+IM_filename = f'response_matrix_KL2S_filtered_nact_{setup.nact}_amp_0.1_3s_pyr.fits'
 IM_KL2S = fits.getdata(os.path.join(folder_calib, IM_filename))  # /0.1
 
 RM_S2KL = np.linalg.pinv(IM_KL2S, rcond=0.10)
@@ -147,56 +140,18 @@ plt.show()
 
 plt.close('all')
 
-# Define KL modes to consider
-nmodes_kl = 195
-KL2Act_papy_new = KL2Act_papy[:nmodes_kl, :]
-Act2KL_papy_new = scipy.linalg.pinv(KL2Act_papy_new)
-IM_KL2S_new = IM_KL2S[:nmodes_kl, :]
-RM_S2KL_new = np.linalg.pinv(IM_KL2S_new, rcond=0.10)
+# # Define KL modes to consider
+# nmodes_kl = 195
+# KL2Act_papy_new = KL2Act_papy[:nmodes_kl, :]
+# Act2KL_papy_new = scipy.linalg.pinv(KL2Act_papy_new)
+# IM_KL2S_new = IM_KL2S[:nmodes_kl, :]
+# RM_S2KL_new = np.linalg.pinv(IM_KL2S_new, rcond=0.10)
 
-
-#%%
-# Load hardware and configuration parameters
-camera_wfs = setup.camera_wfs
-camera_fp = setup.camera_fp
-npix_small_pupil_grid = setup.npix_small_pupil_grid
-
-# Load the folder
-folder_gui = setup.folder_gui
-
-# Flatten the DM
-set_data_dm(setup=setup)
-#deformable_mirror.flatten()
-
-# Reference image 
-normalized_reference_image = normalize_image(reference_image, mask, bias_image)
-pyr_img_shape = reference_image.shape
-
-print('Reference image shape:', pyr_img_shape)
-
-# Diffraction limited PSF
-diffraction_limited_psf = diffraction_limited_psf.astype(np.float32)
-diffraction_limited_psf /= diffraction_limited_psf.sum()
-fp_img_shape = diffraction_limited_psf.shape
-
-print('PSF shape:', fp_img_shape)
-
-# Create the PSF mask 
-psf_mask, psf_center = create_psf_mask(diffraction_limited_psf, crop_size=100, radius=50)
-# Integrate the flux in that small region
-integrated_diff_psf = diffraction_limited_psf[psf_mask].sum()
-
-print('sum center PSF =', integrated_diff_psf)
-
-# Get valid pixel indices from the mask
-valid_pixels_indices = np.where(mask > 0)
 
  #%%   
 # Initialize arrays to store Strehl ratio and total residual phase
 # strehl_ratios = np.zeros(num_iterations)
 # residual_phase_stds = np.zeros(num_iterations)
-
-start_time = time.time()
 
 i = 0
 while True:
@@ -207,18 +162,17 @@ while True:
         normalized_reference_image,
         setup=setup,
     )
-    slopes_image_shm.set_data(slopes_image)
     slopes = slopes_image[valid_pixels_indices].flatten()
     #fits.writeto(os.path.join(folder_gui, f'slopes_image.fits'), slopes_image, overwrite=True)
     
     # Compute KL modes present
-    computed_modes = slopes @ RM_S2KL_new
+    computed_modes = slopes @ RM_S2KL
     # multiply by two because this mode is computed for DM surface and we want DM phase
-    computed_modes_shm.set_data(computed_modes) # setting shared memory
+    computed_modes_shm.set_data(np.asanyarray(computed_modes).astype(np.float32)) # setting shared memory
     
     # Compute actuator commands
-    act_pos = computed_modes @ KL2Act_papy_new
-    commands_shm.set_data(act_pos) # setting shared memory
+    act_pos = computed_modes @ KL2Act_papy
+    commands_shm.set_data(np.asanyarray(act_pos).astype(np.float32)) # setting shared memory
 
     # Capture PSF
     fp_img = camera_fp.get_data()
@@ -234,5 +188,6 @@ while True:
     # strehl_ratios[i] = strehl_ratio
 
     i += 1  # increment loop index
+
 
 

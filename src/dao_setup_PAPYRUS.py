@@ -44,15 +44,16 @@ folder_gui = config.folder_gui
 
 #%% Configuration Camera
 
-# To set camera
-camera_wfs = Camera('/tmp/ocam2.im.shm') #Camera('/tmp/cam1.im.shm') #change to CRED3
-camera_fp = Camera('/tmp/cam2.im.shm') #change to CBlue
+# To set camera shared memory
 
-fps_wfs = dao.shm('/tmp/cam1Fps.im.shm')
-fps_wfs.set_data(fps_wfs.get_data()*0+300)
 
-fps_fp = dao.shm('/tmp/cam2Fps.im.shm')
-fps_fp.set_data(fps_fp.get_data()*0+20)
+camera_wfs = shm.cam1_shm #Camera('/tmp/ocam2.im.shm') 
+fps_wfs =  shm.cam1Fps_shm # dao.shm('/tmp/cam1Fps.im.shm')
+#fps_wfs.set_data(fps_wfs.get_data()*0+300)
+
+camera_fp = shm.cam2_shm #Camera('/tmp/cam2.im.shm') 
+fps_fp = shm.cam2Fps_shm #dao.shm('/tmp/cam2Fps.im.shm')
+#fps_fp.set_data(fps_fp.get_data()*0+20)
 
 img = camera_wfs.get_data()
 img_size_wfs_cam = img.shape[0]
@@ -71,31 +72,30 @@ npix_small_pupil_grid = 550
 #%% Configuration deformable mirror
 
 #wait time
-wait_time = 0.05
+wait_time = 0.1
 
 # Number of actuators
 nact = 17
-
 nact_total = nact**2
-nact_valid = 241 #195
+nact_valid = 241 
 
-dm_flat = np.zeros(nact**2)
+#shared memories for DM
+dm_papy_shm = shm.dm_papy_shm
 
-dm_flat_papy_shm = dao.shm('/tmp/dmCmd00.im.shm')
-
-dm_papy_shm = dao.shm('/tmp/dmCmd02.im.shm')
+# the DM from papyrus
 # plt.figure()
 # plt.plot(dm_papy_shm.get_data())
 # plt.title("DM Command (Papyrus)")
 # plt.show()
 
-dm_map_shm = dao.shm('/tmp/dm241Map.im.shm')
+dm_map_shm = shm.dm_map_shm
 dm_map = dm_map_shm.get_data().astype(bool)
 # plt.figure()
 # plt.imshow(dm_map)
 # plt.title("dm_map (Valid Actuator Mask)")
 # plt.colorbar()
 # plt.show()
+
 
 dm_act_shm = shm.dm_act_shm
 dm_act = dm_act_shm.get_data()
@@ -124,7 +124,7 @@ KL2Act_papy_shm = dao.shm('/tmp/m2c.im.shm')
 KL2Act_papy = KL2Act_papy_shm.get_data().T
 
 
-#%%
+#%% DM flat computation and update
 
 # [-1.6510890005150187, 0.14406016044318903]
 # Create a Tip-Tilt (TT) matrix with specified amplitudes as the diagonal elements
@@ -134,16 +134,16 @@ tt_matrix = tt_amplitude_matrix @ KL2Act_papy[0:2, :]  # Select modes 1 (tip) an
 
 data_tt = (tt_matrix[0] + tt_matrix[1])#.reshape(nmodes_dm)
 
-othermodes_amplitudes = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]  # Focus (mode 3) + modes 4 to 10
+othermodes_amplitudes = [0.01, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]  # Focus (mode 3) + modes 4 to 10
 othermodes_amplitude_matrix = np.diag(othermodes_amplitudes)
 othermodes_matrix = othermodes_amplitude_matrix @ KL2Act_papy[2:10, :]  # Select modes 3 (focus) to 10
 
 data_othermodes = np.sum(othermodes_matrix, axis=0)
 
-#Put the modes on the dm
-dm_flat = data_tt + data_othermodes - 0.0 * np.ones(nmodes_dm)
+data_piston = 0.0 * np.ones(nmodes_dm)
 
-dm_flat_papy_shm.set_data(dm_flat.astype(np.float32))
+#Put the modes on the dm
+dm_flat = data_tt + data_othermodes + data_piston
 
 _setup = SimpleNamespace(
     nact=nact,
@@ -194,7 +194,6 @@ class PupilSetup:
             self.dm_flat = np.asarray(actuators)
             
         
-
 
     def update_pupil(self, tt_amplitudes=None, othermodes_amplitudes=None,):
         """Update pupil parameters and recompute the DM flat map."""
