@@ -95,7 +95,7 @@ System Setup Procedure
   - Compute cross-correlation matrix  
   
 11. Run Open Loop Modes Computation - Day
-----------------------------------  
+----------------------------------------- 
 - Open scripts_with_dao/dao_AO_open_loop_with_kl_3s_pyr_papyrus.py  
 - Run the following steps:  
   - Import libraries & shared memories  
@@ -108,8 +108,31 @@ System Setup Procedure
   - Define the number of KL modes used  
   - Run AO loop  
   
+  
+12. Start Control
+----------------
+- Open GUI - Run: python gui.py  
+- Go to "Calibration" tab:
+  - Make sure there is no turbulence running
+  - Click on "Start Latency identification" and wait for some time
+  - Click on "Save Latency"
+  - Click on "Load Latency"
+- Go to "Process" tab:
+  - Click on "start pol reconstruction"
+  - Click on "start freq mag estimation"
+- Go to terminal:
+  - Open a new terminal
+  - cd /home/ristretto-dao/optlab-master/PROJECTS_3/RISTRETTO/Banc\ AO/src  
+  - Run: python hrtc.py 
+- Go to "Control" tab
+  - You should see the top plot updating
+  - We are now ready to close the loop
+  - Set "Gain" 
+  - Check the "loop closed" botton
+  - You should see the bottom plot updating now
+  
 12. Creating On Sky Mask  
-------------------------------------------------------------  
+------------------------
 - Run the following steps:  
   - Import libraries & shared memories   
   - Set DM to flat  
@@ -118,7 +141,7 @@ System Setup Procedure
   - Create shared memories based on the number of valid pixels  
   
 13. Run Open Loop Modes Computation - Night
-----------------------------------  
+-------------------------------------------
 - Open scripts_with_dao/dao_AO_open_loop_with_kl_3s_pyr_papyrus.py  
 - Run the following steps:  
   - Import libraries & shared memories  
@@ -130,3 +153,4 @@ System Setup Procedure
   - Load reference image and PSF  
   - Define the number of KL modes used  
   - Run AO loop 
+  
