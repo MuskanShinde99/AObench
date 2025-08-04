@@ -134,7 +134,7 @@ method='dm_random'
 flux_cutoff = 0.09 # 0.06 - papy dm random; 0.2 - geneva dm random
 modulation_angles = np.arange(0, 360, 1)  # angles of modulation
 modulation_amp = 15 # in lamda/D
-n_iter=100 # number of iternations for dm random commands
+n_iter=500 # number of iternations for dm random commands
 
 mask = create_flux_filtering_mask(method, flux_cutoff, KL2Act_papy[0], KL2Act_papy[1],
                                modulation_angles, modulation_amp, n_iter,
@@ -194,12 +194,6 @@ reference_image = (np.mean([camera_wfs.get_data().astype(np.float32) for i in ra
 reference_image_shm.set_data(reference_image)
 fits.writeto(folder_calib / 'reference_image_raw.fits', reference_image, overwrite=True)
 fits.writeto(folder_calib / f'reference_image_raw_{timestamp}.fits', reference_image, overwrite=True)
-
-# Normailzed refrence image
-normalized_reference_image = normalize_image(reference_image, mask, bias_image)
-normalized_ref_image_shm.set_data(normalized_reference_image)
-fits.writeto(folder_calib / 'reference_image_normalized.fits', normalized_reference_image, overwrite=True)
-fits.writeto(folder_calib / f'reference_image_normalized_{timestamp}.fits', normalized_reference_image, overwrite=True)
 
 #Plot
 plt.figure()

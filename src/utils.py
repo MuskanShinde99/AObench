@@ -457,19 +457,53 @@ def matrix_exists(folder, filename):
     # Use os.path.exists() to check if the file exists at the specified path
     return os.path.exists(file_path)
 
+def compute_response_matrix(images, mask=None):
+    """
+    Compute a response matrix from a 3D array, list of 2D images, or 2D array of flattened images.
 
-def bin_matrix_2d(matrix, new_rows, new_cols):
-    """Interpolates a matrix to a new shape using 2D interpolation."""
-    old_rows, old_cols = matrix.shape
-    old_x = np.linspace(0, 1, old_cols)  # Original column scale
-    old_y = np.linspace(0, 1, old_rows)  # Original row scale
-    new_x = np.linspace(0, 1, new_cols)  # New column scale
-    new_y = np.linspace(0, 1, new_rows)  # New row scale
-    
-    interp_func = interp2d(old_x, old_y, matrix, kind='linear')  # 2D interpolation
-    interpolated_matrix = interp_func(new_x, new_y)
-    
-    return interpolated_matrix
+    Parameters:
+    -----------
+    images : np.ndarray or list
+        - 3D array (n_images, height, width)
+        - List of 2D images
+        - 2D array (n_images, n_pixels), where each row is a flattened image
+    mask : np.ndarray or None
+        Optional 2D mask to apply to each image. Only pixels where mask > 0 are kept.
+
+    Returns:
+    --------
+    response_matrix : np.ndarray
+        2D array where each row is a flattened image (masked or full).
+    """
+    images = np.asarray(images)
+
+    # If input is 2D, assume each row is a flattened image
+    if images.ndim == 2:
+        n_images, n_pixels = images.shape
+        side = int(np.sqrt(n_pixels))
+        if side * side != n_pixels:
+            raise ValueError(f"Cannot reshape image: {n_pixels} pixels is not a perfect square.")
+        images = images.reshape((n_images, side, side))
+
+    # If input is a single 2D image, make it 3D
+    elif images.ndim == 2:
+        images = images[np.newaxis, ...]
+
+    if images.ndim != 3:
+        raise ValueError("Input must be a 2D or 3D array of images.")
+
+    if mask is not None:
+        mask = np.asarray(mask)
+        if mask.shape != images.shape[1:]:
+            raise ValueError("Mask shape must match individual image shape.")
+        response_matrix = np.array([img[mask > 0].ravel() for img in images])
+    else:
+        response_matrix = images.reshape(images.shape[0], -1)
+
+    return response_matrix
+
+
+
 
 def process_response_images_3s_pyr(images, mask, ref_image, bias_image):
     """
@@ -652,6 +686,19 @@ z
     combined_image[crop_height:, crop_width:] = crops[3]
     
     return combined_image
+
+def bin_matrix_2d(matrix, new_rows, new_cols):
+    """Interpolates a matrix to a new shape using 2D interpolation."""
+    old_rows, old_cols = matrix.shape
+    old_x = np.linspace(0, 1, old_cols)  # Original column scale
+    old_y = np.linspace(0, 1, old_rows)  # Original row scale
+    new_x = np.linspace(0, 1, new_cols)  # New column scale
+    new_y = np.linspace(0, 1, new_rows)  # New row scale
+    
+    interp_func = interp2d(old_x, old_y, matrix, kind='linear')  # 2D interpolation
+    interpolated_matrix = interp_func(new_x, new_y)
+    
+    return interpolated_matrix
 
 
 

@@ -196,29 +196,6 @@ def perform_push_pull_calibration_with_phase_basis(
     return pull_images, push_images, push_pull_images
 
 
-def compute_response_matrix(images, mask=None):
-    """
-    Compute a response matrix from a list or array of 2D images.
-
-    Parameters:
-    -----------
-    images : list or np.ndarray
-        Sequence of 2D image arrays.
-    mask : np.ndarray or None
-        2D boolean or integer mask. If provided, only pixels where mask > 0 are used.
-
-    Returns:
-    --------
-    response_matrix : np.ndarray
-        2D array where each row is a flattened image (masked or full).
-    """
-    if mask is not None:
-        response_matrix = np.array([img[mask > 0].ravel() for img in images])
-    else:
-        response_matrix = np.array([img.ravel() for img in images])
-    return response_matrix
-
-
 def create_response_matrix(
     KL2Act,
     phase_amp,

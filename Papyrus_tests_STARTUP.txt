@@ -1,0 +1,109 @@
+System Setup Procedure  
+======================================
+
+1. Start DAO  
+------------  
+- Open a new terminal
+- cd ~/dao/daoRistretto/
+- tmux kill-server
+- ./ristrettoStartBin
+  (There are errors at startup; ignore them)
+  **To be handled by PAPYRUS team when at OHP**
+
+2. Open Shared Memories Viewer  
+------------------------------  
+- Open a new terminal  
+- cd ~/dao/daoRistretto/  # change the address here  
+- Run:  
+    daoShmViewer.py &  
+  (Opens shared memories viewer)  
+
+3. Run Papyrus SIM / Papyrus GUI  
+------------------------------  
+- Open new terminal  
+- cd ~/dao/daoPapyrus/  
+- Start SIM: daoPapyrusSimStart -b 1  
+- GUI: papyCtrl.py  
+- DM display: daoDmDisp.py -s dmCmd -m dm241Map  
+
+4. Open Spyder  
+--------------  
+- Set the working directory to *Banc AO* 
+- Go to: Tools/PYTHONPATH manager 
+- Add full path to Banc AO
+
+5. Change the location in Config file
+-------------------------------------
+- Open a new terminal  
+- cd /home/ristretto-dao/optlab-master/PROJECTS_3/RISTRETTO/Banc\ AO  
+- Open src/config.py in Spyder
+- Change locations of: opt_lab_root & project_root 
+
+6. Create Shared Memories  
+-------------------------  
+- Open src/create_shared_memories.py in Spyder  
+- Check that configuration is set to config["ohp"]
+- Check the src/setup_params.toml have right parameters for tests at OHP
+- Open src/shm_path.toml in Spyder: Put the correct shared memories for cam1 and cam2
+- Set the path in Spyder console to: cd /home/ristretto-dao/optlab-master/PROJECTS_3/RISTRETTO/Banc\ AO/src
+- Run the file  
+
+7. Start the GUI from Isaac  
+---------------------------  
+- Open a new terminal  
+- cd /home/ristretto-dao/optlab-master/PROJECTS_3/RISTRETTO/Banc\ AO/src  
+- Run:  
+    python gui.py  
+    
+8. Check dao setup file  
+---------------------------------  
+- Open src/dao_setup.py in Spyder  
+- PLACE_OF_TEST = os.environ.get("PLACE_OF_TEST", "OHP")
+- Open src/dao_setup_PAPYRUS.py in Spyder  
+
+9. Run Calibrations  
+-------------------  
+- Open scripts_with_dao/dao_calibrations_file.py  
+- Run the following steps:  
+  - Import libraries & shared memories  
+  - Turn off the laser  
+  - Take a bias frame  
+    **(bias frame is set to zero for tests with Papyrus simulator – remove that part)**  
+  - Turn on the laser  
+  - Set DM to flat  
+  - Load transformation matrix from KL2Act_papy_shm  
+  - Create a flux filtering mask – OnSky = False  
+  - Create shared memories based on the number of valid pixels  
+  - Scan modes to find the pyramid's zero ??  
+  - Capture reference image and PSF  
+  - **Bias image was set to zero for tests with Papyrus simulator – remove that**  
+  - Perform push-pull calibration  
+
+10. Run Open Loop Modes Computation  
+----------------------------------  
+- Open scripts_with_dao/dao_AO_open_loop_with_kl_3s_pyr_papyrus.py  
+- Run the following steps:  
+  - Import libraries & shared memories  
+    **(OnSky = False during the day)**  
+  - Set DM to flat  
+  - Load transformation matrix from KL2Act_papy_shm  
+  - Load bias image, calibration mask, and interaction matrix  
+    **(bias frame is set to zero for tests with Papyrus simulator – remove that part)**  
+  - Load reference image and PSF  
+  - Define the number of KL modes used  
+  - Run AO loop  
+
+11. Linearity Curve and Cross-Correlation Matrix Computation  
+------------------------------------------------------------  
+- Open scripts_with_dao/dao_linearity_curve_3s_pyr_papyrus.py  
+- Run the following steps:  
+- Import libraries & shared memories  
+    **(OnSky = False)**  
+  - Set DM to flat  
+  - Load transformation matrix from KL2Act_papy_shm  
+  - Load bias image, calibration mask, and interaction matrix  
+    **(bias frame is set to zero for tests with Papyrus simulator – remove that part)**  
+  - Load reference image and PSF  
+  - Define the number of KL modes used  
+  - Compute linearity curves  
+  - Compute cross-correlation matrix  
