@@ -36,6 +36,10 @@ camera_wfs = setup.camera_wfs
 camera_fp = setup.camera_fp
 npix_small_pupil_grid = setup.npix_small_pupil_grid
 
+# Flag to identify on-sky data
+OnSky = False
+suffix = "_OnSky" if OnSky else ""
+
 #%% Creating and Displaying a Circular Pupil on the SLM
 
 #DM set to flat
@@ -59,7 +63,7 @@ print(f"Bias image shape: {bias_image.shape}")
 bias_image=np.zeros_like(bias_image)
 
 # Load the calibration mask for processing images.
-mask_filename = f'mask_3s_pyr.fits'
+mask_filename = f'mask_3s_pyr{suffix}.fits'
 mask = fits.getdata(os.path.join(folder_calib, mask_filename))
 print(f"Mask dimensions: {mask.shape}")
 
