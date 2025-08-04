@@ -60,7 +60,7 @@ def perform_push_pull_calibration_with_phase_basis(
     nmodes_basis = basis.shape[0]
 
     # Normalize reference image with explicit bias_img set to zero
-    normalized_reference_image = normalize_image(ref_image, mask, bias_img=np.zeros_like(ref_image))
+    normalized_reference_image = normalize_image(ref_image, mask, bias_img)
 
     # Prepare number of repetitions per mode
     if mode_repetitions is None:
