@@ -30,3 +30,9 @@ slm-cam_tests/
 *.png
 *.gif
 *.npy
+
+**/*.fits
+**/*.png
+**/*.gif
+**/*.npy
+
