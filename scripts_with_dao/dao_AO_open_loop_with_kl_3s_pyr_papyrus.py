@@ -187,7 +187,7 @@ while True:
     observed_psf = fp_img / fp_img.sum()
     integrated_obs_psf = observed_psf[psf_mask].sum()
     strehl_ratio = integrated_obs_psf / integrated_diff_psf
-    strehl_ratio_shm.set_data((strehl_ratio)) # setting shared memory
+    strehl_ratio_shm.set_data(np.array([[strehl_ratio]]).astype(np.float32)) # setting shared memory
     # strehl_ratio = np.max(observed_psf) / np.max(diffraction_limited_psf)
     # strehl_ratios[i] = strehl_ratio
 
