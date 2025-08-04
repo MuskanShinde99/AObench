@@ -89,7 +89,7 @@ plt.show()
 fits.writeto(os.path.join(folder_calib, f'bias_image.fits'), np.asarray(bias_image), overwrite=True)
 
 # Set bias image to zero for PAPY SIM tests
-bias_image=np.zeros_like(bias_image)
+bias_image=np.zeros_like(bias_image) #TODO: Remove it
 
 #%% Turn on laser
 
@@ -134,7 +134,7 @@ KL2Act_papy = KL2Act_papy_shm.get_data().T
 #%% Creating a Flux Filtering Mask
 
 method='dm_random'
-flux_cutoff = 0.09 # 0.06 - papy dm random; 0.2 - geneva dm random
+flux_cutoff = 0.08 # 0.06 - papy dm random; 0.2 - geneva dm random
 modulation_angles = np.arange(0, 360, 1)  # angles of modulation
 modulation_amp = 15 # in lamda/D
 n_iter=500 # number of iternations for dm random commands
@@ -180,9 +180,6 @@ scan_othermode_amplitudes_wfs_std(test_values, mode_index, mask,
 #revise the crieteria to standard deviation of intensities within the valid pixels
 
 #%% Capture Reference Image
-
-#set bias image to zero for PAPY SIM tests
-bias_image=np.zeros_like(bias_image)
 
 #Timestamp
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")

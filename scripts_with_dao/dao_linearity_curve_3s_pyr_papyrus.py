@@ -75,7 +75,7 @@ bias_image = fits.getdata(os.path.join(folder_calib, bias_filename))
 print(f"Bias image shape: {bias_image.shape}")
 
 # Set bias image to zero for PAPY SIM tests
-bias_image=np.zeros_like(bias_image)
+bias_image=np.zeros_like(bias_image) #TODO: Remove it
 
 # Load the calibration mask for processing images.
 mask_filename = f'mask_3s_pyr{suffix}.fits'
@@ -122,7 +122,7 @@ plt.close('all')
 
 # Number of KL modes to plot
 num_modes = 10
-applied_phase_amp = np.arange(-0.5, 0.5, 0.1) # 
+applied_phase_amp = np.arange(-1.0, 1.1, 0.1) # 
 computed_phase_amp = np.zeros((num_modes, len(applied_phase_amp)))
 
 # Loop through each Zernike mode
@@ -171,7 +171,14 @@ for mode in range(num_modes):
     axes[mode].grid(True)
 
 plt.tight_layout()
+
+
+# Save to file
+save_path = folder_calib / "linearity_curves.png"
+plt.savefig(save_path, dpi=300)
 plt.show()
+
+print(f"Linearity curves saved to: {save_path}")
 
 #%% Compute cross correlation matrix
 
@@ -229,3 +236,9 @@ plt.ylabel('Applied KL mode index')
 plt.grid(False)
 plt.tight_layout()
 plt.show()
+
+# Save cross-correlation matrix as FITS
+fits_path = folder_calib / "crosscorrelation_matrix.fits"
+fits.writeto(fits_path, crosscorrelation_matrix, overwrite=True)
+
+print(f"Cross-correlation matrix saved to: {fits_path}")
