@@ -109,14 +109,16 @@ plt.colorbar()
 plt.title('Normalized Reference Image')
 plt.show()
 
-#%% Linearity plot KL basis: Phase KL2Act
-
-plt.close('all')
+#%% Select number of KL modes to consider
 
 nmodes_KL = 195
 IM_KL2S = IM_KL2S[:nmodes_KL,:]
 RM_S2KL = np.linalg.pinv(IM_KL2S, rcond=0.10)
 print(f"Shape of the response matrix: {RM_S2KL.shape}")
+
+#%%  Compute linearity curves
+
+plt.close('all')
 
 # Number of KL modes to plot
 num_modes = 10
@@ -168,5 +170,62 @@ for mode in range(num_modes):
     #axes[mode].set_ylim(-0.35, 0.35)
     axes[mode].grid(True)
 
+plt.tight_layout()
+plt.show()
+
+#%% Compute cross correlation matrix
+
+# Parameters
+num_modes = 195
+amp = 0.1  # Use only a single amplitude
+crosscorrelation_matrix = np.zeros((num_modes, num_modes))
+
+# For storing full reconstructed vectors if needed
+reconstructed_all = np.zeros((num_modes, nmodes_KL))
+
+# Loop over each mode
+for mode in range(num_modes):
+    print(f"Applying KL mode {mode}")
+    
+    # Generate DM command for this KL mode
+    kl_mode = amp * KL2Act_papy[mode]
+
+    # Apply DM command
+    set_data_dm(kl_mode, setup=setup)
+
+    # Capture image and compute slopes
+    slopes_image = get_slopes_image(
+        mask,
+        bias_image,
+        normalized_reference_image,
+        setup=setup,
+    )
+
+    slopes = slopes_image[valid_pixels_indices].flatten()
+
+    # Reconstruct the phase vector in KL basis
+    computed_modes = slopes @ RM_S2KL
+    computed_modes_shm.set_data(np.asanyarray(computed_modes).astype(np.float32))
+
+    # Save reconstructed KL amplitudes
+    reconstructed_all[mode, :] = computed_modes
+
+# # Compute cross-correlation matrix between input and output modes
+# for i in range(num_modes):
+#     for j in range(num_modes):
+#         num = np.dot(reconstructed_all[i], reconstructed_all[j])
+#         den = np.linalg.norm(reconstructed_all[i]) * np.linalg.norm(reconstructed_all[j])
+#         crosscorrelation_matrix[i, j] = num / den if den != 0 else 0
+
+crosscorrelation_matrix = reconstructed_all/amp
+
+# Optionally plot the cross-correlation matrix
+plt.figure(figsize=(8, 6))
+plt.imshow(crosscorrelation_matrix, cmap='viridis', interpolation='nearest')
+plt.colorbar(label='Cross-correlation')
+plt.title(f'Cross-correlation matrix (Amp = {amp})')
+plt.xlabel('Reconstructed KL mode index')
+plt.ylabel('Applied KL mode index')
+plt.grid(False)
 plt.tight_layout()
 plt.show()
