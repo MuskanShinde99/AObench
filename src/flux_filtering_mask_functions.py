@@ -117,8 +117,12 @@ def create_summed_image_for_mask_dm_random(n_iter, verbose=False, **kwargs):
 
 def create_flux_filtering_mask(method, flux_cutoff, tiltx, tilty,
                                modulation_angles=np.arange(0, 360, 10), modulation_amp=15, n_iter=200,
-                               create_summed_image=True, verbose=False, verbose_plot=False, **kwargs):
+                               create_summed_image=True, verbose=False, verbose_plot=False,
+                               OnSky=False, **kwargs):
     """Generate a binary mask highlighting high-flux regions.
+
+    When ``OnSky=True`` the string ``'_OnSky'`` is appended to the output
+    filenames instead of producing an additional file.
 
     Parameters
     ----------
@@ -140,6 +144,8 @@ def create_flux_filtering_mask(method, flux_cutoff, tiltx, tilty,
         Print progress information.
     verbose_plot : bool, optional
         Display intermediate plots.
+    OnSky : bool, optional
+        If ``True`` append ``'_OnSky'`` to output filenames.
     **kwargs : optional
         ``camera`` and ``nact_total`` passed to image acquisition functions,
         ``folder_pyr_mask`` and ``folder_calib`` to override output locations.
@@ -153,7 +159,8 @@ def create_flux_filtering_mask(method, flux_cutoff, tiltx, tilty,
     folder_pyr_mask = kwargs.get("folder_pyr_mask", setup.folder_pyr_mask)
     folder_calib = kwargs.get("folder_calib", setup.folder_calib)
 
-    summed_img_path = os.path.join(folder_calib, f'summed_pyr_images_3s_pyr.fits')
+    suffix = "_OnSky" if OnSky else ""
+    summed_img_path = os.path.join(folder_calib, f'summed_pyr_images_3s_pyr{suffix}.fits')
 
     if create_summed_image:
         if verbose:
@@ -217,11 +224,11 @@ def create_flux_filtering_mask(method, flux_cutoff, tiltx, tilty,
         print('Saving masked image and mask')
 
     fits.writeto(
-        os.path.join(folder_calib, f'masked_pyr_images_3s_pyr.fits'),
+        os.path.join(folder_calib, f'masked_pyr_images_3s_pyr{suffix}.fits'),
         masked_summed_image.astype(np.float32), overwrite=True
     )
     fits.writeto(
-        os.path.join(folder_calib, f'mask_3s_pyr.fits'),
+        os.path.join(folder_calib, f'mask_3s_pyr{suffix}.fits'),
         mask.astype(np.uint8), overwrite=True
     )
 
