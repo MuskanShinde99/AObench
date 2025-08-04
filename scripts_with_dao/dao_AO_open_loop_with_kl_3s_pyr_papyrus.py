@@ -110,6 +110,7 @@ plt.show()
 
 # Load Diffraction limited PSF
 diffraction_limited_psf = fits.getdata(folder_calib / 'reference_psf.fits')
+diffraction_limited_psf = diffraction_limited_psf.astype(np.float32)
 diffraction_limited_psf /= diffraction_limited_psf.sum()
 fp_img_shape = diffraction_limited_psf.shape
 print('PSF shape:', fp_img_shape)
