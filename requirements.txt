@@ -12,8 +12,8 @@ PyQt5
 scikit-image
 scikit-optimize
 toml
-cvxpy
 hcipy
+# cvxpy
 # pypylon
 # dao
 # holoeye
