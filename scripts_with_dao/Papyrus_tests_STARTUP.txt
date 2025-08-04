@@ -30,6 +30,7 @@ System Setup Procedure
 - Open a new terminal  
 - cd /home/ristretto-dao/optlab-master/PROJECTS_3/RISTRETTO/Banc\ AO  
 - Open src/create_shared_memories.py in Spyder  
+- Check that configuration is set to config["ohp"]
 - Run the file  
 
 6. Start the GUI from Isaac  
@@ -38,10 +39,12 @@ System Setup Procedure
 - cd /home/ristretto-dao/optlab-master/PROJECTS_3/RISTRETTO/Banc\ AO/src  
 - Run:  
     python gui.py  
-
-7. Create Transformation Matrices  
+    
+7. Check dao setup file  
 ---------------------------------  
-- In case of Papyrus, already stored in shared memory KL2Act_papy  
+- Open src/dao_setup.py in Spyder  
+- PLACE_OF_TEST = os.environ.get("PLACE_OF_TEST", "OHP")
+- Open src/dao_setup_PAPYRUS.py in Spyder  
 
 8. Run Calibrations  
 -------------------  
