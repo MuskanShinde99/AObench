@@ -25,10 +25,15 @@ System Setup Procedure
 --------------  
 - Set the working directory to *Banc AO*  
 
-5. Create Shared Memories  
--------------------------  
+5. Change the location in Config file
+-------------------------------------
 - Open a new terminal  
 - cd /home/ristretto-dao/optlab-master/PROJECTS_3/RISTRETTO/Banc\ AO  
+- Open src/config.py in Spyder
+- Change locations of: opt_lab_root & project_root 
+
+5. Create Shared Memories  
+-------------------------  
 - Open src/create_shared_memories.py in Spyder  
 - Check that configuration is set to config["ohp"]
 - Run the file  
