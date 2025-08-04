@@ -19,6 +19,10 @@ from src.dao_setup import init_setup
 from src.utils import *
 from src.shm_loader import shm
 
+# Flag to identify on-sky data
+OnSky = False
+suffix = "_OnSky" if OnSky else ""
+
 #Loading setup
 setup = init_setup()
 setup = reload_setup()
@@ -50,9 +54,6 @@ camera_wfs = setup.camera_wfs
 camera_fp = setup.camera_fp
 npix_small_pupil_grid = setup.npix_small_pupil_grid
 
-# Flag to identify on-sky data
-OnSky = False
-suffix = "_OnSky" if OnSky else ""
 
 #%% Creating and Displaying a Circular Pupil on the SLM
 
@@ -85,11 +86,12 @@ print(f"Mask dimensions: {mask.shape}")
 valid_pixels_indices = np.where(mask > 0)
 
 # Load the response matrix 
-IM_filename = f'response_matrix_KL2S_filtered_nact_{setup.nact}_amp_0.1_3s_pyr.fits'
-IM_KL2S = fits.getdata(os.path.join(folder_calib, IM_filename))  # /0.1
+IM_filename = f'response_matrix_KL2S_full_nact_{setup.nact}_amp_0.1_3s_pyr.fits'
+IM_KL2S_full = fits.getdata(os.path.join(folder_calib, IM_filename))  # /0.1
+IM_KL2S = compute_response_matrix(IM_KL2S_full, mask).astype(np.float32)
 
 RM_S2KL = np.linalg.pinv(IM_KL2S, rcond=0.10)
-print(f"Shape of the response matrix: {RM_S2KL.shape}")
+print(f"Shape of the reconstruction matrix: {RM_S2KL.shape}")
 
 #%% Load Reference Image and PSF
 
@@ -108,14 +110,15 @@ plt.show()
 
 # Load Diffraction limited PSF
 diffraction_limited_psf = fits.getdata(folder_calib / 'reference_psf.fits')
-#diffraction_limited_psf /= diffraction_limited_psf.sum()
+diffraction_limited_psf /= diffraction_limited_psf.sum()
 fp_img_shape = diffraction_limited_psf.shape
 print('PSF shape:', fp_img_shape)
 
-#Radial Profile 
+#Plot
 plt.figure()
-plt.plot(diffraction_limited_psf[:,291:311:2])
-plt.plot(diffraction_limited_psf[286:316:2,:].T)
+plt.imshow(diffraction_limited_psf)
+plt.colorbar()
+plt.title('PSF')
 plt.show()
 
 # Create the PSF mask 
@@ -144,8 +147,6 @@ plt.show()
 
 #%% Defining the number of Kl modes used for Closed lop simulations
 
-plt.close('all')
-
 # # Define KL modes to consider
 # nmodes_kl = 195
 # KL2Act_papy_new = KL2Act_papy[:nmodes_kl, :]
@@ -158,6 +159,8 @@ plt.close('all')
 # Initialize arrays to store Strehl ratio and total residual phase
 # strehl_ratios = np.zeros(num_iterations)
 # residual_phase_stds = np.zeros(num_iterations)
+
+plt.close('all')
 
 print('Running AO open loop')
 
