@@ -28,7 +28,7 @@ pyramid_select_shm = dao.shm(shm_path['control']['pyramid_select'])
 n_modes_dd_high_shm = dao.shm(shm_path['control']['n_modes_dd_high'])
 n_modes_controlled_shm = dao.shm(shm_path['control']['n_modes_int'])
 telemetry_shm = dao.shm(shm_path['control']['telemetry']) 
-# telemetry_ts_shm = dao.shm(shm_path['control']['telemetry_ts']) 
+telemetry_ts_shm = dao.shm(shm_path['control']['telemetry_ts']) 
 reset_flag_shm = dao.shm(shm_path['control']['reset_flag']) 
 fs = dao.shm(shm_path['control']['fs']).get_data(check=False, semNb=sem_nb)[0][0]
 
@@ -36,7 +36,8 @@ M2V = dao.shm(shm_path['control']['M2V']).get_data(check=False, semNb=sem_nb)
 V2M = np.linalg.pinv(M2V)
 state_mat = np.zeros((2*max_order+1, n_modes),np.float32)
 telemetry = np.zeros((2,n_modes),np.float32)
-telemetry_ts = np.zeros((2,1),dtype='datetime64[us]')
+telemetry_ts = np.zeros((2,1),np.float32)
+epoch = np.datetime64('1970-01-01T00:00:00', 'us')
 
 old_time = time.time()
 print_rate = 1 # [s]
@@ -129,8 +130,8 @@ while True:
     telemetry[1,:] = command
     telemetry_shm.set_data(telemetry.astype(np.float32))
     command_ts = np.datetime64(datetime.datetime.now(), 'us')
-    telemetry_ts[0,:] = modes_ts
-    telemetry_ts[1,:] = command_ts
+    telemetry_ts[0,:] = (modes_ts - epoch) / np.timedelta64(1, 's')
+    telemetry_ts[1,:] = (command_ts - epoch) / np.timedelta64(1, 's')
     # telemetry_ts_shm.set_data(telemetry_ts)
 
     # time.sleep(0.001)
