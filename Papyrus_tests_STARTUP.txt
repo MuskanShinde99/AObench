@@ -3,7 +3,12 @@ System Setup Procedure
 
 1. Start DAO  
 ------------  
-- To be handled by PAPYRUS team  
+- Open a new terminal
+- cd ~/dao/daoRistretto/
+- tmux kill-server
+- ./ristrettoStartBin
+  (There are errors at startup; ignore them)
+  **To be handled by PAPYRUS team when at OHP**
 
 2. Open Shared Memories Viewer  
 ------------------------------  
@@ -38,6 +43,8 @@ System Setup Procedure
 -------------------------  
 - Open src/create_shared_memories.py in Spyder  
 - Check that configuration is set to config["ohp"]
+- Check the src/setup_params.toml have right parameters for tests at OHP
+- Set the path in Spyder console to: cd /home/ristretto-dao/optlab-master/PROJECTS_3/RISTRETTO/Banc\ AO/src
 - Run the file  
 
 7. Start the GUI from Isaac  
