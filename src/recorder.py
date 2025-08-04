@@ -67,6 +67,7 @@ M2V = dao.shm(shm_path['control']['M2V']).get_data()
 S2M = dao.shm(shm_path['control']['S2M']).get_data()
 
 norm_flux_pyr_img_shm = dao.shm(shm_path_flux['norm_flux_pyr_img'])
+strehl_ratio_shm = dao.shm(shm_path_flux['strehl_ratio'])
 
 record_its = int(record_time*fs)
 
@@ -99,6 +100,7 @@ modes_buf = np.zeros((record_its,n_modes))
 command_buf = np.zeros((record_its,n_modes))
 voltages_buf = np.zeros((record_its,n_voltages))
 pyr_flux_buf = np.zeros((record_its,1))
+strehl_buf = np.zeros((record_its,1))
 
 modes_ts_buf = np.zeros((record_its,1),dtype='datetime64[us]')
 command_ts_buf = np.zeros((record_its,1),dtype='datetime64[us]')
@@ -115,6 +117,7 @@ for i in range(record_its):
 
     voltages = dm_shm.get_data(check=False, semNb=sem_nb).squeeze()
     pyr_flux = norm_flux_pyr_img_shm.get_data(check=False, semNb=sem_nb).squeeze()
+    strehl = strehl_ratio_shm.get_data(check=False, semNb=sem_nb).squeeze()
 
     modes_buf = np.roll(modes_buf, -1, axis=0)
     voltages_buf = np.roll(voltages_buf, -1, axis=0)
@@ -122,6 +125,7 @@ for i in range(record_its):
     command_ts_buf = np.roll(command_ts_buf, -1, axis=0)
     command_buf = np.roll(command_buf, -1, axis=0)
     pyr_flux_buf = np.roll(pyr_flux_buf, -1, axis=0)
+    strehl_buf = np.roll(strehl_buf, -1, axis=0)
 
     modes_buf[-1, :] = modes
     voltages_buf[-1, :] = voltages
@@ -129,6 +133,7 @@ for i in range(record_its):
     command_ts_buf[-1, :] = epoch + (command_ts * np.timedelta64(1, 's')).astype('timedelta64[us]')
     command_buf[-1, :] = command
     pyr_flux_buf[-1, :] = pyr_flux
+    strehl_buf[-1, :] = strehl
 
 
 rms = np.mean(np.sum(np.square(modes_buf),axis=1))

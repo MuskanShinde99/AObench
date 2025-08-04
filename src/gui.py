@@ -329,11 +329,14 @@ class MainWindow(QMainWindow):
         self.init_process()
         self.init_spinboxes()
         self.view_update_timer = QTimer()
+        self.strehl_ratio_uptade_timer = QTimer()
         self.view_update_timer.timeout.connect(self.update_images)
         self.view_update_timer.timeout.connect(self.update_fft_wiew)
         self.view_update_timer.timeout.connect(self.update_time_wiew)
         self.view_update_timer.timeout.connect(self.update_modes_amp_wiew)
+        self.strehl_ratio_uptade_timer.timeout.connect(self.update_strehl_ratio)
         self.view_update_timer.start(100) # ms 
+        self.strehl_ratio_uptade_timer.start(1000)
 
         print("init done")
     def init_spinboxes(self):
@@ -403,6 +406,7 @@ class MainWindow(QMainWindow):
         self.cam1_shm                     = dao.shm(shm_path['cam1'])             
         self.cam2_shm                     = dao.shm(shm_path['cam2'])
         self.dm_act_shm                   = dao.shm(shm_path['dm_act'])
+        self.strehl_ratio_shm             = dao.shm(shm_path['strehl_ratio'])
 
         self.modes_fft_shm = dao.shm(shm_path_control['control']['modes_fft'])
         self.commands_fft_shm = dao.shm(shm_path_control['control']['commands_fft'])
@@ -553,8 +557,10 @@ class MainWindow(QMainWindow):
             commands = np.sqrt(np.square(commands))
         self.commands_view.draw([(np.arange(commands.shape[0]), commands)])
 
+    def update_strehl_ratio(self):
+        strehl = self.strehl_ratio_shm.get_data(check=False, semNb=self.sem_nb).squeeze()
+        self.strehl_output.append(f"{strehl:.2f}")   
 
-        
     def update_fft_wiew(self):
         f =  self.f_shm.get_data(check=False, semNb=self.sem_nb)
         pol_fft = self.pol_fft_shm.get_data(check=False, semNb=self.sem_nb)
@@ -636,7 +642,7 @@ class MainWindow(QMainWindow):
 
     def save_flat(self):
         try:
-            calib_flat = fits.getdata('../outputs/calibration_files/dm_flat_papy.fits')
+            calib_flat = fits.getdata('../outputs/Calibration_files_papyrus/dm_flat_papy.fits')
         except FileNotFoundError:
             calib_flat = 0.
             print("File: calibration_files/dm_flat_papy.fits not found")
@@ -646,7 +652,7 @@ class MainWindow(QMainWindow):
 
     def load_flat(self):
         try:
-            calib_flat = fits.getdata('../outputs/calibration_files/dm_flat_papy.fits')
+            calib_flat = fits.getdata('../outputs/Calibration_files_papyrus/dm_flat_papy.fits')
         except FileNotFoundError:
             calib_flat = 0.
             print("File: calibration_files/dm_flat_papy.fits not found")
@@ -658,7 +664,7 @@ class MainWindow(QMainWindow):
 
     def reset_flat(self):
         try:
-            calib_flat = fits.getdata('../outputs/calibration_files/dm_flat_papy.fits')
+            calib_flat = fits.getdata('../outputs/Calibration_files_papyrus/dm_flat_papy.fits')
         except FileNotFoundError:
             calib_flat = 0.
             print("File: calibration_files/dm_flat_papy.fits not found")
@@ -725,6 +731,7 @@ class MainWindow(QMainWindow):
         self.pol_reconstructor_process.stop_process()
         self.freq_mag_estimator_process.stop_process()
         self.view_update_timer.stop()
+        self.strehl_ratio_uptade_timer.stop()
         self.identify_latency_frequency_process.stop_process()
 
         print("All processes and timers stopped")

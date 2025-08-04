@@ -14,7 +14,7 @@ class Config:
         self.root_dir = self.project_root
 
         # Pre-compute commonly used output folders
-        self.folder_calib = self.root_dir / 'outputs/Calibration_files_papyrus'
+        self.folder_calib = self.root_dir / 'outputs/Calibration_files'
         self.folder_pyr_mask = self.root_dir / 'outputs/3s_pyr_mask'
         self.folder_transformation_matrices = self.root_dir / 'outputs/Transformation_matrices'
         self.folder_closed_loop_tests = self.root_dir / 'outputs/Closed_loop_tests'
