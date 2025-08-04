@@ -79,21 +79,7 @@ System Setup Procedure
   - **Bias image was set to zero for tests with Papyrus simulator – remove that**  
   - Perform push-pull calibration  
 
-10. Run Open Loop Modes Computation  
-----------------------------------  
-- Open scripts_with_dao/dao_AO_open_loop_with_kl_3s_pyr_papyrus.py  
-- Run the following steps:  
-  - Import libraries & shared memories  
-    **(OnSky = False during the day)**  
-  - Set DM to flat  
-  - Load transformation matrix from KL2Act_papy_shm  
-  - Load bias image, calibration mask, and interaction matrix  
-    **(bias frame is set to zero for tests with Papyrus simulator – remove that part)**  
-  - Load reference image and PSF  
-  - Define the number of KL modes used  
-  - Run AO loop  
-
-11. Linearity Curve and Cross-Correlation Matrix Computation  
+10. Linearity Curve and Cross-Correlation Matrix Computation  
 ------------------------------------------------------------  
 - Open scripts_with_dao/dao_linearity_curve_3s_pyr_papyrus.py  
 - Run the following steps:  
@@ -107,3 +93,40 @@ System Setup Procedure
   - Define the number of KL modes used  
   - Compute linearity curves  
   - Compute cross-correlation matrix  
+  
+11. Run Open Loop Modes Computation - Day
+----------------------------------  
+- Open scripts_with_dao/dao_AO_open_loop_with_kl_3s_pyr_papyrus.py  
+- Run the following steps:  
+  - Import libraries & shared memories  
+    **(OnSky = False during the day)**  
+  - Set DM to flat  
+  - Load transformation matrix from KL2Act_papy_shm  
+  - Load bias image, calibration mask, and interaction matrix  
+    **(bias frame is set to zero for tests with Papyrus simulator – remove that part)**  
+  - Load reference image and PSF  
+  - Define the number of KL modes used  
+  - Run AO loop  
+  
+12. Creating On Sky Mask  
+------------------------------------------------------------  
+- Run the following steps:  
+  - Import libraries & shared memories   
+  - Set DM to flat  
+  - Load transformation matrix from KL2Act_papy_shm  
+  - Create a flux filtering mask – OnSky = True  
+  - Create shared memories based on the number of valid pixels  
+  
+13. Run Open Loop Modes Computation - Night
+----------------------------------  
+- Open scripts_with_dao/dao_AO_open_loop_with_kl_3s_pyr_papyrus.py  
+- Run the following steps:  
+  - Import libraries & shared memories  
+    **(OnSky = True during the night)**  
+  - Set DM to flat  
+  - Load transformation matrix from KL2Act_papy_shm  
+  - Load bias image, calibration mask, and interaction matrix  
+    **(bias frame is set to zero for tests with Papyrus simulator – remove that part)**  
+  - Load reference image and PSF  
+  - Define the number of KL modes used  
+  - Run AO loop 

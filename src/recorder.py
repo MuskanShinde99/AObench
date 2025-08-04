@@ -64,7 +64,7 @@ n_modes_dd_high = dao.shm(shm_path['control']['n_modes_dd_high']).get_data()[0][
 record_time = dao.shm(shm_path['control']['record_time']).get_data()[0][0]
 delay = dao.shm(shm_path['control']['delay']).get_data()[0][0]
 M2V = dao.shm(shm_path['control']['M2V']).get_data()
-S2M = dao.shm(shm_path['control']['S2M']).get_data()
+M2S = dao.shm(shm_path['control']['M2S']).get_data()
 
 norm_flux_pyr_img_shm = dao.shm(shm_path_flux['norm_flux_pyr_img'])
 strehl_ratio_shm = dao.shm(shm_path_flux['strehl_ratio'])
@@ -148,8 +148,8 @@ fits.writeto(os.path.join(full_path, "commands_ts.fits"), command_ts_buf, overwr
 fits.writeto(os.path.join(full_path, "voltages.fits"), voltages_buf, overwrite = True)
 fits.writeto(os.path.join(full_path, "pyr_fluxes.fits"), pyr_flux_buf, overwrite = True)
 fits.writeto(os.path.join(full_path, "M2V.fits"), M2V, overwrite = True)
-fits.writeto(os.path.join(full_path, "S2M.fits"), S2M, overwrite = True)
-
+fits.writeto(os.path.join(full_path, "M2S.fits"), M2S, overwrite = True)
+fits.writeto(os.path.join(full_path, "strehl.fits"), strehl_buf, overwrite = True)
 results_file.save()
 
 print('print record done')

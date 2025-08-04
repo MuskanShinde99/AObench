@@ -1,0 +1,6 @@
+n_fft = 150
+control mode = int
+delay = 2.404202938079834
+n modes controlled = 195
+record time = 5.0
+rms = 0.049196152243132535
