@@ -45,7 +45,7 @@ n_modes = config['common']['n_modes']
 n_voltages = config['common']['n_voltages']
 fs = dao.shm(shm_path['control']['fs']).get_data()[0][0]
 record_time = dao.shm(shm_path['control']['record_time']).get_data()[0][0]
-modes_shm = dao.shm(shm_path['control']['modes'])
+
 dm_shm = dao.shm(shm_path['control']['dm'])
 slopes_shm = dao.shm(shm_path['control']['slopes'])
 telemetry_shm = dao.shm(shm_path['control']['telemetry'])
@@ -102,8 +102,8 @@ voltages_buf = np.zeros((record_its,n_voltages))
 pyr_flux_buf = np.zeros((record_its,1))
 strehl_buf = np.zeros((record_its,1))
 
-modes_ts_buf = np.zeros((record_its,1),dtype='datetime64[us]')
-command_ts_buf = np.zeros((record_its,1),dtype='datetime64[us]')
+modes_ts_buf = np.zeros((record_its,1),dtype=np.float64)
+command_ts_buf = np.zeros((record_its,1),dtype=np.float64)
 
 for i in range(record_its):
 
@@ -129,8 +129,10 @@ for i in range(record_its):
 
     modes_buf[-1, :] = modes
     voltages_buf[-1, :] = voltages
-    modes_ts_buf[-1, :]  epoch + (modes_ts * np.timedelta64(1, 's')).astype('timedelta64[us]')
-    command_ts_buf[-1, :] = epoch + (command_ts * np.timedelta64(1, 's')).astype('timedelta64[us]')
+    modes_ts_buf[-1, :] = modes_ts 
+    command_ts_buf[-1, :] =  command_ts 
+    # dummy = epoch + (command_ts * np.timedelta64(1, 's')).astype('timedelta64[us]')
+    # print(dummy)
     command_buf[-1, :] = command
     pyr_flux_buf[-1, :] = pyr_flux
     strehl_buf[-1, :] = strehl

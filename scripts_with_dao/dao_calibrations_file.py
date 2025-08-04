@@ -197,9 +197,9 @@ fits.writeto(folder_calib / f'reference_image_raw_{timestamp}.fits', reference_i
 
 #Plot
 plt.figure()
-plt.imshow(normalized_reference_image)
+plt.imshow(reference_image)
 plt.colorbar()
-plt.title('Normalized Reference Image')
+plt.title('Reference Image')
 plt.show()
 
 # Display the Focal plane image
