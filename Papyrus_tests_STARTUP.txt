@@ -32,26 +32,26 @@ System Setup Procedure
 - Open src/config.py in Spyder
 - Change locations of: opt_lab_root & project_root 
 
-5. Create Shared Memories  
+6. Create Shared Memories  
 -------------------------  
 - Open src/create_shared_memories.py in Spyder  
 - Check that configuration is set to config["ohp"]
 - Run the file  
 
-6. Start the GUI from Isaac  
+7. Start the GUI from Isaac  
 ---------------------------  
 - Open a new terminal  
 - cd /home/ristretto-dao/optlab-master/PROJECTS_3/RISTRETTO/Banc\ AO/src  
 - Run:  
     python gui.py  
     
-7. Check dao setup file  
+8. Check dao setup file  
 ---------------------------------  
 - Open src/dao_setup.py in Spyder  
 - PLACE_OF_TEST = os.environ.get("PLACE_OF_TEST", "OHP")
 - Open src/dao_setup_PAPYRUS.py in Spyder  
 
-8. Run Calibrations  
+9. Run Calibrations  
 -------------------  
 - Open scripts_with_dao/dao_calibrations_file.py  
 - Run the following steps:  
@@ -69,7 +69,7 @@ System Setup Procedure
   - **Bias image was set to zero for tests with Papyrus simulator – remove that**  
   - Perform push-pull calibration  
 
-9. Run Open Loop Modes Computation  
+10. Run Open Loop Modes Computation  
 ----------------------------------  
 - Open scripts_with_dao/dao_AO_open_loop_with_kl_3s_pyr_papyrus.py  
 - Run the following steps:  
@@ -83,7 +83,7 @@ System Setup Procedure
   - Define the number of KL modes used  
   - Run AO loop  
 
-10. Linearity Curve and Cross-Correlation Matrix Computation  
+11. Linearity Curve and Cross-Correlation Matrix Computation  
 ------------------------------------------------------------  
 - Open scripts_with_dao/dao_linearity_curve_3s_pyr_papyrus.py  
 - Run the following steps:  
