@@ -23,7 +23,9 @@ System Setup Procedure
 
 4. Open Spyder  
 --------------  
-- Set the working directory to *Banc AO*  
+- Set the working directory to *Banc AO* 
+- Go to: Tools/PYTHONPATH manager 
+- Add full path to Banc AO
 
 5. Change the location in Config file
 -------------------------------------
