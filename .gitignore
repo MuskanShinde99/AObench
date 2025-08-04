@@ -3,7 +3,6 @@ __pycache__/
 *.pyc
 
 # Ignore outputs
-outputs/*
 !outputs/GUI_tests/
 !outputs/GUI_tests/**
 *.pfs
