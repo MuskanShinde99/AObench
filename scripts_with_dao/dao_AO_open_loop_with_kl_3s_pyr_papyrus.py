@@ -50,6 +50,10 @@ camera_wfs = setup.camera_wfs
 camera_fp = setup.camera_fp
 npix_small_pupil_grid = setup.npix_small_pupil_grid
 
+# Flag to identify on-sky data
+OnSky = False
+suffix = "_OnSky" if OnSky else ""
+
 #%% Creating and Displaying a Circular Pupil on the SLM
 
 #DM set to flat
@@ -73,7 +77,7 @@ print(f"Bias image shape: {bias_image.shape}")
 bias_image=np.zeros_like(bias_image)
 
 # Load the calibration mask for processing images.
-mask_filename = f'mask_3s_pyr.fits'
+mask_filename = f'mask_3s_pyr{suffix}.fits'
 mask = fits.getdata(os.path.join(folder_calib, mask_filename))
 print(f"Mask dimensions: {mask.shape}")
 
@@ -125,7 +129,6 @@ plt.show()
 
 # Integrate the flux in that small region
 integrated_diff_psf = diffraction_limited_psf[psf_mask].sum()
-print('sum center PSF =', integrated_diff_psf)
 
 # Plot PSF with selected region overlayed
 plt.figure()
@@ -155,6 +158,8 @@ plt.close('all')
 # Initialize arrays to store Strehl ratio and total residual phase
 # strehl_ratios = np.zeros(num_iterations)
 # residual_phase_stds = np.zeros(num_iterations)
+
+print('Running AO open loop')
 
 i = 0
 while True:

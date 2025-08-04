@@ -24,7 +24,6 @@ from types import SimpleNamespace
 # Import Specific Modules
 import dao
 from src.config import config
-from src.hardware import Camera
 from src.utils import (
     compute_data_slm,
     set_default_setup,
@@ -220,8 +219,8 @@ def update_pupil(*args, **kwargs):
 class DAOSetup:
     """Bundled access to frequently used setup objects."""
 
-    camera_wfs: Camera
-    camera_fp: Camera
+    camera_wfs: Any
+    camera_fp: Any
     pupil_setup: PupilSetup
     folder_calib: str
     folder_pyr_mask: str

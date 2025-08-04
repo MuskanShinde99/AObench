@@ -5,11 +5,16 @@ astropy
 matplotlib
 opencv-python-headless
 tqdm
-hcipy
 pillow
 pyqtgraph
 PyQt6
+PyQt5
 scikit-image
 scikit-optimize
 toml
-pypylon
+hcipy
+# cvxpy
+# pypylon
+# dao
+# holoeye
+
