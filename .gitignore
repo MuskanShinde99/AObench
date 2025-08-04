@@ -27,3 +27,6 @@ files_with_ueye_camera/
 slm-cam_tests/
 
 *.fits
+*.png
+*.gif
+*.npy
