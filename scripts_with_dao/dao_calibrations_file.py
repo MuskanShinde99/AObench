@@ -134,11 +134,12 @@ method='dm_random'
 flux_cutoff = 0.09 # 0.06 - papy dm random; 0.2 - geneva dm random
 modulation_angles = np.arange(0, 360, 1)  # angles of modulation
 modulation_amp = 15 # in lamda/D
-n_iter=800 # number of iternations for dm random commands
+n_iter=100 # number of iternations for dm random commands
 
 mask = create_flux_filtering_mask(method, flux_cutoff, KL2Act_papy[0], KL2Act_papy[1],
                                modulation_angles, modulation_amp, n_iter,
-                               create_summed_image=False, verbose=False, verbose_plot=True)
+                               create_summed_image=True, verbose=False, verbose_plot=True,
+                               OnSky=False,)
 
 valid_pixels_mask_shm.set_data(mask)
 
