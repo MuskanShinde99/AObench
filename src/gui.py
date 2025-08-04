@@ -636,35 +636,35 @@ class MainWindow(QMainWindow):
 
     def save_flat(self):
         try:
-            calib_flat = fits.getdata('../outputs/calibration_files/dm_flat_papy.fits')
+            calib_flat = fits.getdata('../outputs/Calibration_files_papyrus/dm_flat_papy.fits')[:,np.newaxis]
         except FileNotFoundError:
             calib_flat = 0.
-            print("File: calibration_files/dm_flat_papy.fits not found")
+            print("File: Calibration_files_papyrus/dm_flat_papy.fits not found")
         flat = self.dm_shm.get_data(check=False, semNb=self.sem_nb)
         fits.writeto('save/flat.fits',flat, overwrite = True)
-        self.flat_dm_shm.set_data((flat+calib_flat).astype(np.float32))
+        self.flat_dm_shm.set_data((flat+calib_flat.astype(np.float32)).astype(np.float32))
 
     def load_flat(self):
         try:
-            calib_flat = fits.getdata('../outputs/calibration_files/dm_flat_papy.fits')
+            calib_flat = fits.getdata('../outputs/Calibration_files_papyrus/dm_flat_papy.fits')[:,np.newaxis]
         except FileNotFoundError:
             calib_flat = 0.
-            print("File: calibration_files/dm_flat_papy.fits not found")
+            print("File: Calibration_files_papyrus/dm_flat_papy.fits not found")
         try:
             flat = fits.getdata('save/flat.fits')
-            self.flat_dm_shm.set_data((flat+calib_flat).astype(np.float32))
+            self.flat_dm_shm.set_data((flat+calib_flat.astype(np.float32)).astype(np.float32))
         except FileNotFoundError:
             print("File: 'save/flat.fits' not found")
 
     def reset_flat(self):
         try:
-            calib_flat = fits.getdata('../outputs/calibration_files/dm_flat_papy.fits')
+            calib_flat = fits.getdata('../outputs/Calibration_files_papyrus/dm_flat_papy.fits')[:,np.newaxis]
         except FileNotFoundError:
             calib_flat = 0.
-            print("File: calibration_files/dm_flat_papy.fits not found")
+            print("File: Calibration_files_papyrus/dm_flat_papy.fits not found")
         flat = self.dm_shm.get_data(check=False, semNb=self.sem_nb)*0
         fits.writeto('save/flat.fits',flat, overwrite = True)
-        self.flat_dm_shm.set_data((flat+calib_flat).astype(np.float32))
+        self.flat_dm_shm.set_data((flat+calib_flat.astype(np.float32)).astype(np.float32))
 
     def save_latency(self):
         latency = self.latency_shm.get_data(check=False, semNb=self.sem_nb)
