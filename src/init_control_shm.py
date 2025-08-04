@@ -21,7 +21,7 @@ dm_shm = dao.shm(shm_path['control']['dm'])
 # time domain data
 modes_buf = np.zeros((buf_size,n_modes),np.float32)
 telemetry = np.zeros((2,n_modes),np.float32)
-telemetry_ts = np.zeros((2,1),dtype=np.datetime64('us'))
+telemetry_ts = np.zeros((2,1),np.float32)
 commands_buf = np.zeros((buf_size,n_modes),np.float32)
 pol_buf = np.zeros((buf_size,n_modes),np.float32)
 state_mat = np.zeros((2*max_order+1, n_modes),np.float32)

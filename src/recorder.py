@@ -50,7 +50,7 @@ dm_shm = dao.shm(shm_path['control']['dm'])
 slopes_shm = dao.shm(shm_path['control']['slopes'])
 telemetry_shm = dao.shm(shm_path['control']['telemetry'])
 telemetry_ts_shm = dao.shm(shm_path['control']['telemetry_ts']) 
-
+epoch = np.datetime64('1970-01-01T00:00:00', 'us')
 n_fft = dao.shm(shm_path['control']['n_fft']).get_data()[0][0]
 controller_select = dao.shm(shm_path['control']['controller_select']).get_data()[0][0]
 gain_margin = dao.shm(shm_path['control']['gain_margin']).get_data()[0][0]
@@ -125,8 +125,8 @@ for i in range(record_its):
 
     modes_buf[-1, :] = modes
     voltages_buf[-1, :] = voltages
-    modes_ts_buf[-1, :] = modes_ts
-    command_ts_buf[-1, :] = command_ts
+    modes_ts_buf[-1, :]  epoch + (modes_ts * np.timedelta64(1, 's')).astype('timedelta64[us]')
+    command_ts_buf[-1, :] = epoch + (command_ts * np.timedelta64(1, 's')).astype('timedelta64[us]')
     command_buf[-1, :] = command
     pyr_flux_buf[-1, :] = pyr_flux
 
