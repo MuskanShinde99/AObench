@@ -87,3 +87,4 @@ residual_modes_shm           = dao.shm('/tmp/residual_modes.im.shm',          np
 computed_modes_shm           = dao.shm('/tmp/computed_modes.im.shm',          np.zeros((nmodes_KL, 1), dtype=np.float32))
 dm_kl_modes_shm              = dao.shm('/tmp/dm_kl_modes.im.shm',             np.zeros((nmodes_KL, 1), dtype=np.float32))
 norm_flux_pyr_img_shm        = dao.shm('/tmp/norm_flux_pyr_img.im.shm',       np.zeros((1, 1), dtype=np.float32))
+strehl_ratio_shm             = dao.shm('/tmp/strehl_ratio.im.shm',            np.zeros((1, 1), dtype=np.float32))
