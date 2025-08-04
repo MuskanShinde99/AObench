@@ -44,6 +44,7 @@ System Setup Procedure
 - Open src/create_shared_memories.py in Spyder  
 - Check that configuration is set to config["ohp"]
 - Check the src/setup_params.toml have right parameters for tests at OHP
+- Open src/shm_path.toml in Spyder: Put the correct shared memories for cam1 and cam2
 - Set the path in Spyder console to: cd /home/ristretto-dao/optlab-master/PROJECTS_3/RISTRETTO/Banc\ AO/src
 - Run the file  
 
