@@ -89,7 +89,7 @@ plt.show()
 fits.writeto(os.path.join(folder_calib, f'bias_image.fits'), np.asarray(bias_image), overwrite=True)
 
 # Set bias image to zero for PAPY SIM tests
-bias_image=np.zeros_like(bias_image) #TODO: Remove it
+# bias_image=np.zeros_like(bias_image) #TODO: Remove it
 
 #%% Turn on laser
 
