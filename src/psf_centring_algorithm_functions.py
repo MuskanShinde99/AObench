@@ -5,6 +5,8 @@ from pathlib import Path
 import cv2
 import re
 
+from src.shm_loader import shm
+
 from src.config import config
 from src.utils import set_data_dm
 
@@ -12,6 +14,7 @@ from src.dao_setup import init_setup, ROOT_DIR, PLACE_OF_TEST
 
 
 setup = init_setup()
+dm_flat_papy_shm = shm.dm_flat_papy_shm
 # wait_time = setup.wait_time
 pupil_setup = setup.pupil_setup
 camera_wfs = setup.camera_wfs
@@ -59,6 +62,7 @@ def cost_function(amplitudes, pupil_coords, radius, iteration, variance_threshol
     pupil_setup.update_pupil(tt_amplitudes=amplitudes)
     # Apply the updated flat map to the DM and SLM
     set_data_dm(setup=setup)
+    dm_flat_papy_shm.set_data(setup.dm_flat.astype(np.float32))
 
     # Capture and average 5 images
     num_images = 5
