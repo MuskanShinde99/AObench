@@ -55,10 +55,10 @@ fps_fp = shm.cam2Fps_shm #dao.shm('/tmp/cam2Fps.im.shm')
 #fps_fp.set_data(fps_fp.get_data()*0+20)
 
 img = camera_wfs.get_data()
-img_size_wfs_cam = img.shape[0]
+img_size_wfs_cam_x, img_size_wfs_cam_y =  160, 128 #240, 240
 
 img_fp = camera_fp.get_data()
-img_size_fp_cam = img_fp.shape[0]
+img_size_fp_cam_x, img_size_fp_cam_y =  816, 624 #600, 600
 
 # # To get camera image
 # camera_wfs.get_data()
@@ -228,8 +228,10 @@ class DAOSetup:
     folder_closed_loop_tests: str
     folder_turbulence: str
     folder_gui: str
-    img_size_wfs_cam: int
-    img_size_fp_cam: int
+    img_size_wfs_cam_x: int
+    img_size_wfs_cam_y: int
+    img_size_fp_cam_x: int
+    img_size_fp_cam_y: int
     npix_small_pupil_grid: int
     wait_time: float
     nact: int
@@ -256,8 +258,10 @@ def init_setup() -> DAOSetup:
         folder_closed_loop_tests=str(folder_closed_loop_tests),
         folder_turbulence=str(folder_turbulence),
         folder_gui=str(folder_gui),
-        img_size_wfs_cam=img_size_wfs_cam,
-        img_size_fp_cam=img_size_fp_cam,
+        img_size_wfs_cam_x=img_size_wfs_cam_x,
+        img_size_wfs_cam_y=img_size_wfs_cam_y,
+        img_size_fp_cam_x=img_size_fp_cam_x,
+        img_size_fp_cam_y=img_size_fp_cam_y,
         npix_small_pupil_grid=npix_small_pupil_grid,
         wait_time=wait_time,
         nact=nact,
