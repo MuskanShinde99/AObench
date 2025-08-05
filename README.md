@@ -15,7 +15,7 @@ export PLACE_OF_TEST=Geneva  # or OHP
 
 These variables allow running the code from different locations without
 modifying the source files. Output directories are created under
-`PROJECT_ROOT`, which defaults to `${OPT_LAB_ROOT}/PROJECTS_3/RISTRETTO/Banc AO`.
+`PROJECT_ROOT`.
 
 The scripts under `scripts_with_dao` rely on modules from the `src` package. Make sure the repository root is on your `PYTHONPATH`:
 
