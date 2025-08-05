@@ -49,6 +49,7 @@ def perform_push_pull_calibration_with_phase_basis(
     """
     # Load optional configuration values
     nact = kwargs.get("nact", setup.nact)
+    camera_wfs = kwargs.get("camera_wfs", setup.camera_wfs)
 
     if not (push_pull or pull_push):
         raise ValueError("Either push_pull or pull_push must be True")
