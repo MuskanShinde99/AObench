@@ -216,6 +216,7 @@ def create_response_matrix(
     push_pull=False,
     pull_push=True,
     n_frames: int = 1,
+    filename_suffix: str = "",
     **kwargs,
 ):
     """
@@ -251,6 +252,8 @@ def create_response_matrix(
         If True, perform a pull followed by a push ([phase_amp, -phase_amp]).
     n_frames : int
         Number of frames to average for each measurement during calibration.
+    filename_suffix : str, optional
+        Suffix appended to all saved FITS filenames. Defaults to an empty string.
     kwargs:
         - nact
         - folder_calib
@@ -307,9 +310,15 @@ def create_response_matrix(
     response_matrix_filtered = compute_response_matrix(push_pull_images, mask).astype(np.float32)
 
     # Define output filenames
-    pull_filename     = f'processed_response_cube_KL2PWFS_only_pull_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
-    push_filename     = f'processed_response_cube_KL2PWFS_only_push_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
-    pushpull_filename = f'processed_response_cube_KL2PWFS_push-pull_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
+    pull_filename     = (
+        f'processed_response_cube_KL2PWFS_only_pull_nact_{nact}_amp_{phase_amp}_3s_pyr{filename_suffix}.fits'
+    )
+    push_filename     = (
+        f'processed_response_cube_KL2PWFS_only_push_nact_{nact}_amp_{phase_amp}_3s_pyr{filename_suffix}.fits'
+    )
+    pushpull_filename = (
+        f'processed_response_cube_KL2PWFS_push-pull_nact_{nact}_amp_{phase_amp}_3s_pyr{filename_suffix}.fits'
+    )
 
     # Save FITS files
     if verbose: print('Pull images saved')
@@ -325,15 +334,21 @@ def create_response_matrix(
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     
     # Filterd
-    filtered = f'response_matrix_KL2S_filtered_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
-    filtered_timestamped = f'response_matrix_KL2S_filtered_nact_{nact}_amp_{phase_amp}_3s_pyr_{timestamp}.fits'
+    filtered = (
+        f'response_matrix_KL2S_filtered_nact_{nact}_amp_{phase_amp}_3s_pyr{filename_suffix}.fits'
+    )
+    filtered_timestamped = (
+        f'response_matrix_KL2S_filtered_nact_{nact}_amp_{phase_amp}_3s_pyr_{timestamp}{filename_suffix}.fits'
+    )
     fits.writeto(os.path.join(folder_calib, filtered), response_matrix_filtered, overwrite=True)
     fits.writeto(os.path.join(folder_calib, filtered_timestamped), response_matrix_filtered, overwrite=True)
     if verbose: print(f"Filtered matrix saved to:\n  {filtered}\n  {filtered_timestamped}")
     
     # Full
-    full = f'response_matrix_KL2S_full_nact_{nact}_amp_{phase_amp}_3s_pyr.fits'
-    full_timestamped = f'response_matrix_KL2S_full_nact_{nact}_amp_{phase_amp}_3s_pyr_{timestamp}.fits'
+    full = f'response_matrix_KL2S_full_nact_{nact}_amp_{phase_amp}_3s_pyr{filename_suffix}.fits'
+    full_timestamped = (
+        f'response_matrix_KL2S_full_nact_{nact}_amp_{phase_amp}_3s_pyr_{timestamp}{filename_suffix}.fits'
+    )
     fits.writeto(os.path.join(folder_calib, full), response_matrix_full, overwrite=True)
     fits.writeto(os.path.join(folder_calib, full_timestamped), response_matrix_full, overwrite=True)
     if verbose: print(f"Full matrix saved to:\n  {full}\n  {full_timestamped}")
