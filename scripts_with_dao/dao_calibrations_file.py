@@ -89,7 +89,7 @@ plt.show()
 fits.writeto(os.path.join(folder_calib, f'bias_image.fits'), np.asarray(bias_image), overwrite=True)
 
 # Set bias image to zero for PAPY SIM tests
-# bias_image=np.zeros_like(bias_image) #TODO: Remove it
+bias_image=np.zeros_like(bias_image) #TODO: Remove it
 
 #%% Turn on laser
 
@@ -166,7 +166,7 @@ S2KL_shm = dao.shm('/tmp/S2KL.im.shm' , np.zeros((npix_valid, setup.nmodes_KL), 
 #%% Centering the PSF on the Pyramid Tip
 
 center_psf_on_pyramid_tip(mask=mask, 
-                          bounds = [(-2.0, 2.0), (-2.0, 2.0)], variance_threshold=0.00001, 
+                          bounds = [(-2.0, 2.0), (-2.0, 2.0)], variance_threshold=0.1, 
                           update_setup_file=True, verbose=True, verbose_plot=True)
 
 #%% Scanning modes to find zero of the pyramid

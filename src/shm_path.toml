@@ -39,10 +39,10 @@ leakage                  = '/tmp/leakage.im.shm'
 num_iterations           = '/tmp/num_iterations.im.shm'
 
 
-cam1 = '/tmp/cred3.im.shm'#'/tmp/ocam2.im.shm' #'/tmp/cam1.im.shm'
-cam2 = '/tmp/cblue.im.shm'#'/tmp/cam2.im.shm'
-cam1Fps                 = '/tmp/cred3Fps.im.shm' #'/tmp/cam1Fps.im.shm'
-cam2Fps                 = '/tmp/cblueFps.im.shm' #'/tmp/cam2Fps.im.shm'
+cam1 = '/tmp/ocam2.im.shm' #'/tmp/ocam2.im.shm' #'/tmp/cred3.im.shm'
+cam2 = '/tmp/cam2.im.shm' #'/tmp/cam2.im.shm' #'/tmp/cblue.im.shm'
+cam1Fps                 = '/tmp/cam1Fps.im.shm' #'/tmp/cam1Fps.im.shm' #'/tmp/cred3Fps.im.shm'
+cam2Fps                 = '/tmp/cam2Fps.im.shm' #'/tmp/cam2Fps.im.shm' #'/tmp/cblueFps.im.shm'
 
 
 

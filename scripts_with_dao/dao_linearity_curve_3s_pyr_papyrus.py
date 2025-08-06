@@ -75,7 +75,7 @@ bias_image = fits.getdata(os.path.join(folder_calib, bias_filename))
 print(f"Bias image shape: {bias_image.shape}")
 
 # Set bias image to zero for PAPY SIM tests
-# bias_image=np.zeros_like(bias_image) #TODO: Remove it
+bias_image=np.zeros_like(bias_image) #TODO: Remove it
 
 # Load the calibration mask for processing images.
 mask_filename = f'mask_3s_pyr{suffix}.fits'
