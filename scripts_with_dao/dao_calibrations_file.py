@@ -248,7 +248,8 @@ response_matrix_full, response_matrix_filtered = create_response_matrix(
     calibration_repetitions=calibration_repetitions,
     mode_repetitions=mode_repetitions,
     push_pull=False,
-    pull_push=True
+    pull_push=True,
+    n_frames=n_frames,
 )
 
 #Reset the DM to flat
