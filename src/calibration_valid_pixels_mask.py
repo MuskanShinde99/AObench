@@ -58,7 +58,6 @@ dm_papy_shm = shm.dm_papy_shm
 # slm.set_data(data_slm)
 # time.sleep(wait_time)
 
-setup = reload_setup()
 # DM set to flat
 set_data_dm(setup=setup)
 dm_flat_papy_shm.set_data(setup.dm_flat.astype(np.float32))

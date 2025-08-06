@@ -20,6 +20,10 @@ import dao
 from src.dao_setup import init_setup, las
 from src.utils import set_data_dm, reload_setup
 
+#Loading setup
+setup = init_setup()
+setup = reload_setup()
+
 from src.config import config
 from src.utils import *
 from src.circular_pupil_functions import *
@@ -32,9 +36,6 @@ from src.psf_centring_algorithm_functions import *
 from src.shm_loader import shm
 from src.scan_modes_functions import *
 from src.ao_loop_functions import *
-
-#Loading setup
-setup = init_setup()
 
 #Loading folder
 folder_calib = config.folder_calib
@@ -109,7 +110,6 @@ else:
 # slm.set_data(data_slm)
 # time.sleep(wait_time)
 
-setup = reload_setup()
 # DM set to flat
 set_data_dm(setup=setup)
 dm_flat_papy_shm.set_data(setup.dm_flat.astype(np.float32))
@@ -165,6 +165,7 @@ S2KL_shm = dao.shm('/tmp/S2KL.im.shm' , np.zeros((npix_valid, setup.nmodes_KL), 
 
 #%% Centering the PSF on the Pyramid Tip
 
+# print('Start centering algorithm')
 # center_psf_on_pyramid_tip(mask=mask, 
 #                           bounds = [(-2.0, 2.0), (-2.0, 2.0)], variance_threshold=0.1, 
 #                           update_setup_file=True, verbose=True, verbose_plot=True)
