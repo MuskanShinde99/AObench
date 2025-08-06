@@ -24,6 +24,7 @@ def perform_push_pull_calibration_with_phase_basis(
     verbose=False,
     verbose_plot=False,
     mode_repetitions=None,
+    mode_nframes=None,
     push_pull=False,
     pull_push=True,
     **kwargs,
@@ -41,6 +42,9 @@ def perform_push_pull_calibration_with_phase_basis(
     - verbose_plot: Live plot during calibration.
     - mode_repetitions: Sequence or dict specifying how many times each mode is
       repeated and averaged. Modes with unspecified counts default to 1.
+    - mode_nframes: Sequence or dict specifying how many frames to average for
+      each mode. Mirrors mode_repetitions; unspecified entries default to 1. If
+      None, ``n_frames`` is used for all modes.
     - push_pull: If True, perform a push followed by a pull ([-phase_amp, phase_amp]).
     - pull_push: If True, perform a pull followed by a push ([phase_amp, -phase_amp]).
     - kwargs:
@@ -85,6 +89,26 @@ def perform_push_pull_calibration_with_phase_basis(
         elif mode_repetitions.size > nmodes_basis:
             mode_repetitions = mode_repetitions[:nmodes_basis]
 
+    # Prepare number of frames per mode
+    if mode_nframes is None:
+        mode_nframes = np.full(nmodes_basis, n_frames, dtype=int)
+    elif isinstance(mode_nframes, dict):
+        frames = np.ones(nmodes_basis, dtype=int)
+        for idx, val in mode_nframes.items():
+            if 0 <= idx < nmodes_basis:
+                frames[idx] = int(val)
+        mode_nframes = frames
+    else:
+        mode_nframes = np.asarray(mode_nframes, dtype=int)
+        if mode_nframes.size == 1:
+            mode_nframes = np.full(nmodes_basis, mode_nframes.item())
+        elif mode_nframes.size < nmodes_basis:
+            frames = np.ones(nmodes_basis, dtype=int)
+            frames[:mode_nframes.size] = mode_nframes
+            mode_nframes = frames
+        elif mode_nframes.size > nmodes_basis:
+            mode_nframes = mode_nframes[:nmodes_basis]
+
     orders = []
     if push_pull:
         orders.append([-phase_amp, phase_amp])
@@ -107,6 +131,7 @@ def perform_push_pull_calibration_with_phase_basis(
     for mode in range(nmodes_basis):
 
         rep_count = int(mode_repetitions[mode])
+        n_frames_mode = int(mode_nframes[mode])
 
         # Initialize timing and accumulation arrays
         t0 = time.time()
@@ -115,7 +140,7 @@ def perform_push_pull_calibration_with_phase_basis(
         pp_acc = np.zeros((height, width), dtype=np.float32)
         t1 = time.time()
 
-        for i in range(rep_count):
+        for _ in range(rep_count):
             for order in orders:
                 push_pull_img = np.zeros((height, width), dtype=np.float32)
 
@@ -132,7 +157,9 @@ def perform_push_pull_calibration_with_phase_basis(
 
                     # Capture the image and compute slopes
                     t8 = time.time()
-                    pyr_img = np.mean([camera_wfs.get_data() for i in range(n_frames)], axis=0)
+                    pyr_img = np.mean(
+                        [camera_wfs.get_data() for _ in range(n_frames_mode)], axis=0
+                    )
 
                     slopes_image = get_slopes_image(
                         mask,
@@ -212,6 +239,7 @@ def create_response_matrix(
     verbose=True,
     verbose_plot=False,
     mode_repetitions=None,
+    mode_nframes=None,
     calibration_repetitions=1,
     push_pull=False,
     pull_push=True,
@@ -242,6 +270,9 @@ def create_response_matrix(
     mode_repetitions : sequence, dict, or None
         Optional number of times to repeat and average each mode. Unspecified
         modes default to 1.
+    mode_nframes : sequence, dict, or None
+        Optional number of frames to average for each mode. Mirrors
+        ``mode_repetitions``; unspecified modes default to 1.
     calibration_repetitions : int
         Number of times to repeat the whole calibration process. The returned
         response matrices are the average over these runs.
@@ -282,6 +313,7 @@ def create_response_matrix(
             verbose=verbose,
             verbose_plot=verbose_plot,
             mode_repetitions=mode_repetitions,
+            mode_nframes=mode_nframes,
             push_pull=push_pull,
             pull_push=pull_push,
             **kwargs,
