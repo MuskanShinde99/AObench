@@ -20,6 +20,7 @@ def perform_push_pull_calibration_with_phase_basis(
     ref_image,
     mask,
     bias_image,
+    n_frames: int = 1,
     verbose=False,
     verbose_plot=False,
     mode_repetitions=None,
@@ -35,6 +36,7 @@ def perform_push_pull_calibration_with_phase_basis(
     - mask: Binary mask for normalization.
     - basis: Phase basis (e.g. Zernike or actuator basis).
     - phase_amp: Phase amplitude used for push/pull.
+    - n_frames: Number of frames to average for each measurement.
     - verbose: Print debug messages.
     - verbose_plot: Live plot during calibration.
     - mode_repetitions: Sequence or dict specifying how many times each mode is
@@ -130,7 +132,6 @@ def perform_push_pull_calibration_with_phase_basis(
 
                     # Capture the image and compute slopes
                     t8 = time.time()
-                    n_frames=1
                     pyr_img = np.mean([camera_wfs.get_data() for i in range(n_frames)], axis=0)
 
                     slopes_image = get_slopes_image(
@@ -214,6 +215,7 @@ def create_response_matrix(
     calibration_repetitions=1,
     push_pull=False,
     pull_push=True,
+    n_frames: int = 1,
     **kwargs,
 ):
     """
@@ -247,6 +249,8 @@ def create_response_matrix(
         If True, perform a push followed by a pull ([-phase_amp, phase_amp]).
     pull_push : bool
         If True, perform a pull followed by a push ([phase_amp, -phase_amp]).
+    n_frames : int
+        Number of frames to average for each measurement during calibration.
     kwargs:
         - nact
         - folder_calib
@@ -274,6 +278,7 @@ def create_response_matrix(
             reference_image,
             mask,
             bias_image,
+            n_frames=n_frames,
             verbose=verbose,
             verbose_plot=verbose_plot,
             mode_repetitions=mode_repetitions,
