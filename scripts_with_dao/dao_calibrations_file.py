@@ -90,7 +90,7 @@ plt.show()
 fits.writeto(os.path.join(folder_calib, f'bias_image.fits'), np.asarray(bias_image), overwrite=True)
 
 # Set bias image to zero for PAPY SIM tests
-bias_image=np.zeros_like(bias_image) #TODO: Remove it
+#bias_image=np.zeros_like(bias_image) #TODO: Remove it
 
 #%% Turn on laser
 
@@ -234,7 +234,8 @@ calibration_repetitions = 2
 #mode_repetitions = {0: 10, 3: 10} # Repeat the 0th mode ten times, the 3rd mode ten times, rest default to 1
 #mode_repetitions = [2, 3]  # Repeat the 0th mode twice, the 1st mode three times, beyond the 1st default to 1
 
-mode_repetitions = {0: 30, 1: 30}
+mode_repetitions = {0: 1, 1: 1}
+#mode_repetitions = [200] * setup.nmodes_KL
 
 # Run calibration and compute matrices
 # use the ref img, mask directly from shared memories 
