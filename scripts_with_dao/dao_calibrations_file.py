@@ -141,7 +141,7 @@ n_iter=500 # number of iternations for dm random commands
 
 mask = create_flux_filtering_mask(method, flux_cutoff, KL2Act_papy[0], KL2Act_papy[1],
                                modulation_angles, modulation_amp, n_iter,
-                               create_summed_image=True, verbose=False, verbose_plot=True,
+                               create_summed_image=False, verbose=False, verbose_plot=True,
                                OnSky=False,)
 
 valid_pixels_mask_shm.set_data(mask)
@@ -165,19 +165,19 @@ S2KL_shm = dao.shm('/tmp/S2KL.im.shm' , np.zeros((npix_valid, setup.nmodes_KL), 
 
 #%% Centering the PSF on the Pyramid Tip
 
-center_psf_on_pyramid_tip(mask=mask, 
-                          bounds = [(-2.0, 2.0), (-2.0, 2.0)], variance_threshold=0.1, 
-                          update_setup_file=True, verbose=True, verbose_plot=True)
+# center_psf_on_pyramid_tip(mask=mask, 
+#                           bounds = [(-2.0, 2.0), (-2.0, 2.0)], variance_threshold=0.1, 
+#                           update_setup_file=True, verbose=True, verbose_plot=True)
 
-#%% Scanning modes to find zero of the pyramid
+ #%% Scanning modes to find zero of the pyramid
 
-test_values = np.arange(-0.5, 0.5, 0.05)
-mode_index = 3 # 0 - focus, 1 - astimgatism, 2 -astigmatism 
-#scan_othermode_amplitudes(test_values, mode_index, update_setup_file=True)
-scan_othermode_amplitudes_wfs_std(test_values, mode_index, mask, 
-                                  update_setup_file=False)
+# test_values = np.arange(-0.5, 0.5, 0.05)
+# mode_index = 3 # 0 - focus, 1 - astimgatism, 2 -astigmatism 
+# #scan_othermode_amplitudes(test_values, mode_index, update_setup_file=True)
+# scan_othermode_amplitudes_wfs_std(test_values, mode_index, mask, 
+#                                   update_setup_file=False)
   
-#revise the crieteria to standard deviation of intensities within the valid pixels
+# #revise the crieteria to standard deviation of intensities within the valid pixels
 
 #%% Capture Reference Image
 
@@ -249,7 +249,7 @@ response_matrix_full, response_matrix_filtered = create_response_matrix(
     mode_repetitions=mode_repetitions,
     push_pull=False,
     pull_push=True,
-    n_frames=n_frames,
+    n_frames=1,
 )
 
 #Reset the DM to flat
