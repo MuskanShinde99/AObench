@@ -35,4 +35,4 @@ slm-cam_tests/
 **/*.png
 **/*.gif
 **/*.npy
-
+**/results.toml
