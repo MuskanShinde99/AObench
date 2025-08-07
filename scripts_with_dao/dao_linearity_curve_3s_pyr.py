@@ -60,12 +60,12 @@ KL2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Act_nkl_
 #%% Load Bias Image, Calibration Mask and Interaction Matrix
 
 # Load the bias image
-bias_filename = f'binned_bias_image.fits'
+bias_filename = f'bias_image.fits'
 bias_image = fits.getdata(os.path.join(folder_calib, bias_filename))
 print(f"Bias image shape: {bias_image.shape}")
 
 # Load the calibration mask for processing images.
-mask_filename = f'binned_mask_3s_pyr.fits'
+mask_filename = f'mask_3s_pyr.fits'
 mask = fits.getdata(os.path.join(folder_calib, mask_filename))
 print(f"Mask dimensions: {mask.shape}")
 
@@ -73,7 +73,7 @@ print(f"Mask dimensions: {mask.shape}")
 valid_pixels_indices = np.where(mask > 0)
 
 # Load the response matrix 
-IM_filename = f'binned_response_matrix_KL2S_filtered_nact_{setup.nact}_amp_0.1_3s_pyr.fits'
+IM_filename = f'response_matrix_KL2S_filtered_nact_{setup.nact}_amp_0.05_3s_pyr.fits'
 IM_KL2S = fits.getdata(os.path.join(folder_calib, IM_filename))  # /0.1
 
 RM_S2KL = np.linalg.pinv(IM_KL2S, rcond=0.10)
@@ -82,7 +82,6 @@ print(f"Shape of the response matrix: {RM_S2KL.shape}")
 #%% Load Reference Image and PSF
 
 # Load reference image
-time.sleep(wait_time)  # Wait for stabilization of SLM
 reference_image = fits.getdata(folder_calib / 'reference_image_raw.fits')
 normalized_reference_image = normalize_image(reference_image, mask, bias_image)
 pyr_img_shape = reference_image.shape
@@ -102,7 +101,7 @@ RM_S2KL = np.linalg.pinv(IM_KL2S, rcond=0.10)
 print(f"Shape of the response matrix: {RM_S2KL.shape}")
 
 # Number of KL modes to plot
-num_modes = 5
+num_modes = 10
 applied_phase_amp = np.arange(-2, 2, 0.1) # 
 computed_phase_amp = np.zeros((num_modes, len(applied_phase_amp)))
 

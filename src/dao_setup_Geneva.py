@@ -177,13 +177,14 @@ data_pupil = data_pupil + data_focus
 
 # [-1.6510890005150187, 0.14406016044318903]
 # Create a Tip-Tilt (TT) matrix with specified amplitudes as the diagonal elements
-tt_amplitudes = [1.1861719474409322, -1.2662608405353448] # Tip and Tilt amplitudes
+tt_amplitudes = [-1.7213249180817631, 0.13755631783036204] # Tip and Tilt amplitudes
 tt_amplitude_matrix = np.diag(tt_amplitudes)
 tt_matrix = tt_amplitude_matrix @ KL2Act[0:2, :]  # Select modes 1 (tip) and 2 (tilt)
 
 data_tt = (tt_matrix[0] + tt_matrix[1]).reshape(nact**2)
 
-othermodes_amplitudes = [-0.0, 0.0, -0.0, 0.0, 0.0, 0.0, 0.0, 0.0]  # Focus (mode 3) + modes 4 to 10
+othermodes_amplitudes = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] 
+#othermodes_amplitudes = [-0.02, 0.2, -0.0, 0.08, 0.06, 0.2, 0.08, 0.1]  # Focus (mode 3) + modes 4 to 10
 othermodes_amplitude_matrix = np.diag(othermodes_amplitudes)
 othermodes_matrix = othermodes_amplitude_matrix @ KL2Act[2:10, :]  # Select modes 3 (focus) to 10
 

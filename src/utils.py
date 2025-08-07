@@ -171,10 +171,10 @@ def set_dm_actuators(actuators=None, dm_flat=None, setup=None, *, place_of_test=
         
         actuators = np.asarray(actuators)
         act_pos = actuators #+ dm_flat
-        act_pos = act_pos.reshape(setup.nact, setup.nact)
+
         
         #Set 2D map shared memory
-        dm_act_shm.set_data(act_pos.astype(np.float64))
+        dm_act_shm.set_data(act_pos.reshape(setup.nact, setup.nact).astype(np.float64))
         
         #Load the DM
         deformable_mirror = kwargs.get("deformable_mirror", getattr(setup, "deformable_mirror", None))
@@ -249,15 +249,14 @@ def set_data_dm(actuators=None, *, setup=None, dm_flat=None, place_of_test=None,
             raise ValueError("DM flat must be provided")
 
         deformable_mirror.flatten()
-        print("DM opd", deformable_mirror.opd.shaped.shape)
+
         set_dm_actuators(
             actuators, dm_flat=dm_flat, setup=setup, place_of_test=place_of_test, deformable_mirror=deformable_mirror
         )
 
         data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
-        print('data dm shape', data_dm.shape)
 
-        data_dm[:, :] = deformable_mirror.opd.shaped / 2
+        data_dm[:, :] = np.asanyarray(deformable_mirror.opd.shaped) / 2
         
         dm_flat_phase = np.asanyarray(dm_flat_phase)
 

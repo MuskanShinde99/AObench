@@ -9,23 +9,23 @@ ROOT_DIR = config.root_dir
 with open("setup_params.toml", "r") as f:
     config = toml.load(f)
 
-# nact = config["geneva"]["nact"]
-# img_size_wfs_cam_x = config["geneva"]["img_size_wfs_cam_x"]
-# img_size_wfs_cam_y = config["geneva"]["img_size_wfs_cam_y"]
-# img_size_fp_cam_x = config["geneva"]["img_size_fp_cam_x"]
-# img_size_fp_cam_y = config["geneva"]["img_size_fp_cam_y"]
-# npix_small_pupil_grid = config["geneva"]["npix_small_pupil_grid"]
-# nmodes_KL = config["geneva"]["nmodes_KL"]
-# nmodes_dm = config["geneva"]["nmodes_dm"]
+nact = config["geneva"]["nact"]
+img_size_wfs_cam_x = config["geneva"]["img_size_wfs_cam_x"]
+img_size_wfs_cam_y = config["geneva"]["img_size_wfs_cam_y"]
+img_size_fp_cam_x = config["geneva"]["img_size_fp_cam_x"]
+img_size_fp_cam_y = config["geneva"]["img_size_fp_cam_y"]
+npix_small_pupil_grid = config["geneva"]["npix_small_pupil_grid"]
+nmodes_KL = config["geneva"]["nmodes_KL"]
+nmodes_dm = config["geneva"]["nmodes_dm"]
 
-nact = config["ohp"]["nact"]
-img_size_wfs_cam_x = config["ohp"]["img_size_wfs_cam_x"]
-img_size_wfs_cam_y = config["ohp"]["img_size_wfs_cam_y"]
-img_size_fp_cam_x = config["ohp"]["img_size_fp_cam_x"]
-img_size_fp_cam_y = config["ohp"]["img_size_fp_cam_y"]
-npix_small_pupil_grid = config["ohp"]["npix_small_pupil_grid"]
-nmodes_KL = config["ohp"]["nmodes_KL"]
-nmodes_dm = config["ohp"]["nmodes_dm"]
+# nact = config["ohp"]["nact"]
+# img_size_wfs_cam_x = config["ohp"]["img_size_wfs_cam_x"]
+# img_size_wfs_cam_y = config["ohp"]["img_size_wfs_cam_y"]
+# img_size_fp_cam_x = config["ohp"]["img_size_fp_cam_x"]
+# img_size_fp_cam_y = config["ohp"]["img_size_fp_cam_y"]
+# npix_small_pupil_grid = config["ohp"]["npix_small_pupil_grid"]
+# nmodes_KL = config["ohp"]["nmodes_KL"]
+# nmodes_dm = config["ohp"]["nmodes_dm"]
 
 
 

@@ -134,14 +134,14 @@ KL2Act_papy = KL2Act_papy_shm.get_data().T
 #%% Creating a Flux Filtering Mask
 
 method='tip_tilt_modulation'
-flux_cutoff = 0.08 # 0.06 - papy dm random; 0.2 - geneva dm random
+flux_cutoff = 0.2 # 0.06 - papy dm random; 0.2 - geneva dm random
 modulation_angles = np.arange(0, 360, 1)  # angles of modulation
 modulation_amp = 15 # in lamda/D
 n_iter=300 # number of iternations for dm random commands
 
 mask = create_flux_filtering_mask(method, flux_cutoff, KL2Act[0], KL2Act[1],
                                modulation_angles, modulation_amp, n_iter,
-                               create_summed_image=True, verbose=False, verbose_plot=True,
+                               create_summed_image=False, verbose=False, verbose_plot=True,
                                OnSky=False,)
 
 valid_pixels_mask_shm.set_data(mask)
@@ -165,10 +165,10 @@ S2KL_shm = dao.shm('/tmp/S2KL.im.shm' , np.zeros((npix_valid, setup.nmodes_KL), 
 
 #%% Centering the PSF on the Pyramid Tip
 
-# print('Start centering algorithm')
-# center_psf_on_pyramid_tip(mask=mask, 
-#                           bounds = [(-2.0, 2.0), (-2.0, 2.0)], variance_threshold=0.1, 
-#                           update_setup_file=True, verbose=True, verbose_plot=True)
+print('Start centering algorithm')
+center_psf_on_pyramid_tip(mask=mask, 
+                          bounds = [(-2.0, 2.0), (-2.0, 2.0)], variance_threshold=0.155, 
+                          update_setup_file=True, verbose=True, verbose_plot=True)
 
  #%% Scanning modes to find zero of the pyramid
 
@@ -240,7 +240,7 @@ mode_repetitions = {0: 1, 1: 1}
 # Run calibration and compute matrices
 # use the ref img, mask directly from shared memories 
 response_matrix_full, response_matrix_filtered = create_response_matrix(
-    KL2Act_papy,
+    KL2Act,
     phase_amp,
     reference_image,
     mask,
