@@ -180,6 +180,10 @@ plt.show()
 
 print(f"Linearity curves saved to: {save_path}")
 
+#DM set to flat
+set_data_dm(setup=setup)
+dm_flat_papy_shm.set_data(setup.dm_flat.astype(np.float32))
+
 #%% Compute cross correlation matrix
 
 # Parameters

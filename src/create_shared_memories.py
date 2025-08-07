@@ -10,8 +10,10 @@ with open("setup_params.toml", "r") as f:
     config = toml.load(f)
 
 # nact = config["geneva"]["nact"]
-# img_size_wfs_cam = config["geneva"]["img_size_wfs_cam"]
-# img_size_fp_cam = config["geneva"]["img_size_fp_cam"]
+# img_size_wfs_cam_x = config["geneva"]["img_size_wfs_cam_x"]
+# img_size_wfs_cam_y = config["geneva"]["img_size_wfs_cam_y"]
+# img_size_fp_cam_x = config["geneva"]["img_size_fp_cam_x"]
+# img_size_fp_cam_y = config["geneva"]["img_size_fp_cam_y"]
 # npix_small_pupil_grid = config["geneva"]["npix_small_pupil_grid"]
 # nmodes_KL = config["geneva"]["nmodes_KL"]
 # nmodes_dm = config["geneva"]["nmodes_dm"]

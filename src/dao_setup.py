@@ -1,7 +1,7 @@
 """Dispatch module for AO bench setup configuration."""
 import os
 
-PLACE_OF_TEST = os.environ.get("PLACE_OF_TEST", "OHP")
+PLACE_OF_TEST = os.environ.get("PLACE_OF_TEST", "Geneva")
 
 if PLACE_OF_TEST == "Geneva":
     print('Were are in Geneva')

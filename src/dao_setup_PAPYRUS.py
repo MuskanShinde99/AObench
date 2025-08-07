@@ -127,13 +127,13 @@ KL2Act_papy = KL2Act_papy_shm.get_data().T
 
 # [-1.6510890005150187, 0.14406016044318903]
 # Create a Tip-Tilt (TT) matrix with specified amplitudes as the diagonal elements
-tt_amplitudes = [0.0, 0.0] # Tip and Tilt amplitudes
+tt_amplitudes = [0.02, 0.01] # Tip and Tilt amplitudes
 tt_amplitude_matrix = np.diag(tt_amplitudes)
 tt_matrix = tt_amplitude_matrix @ KL2Act_papy[0:2, :]  # Select modes 1 (tip) and 2 (tilt)
 
 data_tt = (tt_matrix[0] + tt_matrix[1])#.reshape(nmodes_dm)
 
-othermodes_amplitudes = [0.01, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]  # Focus (mode 3) + modes 4 to 10
+othermodes_amplitudes = [0.01, 0.03, 0.0, 0.0, 0.02, 0.1, 0.05, 0.0]  # Focus (mode 3) + modes 4 to 10
 othermodes_amplitude_matrix = np.diag(othermodes_amplitudes)
 othermodes_matrix = othermodes_amplitude_matrix @ KL2Act_papy[2:10, :]  # Select modes 3 (focus) to 10
 

@@ -122,8 +122,8 @@ fits.writeto(folder_calib / 'dm_flat_papy.fits', setup.dm_flat.astype(np.float32
 # KL2Phs = KL2Phs_shm.get_data()
 
 # From folder 
-# KL2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Act_nkl_{setup.nmodes_KL}_nact_{setup.nact}.fits'))
-# KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_{setup.nmodes_KL}_npupil_{setup.npix_small_pupil_grid}.fits'))
+KL2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Act_nkl_{setup.nmodes_KL}_nact_{setup.nact}.fits'))
+KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_{setup.nmodes_KL}_npupil_{setup.npix_small_pupil_grid}.fits'))
 
 KL2Act_papy = KL2Act_papy_shm.get_data().T
 
@@ -133,15 +133,15 @@ KL2Act_papy = KL2Act_papy_shm.get_data().T
 
 #%% Creating a Flux Filtering Mask
 
-method='dm_random'
+method='tip_tilt_modulation'
 flux_cutoff = 0.08 # 0.06 - papy dm random; 0.2 - geneva dm random
 modulation_angles = np.arange(0, 360, 1)  # angles of modulation
 modulation_amp = 15 # in lamda/D
-n_iter=500 # number of iternations for dm random commands
+n_iter=300 # number of iternations for dm random commands
 
-mask = create_flux_filtering_mask(method, flux_cutoff, KL2Act_papy[0], KL2Act_papy[1],
+mask = create_flux_filtering_mask(method, flux_cutoff, KL2Act[0], KL2Act[1],
                                modulation_angles, modulation_amp, n_iter,
-                               create_summed_image=False, verbose=False, verbose_plot=True,
+                               create_summed_image=True, verbose=False, verbose_plot=True,
                                OnSky=False,)
 
 valid_pixels_mask_shm.set_data(mask)
@@ -225,7 +225,7 @@ plt.title('PSF radial profile')
 plt.show()
 
 #%%
-phase_amp = 0.1
+phase_amp = 0.05
 
 # Number of times to repeat the whole calibration
 calibration_repetitions = 2
