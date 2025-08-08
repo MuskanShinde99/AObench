@@ -134,7 +134,7 @@ KL2Act_papy = KL2Act_papy_shm.get_data().T
 #%% Creating a Flux Filtering Mask
 
 method='tip_tilt_modulation'
-flux_cutoff = 0.2 # 0.06 - papy dm random; 0.2 - geneva dm random
+flux_cutoff = 0.18 # 0.06 - papy dm random; 0.2 - geneva dm random
 modulation_angles = np.arange(0, 360, 1)  # angles of modulation
 modulation_amp = 15 # in lamda/D
 n_iter=300 # number of iternations for dm random commands
@@ -167,8 +167,8 @@ S2KL_shm = dao.shm('/tmp/S2KL.im.shm' , np.zeros((npix_valid, setup.nmodes_KL), 
 
 print('Start centering algorithm')
 center_psf_on_pyramid_tip(mask=mask, 
-                          bounds = [(-2.0, 2.0), (-2.0, 2.0)], variance_threshold=0.155, 
-                          update_setup_file=True, verbose=True, verbose_plot=True)
+                          bounds = [(-2.0, 2.0), (-2.0, 2.0)], variance_threshold=0.13, 
+                          update_setup_file=False, verbose=True, verbose_plot=True)
 
  #%% Scanning modes to find zero of the pyramid
 
@@ -190,7 +190,8 @@ set_data_dm(setup=setup)
 
 # Capure the Reference Image
 n_frames=20
-reference_image = (np.mean([camera_wfs.get_data().astype(np.float32) for i in range(n_frames)], axis=0)).astype(camera_wfs.get_data().dtype)
+#reference_image = (np.mean([camera_wfs.get_data().astype(np.float32) for i in range(n_frames)], axis=0)).astype(camera_wfs.get_data().dtype)
+reference_image = mask * 2000
 # average over several frames
 reference_image_shm.set_data(reference_image)
 fits.writeto(folder_calib / 'reference_image_raw.fits', reference_image, overwrite=True)

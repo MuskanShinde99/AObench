@@ -93,12 +93,13 @@ plt.imshow(reference_image)
 plt.colorbar()
 plt.title('Reference Image')
 plt.show()
-#%% Linearity plot KL basis: Phase KL2Act
 
-nmodes_KL = 177
-IM_KL2S = IM_KL2S[:nmodes_KL,:]
-RM_S2KL = np.linalg.pinv(IM_KL2S, rcond=0.10)
-print(f"Shape of the response matrix: {RM_S2KL.shape}")
+plt.figure()
+plt.imshow(normalized_reference_image)
+plt.colorbar()
+plt.title('Normalized Reference Image')
+plt.show()
+#%% Linearity plot KL basis: Phase KL2Act
 
 # Number of KL modes to plot
 num_modes = 10
