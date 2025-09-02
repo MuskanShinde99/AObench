@@ -54,13 +54,10 @@ epoch = np.datetime64('1970-01-01T00:00:00', 'us')
 n_fft = dao.shm(shm_path['control']['n_fft']).get_data()[0][0]
 controller_select = dao.shm(shm_path['control']['controller_select']).get_data()[0][0]
 gain_margin = dao.shm(shm_path['control']['gain_margin']).get_data()[0][0]
-dd_order_low = dao.shm(shm_path['control']['dd_order_low']).get_data()[0][0]
-dd_order_high = dao.shm(shm_path['control']['dd_order_high']).get_data()[0][0]
-dd_update_rate_low = dao.shm(shm_path['control']['dd_update_rate_low']).get_data()[0][0]
-dd_update_rate_high = dao.shm(shm_path['control']['dd_update_rate_high']).get_data()[0][0]
+dd_order = dao.shm(shm_path['control']['dd_order']).get_data()[0][0]
+dd_update_rate = dao.shm(shm_path['control']['dd_update_rate']).get_data()[0][0]
 n_modes_int = dao.shm(shm_path['control']['n_modes_int']).get_data()[0][0]
-n_modes_dd_low = dao.shm(shm_path['control']['n_modes_dd_low']).get_data()[0][0]
-n_modes_dd_high = dao.shm(shm_path['control']['n_modes_dd_high']).get_data()[0][0]
+n_modes_dd = dao.shm(shm_path['control']['n_modes_dd']).get_data()[0][0]
 record_time = dao.shm(shm_path['control']['record_time']).get_data()[0][0]
 delay = dao.shm(shm_path['control']['delay']).get_data()[0][0]
 M2V = dao.shm(shm_path['control']['M2V']).get_data()
@@ -81,12 +78,9 @@ match controller_select:
         results_file.add('control mode','dd')
         results_file.add('n_fft',n_fft)
         results_file.add('gain_margin',gain_margin)
-        results_file.add('dd_order_low',dd_order_low)
-        results_file.add('dd_order_high',dd_order_high)
-        results_file.add('dd_update_rate_low',dd_update_rate_low)
-        results_file.add('dd_update_rate_high',dd_update_rate_high)
-        results_file.add('n_modes_dd_low',n_modes_dd_low)
-        results_file.add('n_modes_dd_high',n_modes_dd_high)
+        results_file.add('dd_order',dd_order)
+        results_file.add('dd_update_rate',dd_update_rate)
+        results_file.add('n_modes_dd',n_modes_dd)
     case 2:
         results_file.add('control mode','omgi')
         results_file.add('n_fft',n_fft)

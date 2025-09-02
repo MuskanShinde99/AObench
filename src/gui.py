@@ -337,6 +337,10 @@ class MainWindow(QMainWindow):
         self.strehl_ratio_uptade_timer.timeout.connect(self.update_strehl_ratio)
         self.view_update_timer.start(100) # ms 
         self.strehl_ratio_uptade_timer.start(1000)
+        self.optimization_dd_timer = QTimer()
+        self.optimization_omgi_timer = QTimer()
+        self.optimization_dd_timer.timeout.connect(self.optimization_dd_process.start_process)
+        self.optimization_omgi_timer.timeout.connect(self.optimization_omgi_process.start_process)
 
         print("init done")
     def init_spinboxes(self):
@@ -384,6 +388,8 @@ class MainWindow(QMainWindow):
         self.pol_reconstructor_process = ProcessManager("pol_reconstructor.py",self.start_pol_reconstructor_button, self.stop_pol_reconstructor_button, self.pol_reconstructor_output)
         self.freq_mag_estimator_process = ProcessManager("freq_mag_estimator.py",self.start_freq_mag_estimator_button, self.stop_freq_mag_estimator_button, self.freq_mag_estimator_output)
         self.identify_latency_frequency_process = ProcessManager("identify_latency_frequency.py",self.start_latency_identification_button, None, self.latency_identification_output)
+        self.optimization_dd_process = ProcessManager("optimizer_dd.py",self.start_optimization_dd_button, None, self.optimization_dd_output)
+        self.optimization_omgi_process = ProcessManager("optimizer_omgi.py",self.start_optimization_omgi_button, None, self.optimization_omgi_output)
 
     def init_shm(self):
         with open('shm_path.toml', 'r') as f:
@@ -420,12 +426,8 @@ class MainWindow(QMainWindow):
 
         self.closed_loop_flag_shm = dao.shm(shm_path_control['control']['closed_loop_flag']) 
 
-        self.n_modes_dd_high_shm = dao.shm(shm_path_control['control']['n_modes_dd_high'])  
-        self.n_modes_dd_low_shm = dao.shm(shm_path_control['control']['n_modes_dd_low']) 
-        self.n_modes_int_shm = dao.shm(shm_path_control['control']['n_modes_int'])
-
-        self.dd_update_rate_low_shm = dao.shm(shm_path_control['control']['dd_update_rate_high']) 
-        self.dd_update_rate_high_shm = dao.shm(shm_path_control['control']['dd_update_rate_low'])
+        self.n_modes_dd_shm = dao.shm(shm_path_control['control']['n_modes_dd']) 
+        self.n_modes_int_shm = dao.shm(shm_path_control['control']['n_modes_int']) 
 
         self.K_mat_int_shm = dao.shm(shm_path_control['control']['K_mat_int']) 
 
@@ -433,8 +435,7 @@ class MainWindow(QMainWindow):
         self.K_mat_dd_shm = dao.shm(shm_path_control['control']['K_mat_dd']) 
         self.K_mat_omgi_shm = dao.shm(shm_path_control['control']['K_mat_omgi']) 
 
-        self.dd_order_low_shm = dao.shm(shm_path_control['control']['dd_order_low']) 
-        self.dd_order_high_shm = dao.shm(shm_path_control['control']['dd_order_high']) 
+        self.dd_order_shm = dao.shm(shm_path_control['control']['dd_order']) 
 
         self.latency_shm = dao.shm(shm_path_control['control']['latency']) 
         self.fs_shm = dao.shm(shm_path_control['control']['fs']) 
@@ -619,7 +620,7 @@ class MainWindow(QMainWindow):
             self.closed_loop_flag_shm.set_data(np.array([[0]],np.uint32))
 
     def order_dd_changed(self,value):
-        self.dd_order_high_shm.set_data(np.array([[value]],np.uint32))
+        self.dd_order_shm.set_data(np.array([[value]],np.uint32))
         self.reset_dd_controller()
 
     def n_modes_changed(self,value):

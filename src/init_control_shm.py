@@ -43,22 +43,20 @@ latency = np.zeros((1,1),dtype = np.float32)
 
 closed_loop_flag = np.zeros((1,1),dtype = np.uint32)
 
-n_modes_dd_high = np.zeros((1,1),dtype = np.uint32)
-n_modes_dd_low = np.zeros((1,1),dtype = np.uint32)
+
+n_modes_dd = np.zeros((1,1),dtype = np.uint32)
 n_modes_int = np.zeros((1,1),dtype = np.uint32)
 record_time = np.zeros((1,1),dtype = np.float32)
 mutex_opti = np.zeros((1,1),dtype = np.uint32)
 reset_flag = np.zeros((1,1),dtype = np.uint32)
 modes = np.zeros((n_modes,1),dtype=np.float32)
 
-dd_update_rate_high = np.array([[np.inf]],dtype = np.float32)
-dd_update_rate_low = np.array([[np.inf]],dtype = np.float32)
+dd_update_rate = np.array([[np.inf]],dtype = np.float32)
 
 gain_margin = np.array([[1.2]],dtype = np.float32)
 wait_time = np.array([[config['calibration']['wait_time']]],dtype = np.float32)
 n_fft_optimizer = np.array([[config['optimizer']['n_fft']]],dtype = np.uint32)
-dd_order_high = np.array([[5]],dtype = np.uint32)
-dd_order_low = np.array([[20]],dtype = np.uint32)
+dd_order = np.array([[20]],dtype = np.uint32)
 
 slopes_shm = dao.shm(shm_path['control']['slopes'])
 slopes = slopes_shm.get_data()
@@ -104,17 +102,15 @@ dao.shm(shm_path['control']['latency'],latency)
 
 dao.shm(shm_path['control']['closed_loop_flag'],closed_loop_flag)
 
-dao.shm(shm_path['control']['n_modes_dd_high'],n_modes_dd_high)
-dao.shm(shm_path['control']['n_modes_dd_low'],n_modes_dd_low)
+dao.shm(shm_path['control']['n_modes_dd'],n_modes_dd)
 dao.shm(shm_path['control']['n_modes_int'],n_modes_int)
 dao.shm(shm_path['control']['mutex_opti'],mutex_opti)
 dao.shm(shm_path['control']['reset_flag'],reset_flag)
 
 dao.shm(shm_path['control']['dd_update_rate_high'],dd_update_rate_high)
-dao.shm(shm_path['control']['dd_update_rate_low'],dd_update_rate_low)
+dao.shm(shm_path['control']['dd_update_rate'],dd_update_rate)
 
-dao.shm(shm_path['control']['dd_order_high'],dd_order_high)
-dao.shm(shm_path['control']['dd_order_low'],dd_order_low)
+dao.shm(shm_path['control']['dd_order'],dd_order)
 
 dao.shm(shm_path['control']['S2M'],S2M)
 if config['common']['use_own_modes'] == 1:

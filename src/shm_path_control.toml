@@ -21,15 +21,12 @@ delay = '/tmp/delay.shm'
 
 closed_loop_flag = '/tmp/closed_loop_flag.shm'
 controller_select = '/tmp/controller_select.shm'
-n_modes_dd_high = '/tmp/n_modes_dd_high.shm'
-n_modes_dd_low = '/tmp/n_modes_dd_low.shm'
+n_modes_dd = '/tmp/n_modes_dd.shm'
 n_modes_int = '/tmp/n_modes_int.shm'
 
-dd_update_rate_high = '/tmp/dd_update_rate_high.shm'
-dd_update_rate_low = '/tmp/dd_update_rate_low.shm'
+dd_update_rate = '/tmp/dd_update_rate.shm'
 
-dd_order_high = '/tmp/dd_order_high.shm'
-dd_order_low = '/tmp/dd_order_low.shm'
+dd_order = '/tmp/dd_order.shm'
 
 gain_margin = '/tmp/gain_margin.shm'
 
