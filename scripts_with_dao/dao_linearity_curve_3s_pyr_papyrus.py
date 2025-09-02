@@ -75,7 +75,7 @@ bias_image = fits.getdata(os.path.join(folder_calib, bias_filename))
 print(f"Bias image shape: {bias_image.shape}")
 
 # Set bias image to zero for PAPY SIM tests
-# bias_image=np.zeros_like(bias_image) #TODO: Remove it
+#bias_image=np.zeros_like(bias_image) #TODO: Remove it
 
 # Load the calibration mask for processing images.
 mask_filename = f'mask_3s_pyr{suffix}.fits'
@@ -179,6 +179,10 @@ plt.savefig(save_path, dpi=300)
 plt.show()
 
 print(f"Linearity curves saved to: {save_path}")
+
+#DM set to flat
+set_data_dm(setup=setup)
+dm_flat_papy_shm.set_data(setup.dm_flat.astype(np.float32))
 
 #%% Compute cross correlation matrix
 

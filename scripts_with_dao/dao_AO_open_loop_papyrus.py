@@ -12,6 +12,8 @@ import matplotlib.pyplot as plt
 from astropy.io import fits
 import scipy
 from matplotlib.colors import LogNorm
+import cupy as cp
+
 
 # Import Specific Modules
 from src.config import config
@@ -57,10 +59,10 @@ npix_small_pupil_grid = setup.npix_small_pupil_grid
 
 #%% Creating and Displaying a Circular Pupil on the SLM
 
-#DM set to flat
-set_data_dm(setup=setup)
-dm_flat_papy_shm.set_data(setup.dm_flat.astype(np.float32))
-fits.writeto(folder_calib / 'dm_flat_papy.fits', setup.dm_flat.astype(np.float32), overwrite=True)
+# #DM set to flat
+# set_data_dm(setup=setup)
+# dm_flat_papy_shm.set_data(setup.dm_flat.astype(np.float32))
+# fits.writeto(folder_calib / 'dm_flat_papy.fits', setup.dm_flat.astype(np.float32), overwrite=True)
 
 
 #%% Load transformation matrices
@@ -75,7 +77,7 @@ bias_image = fits.getdata(os.path.join(folder_calib, bias_filename))
 print(f"Bias image shape: {bias_image.shape}")
 
 # Set bias image to zero for PAPY SIM tests
-#bias_image=np.zeros_like(bias_image) #TODO: Remove it
+# bias_image=np.zeros_like(bias_image) #TODO: Remove it
 
 # Load the calibration mask for processing images.
 mask_filename = f'mask_3s_pyr{suffix}.fits'
@@ -86,27 +88,35 @@ print(f"Mask dimensions: {mask.shape}")
 valid_pixels_indices = np.where(mask > 0)
 
 # Load the response matrix 
-IM_filename = f'response_matrix_KL2S_full_nact_{setup.nact}_amp_0.1_3s_pyr.fits'
+IM_filename = f'processed_response_cube_KL2PWFS_push-pull_nact_17_amp_0.05_3s_pyr.fits'
 IM_KL2S_full = fits.getdata(os.path.join(folder_calib, IM_filename))  # /0.1
 IM_KL2S = compute_response_matrix(IM_KL2S_full, mask).astype(np.float32)
 
+#IM_KL2S = fits.getdata(os.path.join(folder_calib, IM_filename))
+#IM_KL2S = IM_KL2S[:, :150]
 RM_S2KL = np.linalg.pinv(IM_KL2S, rcond=0.10)
 print(f"Shape of the reconstruction matrix: {RM_S2KL.shape}")
+RM_S2KL_cp = cp.asarray(RM_S2KL)
 
 #%% Load Reference Image and PSF
 
 # Load reference image
+#reference_image = fits.getdata(folder_calib / 'reference_image_raw_new.fits')
 reference_image = fits.getdata(folder_calib / 'reference_image_raw.fits')
-normalized_reference_image = normalize_image(reference_image, mask, bias_image)
+#reference_image = fits.getdata(os.path.join(folder_calib, f'mask_3s_pyr.fits'))*20000
+#reference_image = fits.getdata(folder_calib / 'masked_pyr_images_3s_pyr.fits')
+
+bias_image_old = fits.getdata(folder_calib / 'bias_image_ref.fits')
+normalized_reference_image = normalize_image(reference_image, mask, bias_image_old)
 pyr_img_shape = reference_image.shape
 print('Reference image shape:', pyr_img_shape)
 
 #Plot
-plt.figure()
-plt.imshow(reference_image)
-plt.colorbar()
-plt.title('Reference Image')
-plt.show()
+# plt.figure()
+# plt.imshow(reference_image)
+# plt.colorbar()
+# plt.title('Reference Image')
+# plt.show()
 
 #Plot
 plt.figure()
@@ -129,39 +139,39 @@ plt.colorbar()
 plt.title('PSF')
 plt.show()
 
-# Create the PSF mask 
-psf_mask, psf_center = create_psf_mask(diffraction_limited_psf, crop_size=100, radius=50)
+# # Create the PSF mask 
+# psf_mask, psf_center = create_psf_mask(diffraction_limited_psf, crop_size=100, radius=50)
 
-plt.figure()
-plt.imshow(psf_mask)
-plt.colorbar()
-plt.title('PSF Mask to compute strehl')
-plt.show()
+# plt.figure()
+# plt.imshow(psf_mask)
+# plt.colorbar()
+# plt.title('PSF Mask to compute strehl')
+# plt.show()
 
-# Integrate the flux in that small region
-integrated_diff_psf = diffraction_limited_psf[psf_mask].sum()
+# # Integrate the flux in that small region
+# integrated_diff_psf = diffraction_limited_psf[psf_mask].sum()
 
-# Plot PSF with selected region overlayed
-plt.figure()
-plt.imshow(diffraction_limited_psf, norm=LogNorm(), cmap='viridis')
-plt.colorbar(label='Intensity')
-plt.title('PSF with Selected Region')
-circle = plt.Circle((psf_center[1], psf_center[0]), radius=50, color='red', fill=False, linewidth=2) # Overlay the integration region (circle)
-plt.gca().add_patch(circle)
-plt.show()
+# # Plot PSF with selected region overlayed
+# plt.figure()
+# plt.imshow(diffraction_limited_psf, norm=LogNorm(), cmap='viridis')
+# plt.colorbar(label='Intensity')
+# plt.title('PSF with Selected Region')
+# circle = plt.Circle((psf_center[1], psf_center[0]), radius=50, color='red', fill=False, linewidth=2) # Overlay the integration region (circle)
+# plt.gca().add_patch(circle)
+# plt.show()
 
 # Compute the Strehl ratio
 #strehl_ratio = integrated_obs / integrated_diff
 
 #%% Defining the number of Kl modes used for Closed lop simulations
 
-# # Define KL modes to consider
-# nmodes_kl = 195
+# Define KL modes to consider
+# nmodes_kl = 150
 # KL2Act_papy_new = KL2Act_papy[:nmodes_kl, :]
 # Act2KL_papy_new = scipy.linalg.pinv(KL2Act_papy_new)
 # IM_KL2S_new = IM_KL2S[:nmodes_kl, :]
 # RM_S2KL_new = np.linalg.pinv(IM_KL2S_new, rcond=0.10)
-
+# print('Reconstruction matrix size: ', RM_S2KL_new.shape)
 
  #%%   
 # Initialize arrays to store Strehl ratio and total residual phase
@@ -172,8 +182,23 @@ plt.close('all')
 
 print('Running AO open loop')
 
-i = 0
+counter = 0
+
+print_rate = 1 # [s]
+time_at_last_print = time.perf_counter()
+last_loop_time = time.perf_counter()
+counter = 0
+read_time = 0
+computation_time = 0
+write_time = 0
+loop_time = 0
+
 while True:
+
+    loop_time += time.perf_counter() - last_loop_time
+    last_loop_time = time.perf_counter()
+    start_read_time = time.perf_counter()
+
     # Capture and process WFS image
     slopes_image = get_slopes_image(
         mask,
@@ -181,33 +206,36 @@ while True:
         normalized_reference_image,
         setup=setup,
     )
+
+    # Compute slopes
     slopes = slopes_image[valid_pixels_indices].flatten()
-    #fits.writeto(os.path.join(folder_gui, f'slopes_image.fits'), slopes_image, overwrite=True)
+
+    read_time += time.perf_counter() - start_read_time
+    start_computation_time = time.perf_counter()
     
     # Compute KL modes present
-    computed_modes = slopes @ RM_S2KL
-    # multiply by two because this mode is computed for DM surface and we want DM phase
-    computed_modes_shm.set_data(np.asanyarray(computed_modes).astype(np.float32)) # setting shared memory
-    
-    # Compute actuator commands
-    act_pos = computed_modes @ KL2Act_papy
-    commands_shm.set_data(np.asanyarray(act_pos).astype(np.float32)) # setting shared memory
+    slopes_cp = cp.asarray(slopes)
+    computed_modes = cp.matmul(slopes_cp, RM_S2KL_cp)
+    #computed_modes = slopes @ RM_S2KL
 
-    # Capture PSF
-    fp_img = camera_fp.get_data()
-    fp_img = np.maximum(fp_img, 1e-10)
-    normalized_psf_shm.set_data((fp_img / np.max(fp_img))) # setting shared memory
-    #fits.writeto(os.path.join(folder_gui, f'normalized_psf.fits'), (fp_img / np.max(fp_img)), overwrite=True)
+    computation_time += time.perf_counter() - start_computation_time
+    start_write_time = time.perf_counter()
+    computed_modes_shm.set_data(np.asanyarray(computed_modes.get()).astype(np.float32)) # setting shared memory
+    write_time += time.perf_counter() - start_write_time
 
-    # Compute Strehl ratio
-    observed_psf = fp_img / fp_img.sum()
-    integrated_obs_psf = observed_psf[psf_mask].sum()
-    strehl_ratio = integrated_obs_psf / integrated_diff_psf
-    strehl_ratio_shm.set_data(np.array([[strehl_ratio]]).astype(np.float32)) # setting shared memory
-    # strehl_ratio = np.max(observed_psf) / np.max(diffraction_limited_psf)
-    # strehl_ratios[i] = strehl_ratio
+    counter += 1  # increment loop index
 
-    i += 1  # increment loop index
-
+    if(time.perf_counter() - time_at_last_print > print_rate):
+        print('Loop rate = {:.2f} Hz'.format(1/(loop_time/counter)))
+        print('Loop time  = {:.2f} ms'.format(loop_time/counter*1e3))
+        print('Read time = {:.2f} ms'.format(read_time/counter*1e3))
+        print('Computation_time = {:.2f} ms'.format(computation_time/counter*1e3))
+        print('Write time  = {:.2f} ms'.format(write_time/counter*1e3))
+        counter = 0
+        read_time = 0
+        computation_time = 0
+        write_time = 0
+        loop_time = 0
+        time_at_last_print = time.perf_counter()
 
 

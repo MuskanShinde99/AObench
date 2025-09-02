@@ -20,6 +20,10 @@ import dao
 from src.dao_setup import init_setup, las
 from src.utils import set_data_dm, reload_setup
 
+#Loading setup
+setup = init_setup()
+setup = reload_setup()
+
 from src.config import config
 from src.utils import *
 from src.circular_pupil_functions import *
@@ -32,9 +36,6 @@ from src.psf_centring_algorithm_functions import *
 from src.shm_loader import shm
 from src.scan_modes_functions import *
 from src.ao_loop_functions import *
-
-#Loading setup
-setup = init_setup()
 
 #Loading folder
 folder_calib = config.folder_calib
@@ -89,7 +90,7 @@ plt.show()
 fits.writeto(os.path.join(folder_calib, f'bias_image.fits'), np.asarray(bias_image), overwrite=True)
 
 # Set bias image to zero for PAPY SIM tests
-# bias_image=np.zeros_like(bias_image) #TODO: Remove it
+#bias_image=np.zeros_like(bias_image) #TODO: Remove it
 
 #%% Turn on laser
 
@@ -109,7 +110,6 @@ else:
 # slm.set_data(data_slm)
 # time.sleep(wait_time)
 
-setup = reload_setup()
 # DM set to flat
 set_data_dm(setup=setup)
 dm_flat_papy_shm.set_data(setup.dm_flat.astype(np.float32))
@@ -122,8 +122,8 @@ fits.writeto(folder_calib / 'dm_flat_papy.fits', setup.dm_flat.astype(np.float32
 # KL2Phs = KL2Phs_shm.get_data()
 
 # From folder 
-# KL2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Act_nkl_{setup.nmodes_KL}_nact_{setup.nact}.fits'))
-# KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_{setup.nmodes_KL}_npupil_{setup.npix_small_pupil_grid}.fits'))
+KL2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Act_nkl_{setup.nmodes_KL}_nact_{setup.nact}.fits'))
+KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_{setup.nmodes_KL}_npupil_{setup.npix_small_pupil_grid}.fits'))
 
 KL2Act_papy = KL2Act_papy_shm.get_data().T
 
@@ -133,15 +133,15 @@ KL2Act_papy = KL2Act_papy_shm.get_data().T
 
 #%% Creating a Flux Filtering Mask
 
-method='dm_random'
-flux_cutoff = 0.08 # 0.06 - papy dm random; 0.2 - geneva dm random
+method='tip_tilt_modulation'
+flux_cutoff = 0.18 # 0.06 - papy dm random; 0.2 - geneva dm random
 modulation_angles = np.arange(0, 360, 1)  # angles of modulation
 modulation_amp = 15 # in lamda/D
-n_iter=500 # number of iternations for dm random commands
+n_iter=300 # number of iternations for dm random commands
 
-mask = create_flux_filtering_mask(method, flux_cutoff, KL2Act_papy[0], KL2Act_papy[1],
+mask = create_flux_filtering_mask(method, flux_cutoff, KL2Act[0], KL2Act[1],
                                modulation_angles, modulation_amp, n_iter,
-                               create_summed_image=True, verbose=False, verbose_plot=True,
+                               create_summed_image=False, verbose=False, verbose_plot=True,
                                OnSky=False,)
 
 valid_pixels_mask_shm.set_data(mask)
@@ -165,19 +165,20 @@ S2KL_shm = dao.shm('/tmp/S2KL.im.shm' , np.zeros((npix_valid, setup.nmodes_KL), 
 
 #%% Centering the PSF on the Pyramid Tip
 
+print('Start centering algorithm')
 center_psf_on_pyramid_tip(mask=mask, 
-                          bounds = [(-2.0, 2.0), (-2.0, 2.0)], variance_threshold=0.00001, 
-                          update_setup_file=True, verbose=True, verbose_plot=True)
+                          bounds = [(-2.0, 2.0), (-2.0, 2.0)], variance_threshold=0.13, 
+                          update_setup_file=False, verbose=True, verbose_plot=True)
 
-#%% Scanning modes to find zero of the pyramid
+ #%% Scanning modes to find zero of the pyramid
 
-test_values = np.arange(-0.5, 0.5, 0.05)
-mode_index = 3 # 0 - focus, 1 - astimgatism, 2 -astigmatism 
-#scan_othermode_amplitudes(test_values, mode_index, update_setup_file=True)
-scan_othermode_amplitudes_wfs_std(test_values, mode_index, mask, 
-                                  update_setup_file=False)
+# test_values = np.arange(-0.5, 0.5, 0.05)
+# mode_index = 3 # 0 - focus, 1 - astimgatism, 2 -astigmatism 
+# #scan_othermode_amplitudes(test_values, mode_index, update_setup_file=True)
+# scan_othermode_amplitudes_wfs_std(test_values, mode_index, mask, 
+#                                   update_setup_file=False)
   
-#revise the crieteria to standard deviation of intensities within the valid pixels
+# #revise the crieteria to standard deviation of intensities within the valid pixels
 
 #%% Capture Reference Image
 
@@ -189,7 +190,8 @@ set_data_dm(setup=setup)
 
 # Capure the Reference Image
 n_frames=20
-reference_image = (np.mean([camera_wfs.get_data().astype(np.float32) for i in range(n_frames)], axis=0)).astype(camera_wfs.get_data().dtype)
+#reference_image = (np.mean([camera_wfs.get_data().astype(np.float32) for i in range(n_frames)], axis=0)).astype(camera_wfs.get_data().dtype)
+reference_image = mask * 2000
 # average over several frames
 reference_image_shm.set_data(reference_image)
 fits.writeto(folder_calib / 'reference_image_raw.fits', reference_image, overwrite=True)
@@ -224,7 +226,7 @@ plt.title('PSF radial profile')
 plt.show()
 
 #%%
-phase_amp = 0.1
+phase_amp = 0.05
 
 # Number of times to repeat the whole calibration
 calibration_repetitions = 2
@@ -233,12 +235,13 @@ calibration_repetitions = 2
 #mode_repetitions = {0: 10, 3: 10} # Repeat the 0th mode ten times, the 3rd mode ten times, rest default to 1
 #mode_repetitions = [2, 3]  # Repeat the 0th mode twice, the 1st mode three times, beyond the 1st default to 1
 
-mode_repetitions = {0: 30, 1: 30}
+mode_repetitions = {0: 1, 1: 1}
+#mode_repetitions = [200] * setup.nmodes_KL
 
 # Run calibration and compute matrices
 # use the ref img, mask directly from shared memories 
 response_matrix_full, response_matrix_filtered = create_response_matrix(
-    KL2Act_papy,
+    KL2Act,
     phase_amp,
     reference_image,
     mask,
@@ -248,7 +251,8 @@ response_matrix_full, response_matrix_filtered = create_response_matrix(
     calibration_repetitions=calibration_repetitions,
     mode_repetitions=mode_repetitions,
     push_pull=False,
-    pull_push=True
+    pull_push=True,
+    n_frames=1,
 )
 
 #Reset the DM to flat
