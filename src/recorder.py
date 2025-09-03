@@ -1,0 +1,167 @@
+import dao
+import numpy as np
+import toml
+from toml_file_updater import TomlFileUpdater
+import os
+from datetime import datetime
+import time 
+import astropy.io.fits as fits
+import ctypes
+daoLogLevel = ctypes.c_int.in_dll(dao.daoLib, "daoLogLevel")
+daoLogLevel.value=0
+# list to record
+# slopes
+# modes
+# command
+# M2V
+# M2S
+# selected mode
+# dd order 
+# dd n fft
+# powers of 2
+# n_modes low
+# n_modes high
+# n_modes controlled 
+
+ 
+print('starting record')
+
+folder_name = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+parent_dir = "record/"
+full_path = os.path.join(parent_dir, folder_name)
+
+os.makedirs(full_path, exist_ok=True)
+
+with open('control_config.toml', 'r') as f:
+    config = toml.load(f)
+with open('shm_path_control.toml', 'r') as f:
+    shm_path = toml.load(f)
+    
+with open('shm_path.toml', 'r') as f:
+    shm_path_flux = toml.load(f)
+
+sem_nb = config['sem_nb']['rec']
+n_modes = config['common']['n_modes']
+n_voltages = config['common']['n_voltages']
+fs = dao.shm(shm_path['control']['fs']).get_data()[0][0]
+record_time = dao.shm(shm_path['control']['record_time']).get_data()[0][0]
+cblue_shm = dao.shm(shm_path['control']['cblue'])
+dm_shm = dao.shm(shm_path['control']['dm'])
+slopes_shm = dao.shm(shm_path['control']['slopes'])
+telemetry_shm = dao.shm(shm_path['control']['telemetry'])
+telemetry_ts_shm = dao.shm(shm_path['control']['telemetry_ts']) 
+pyramid_select_shm = dao.shm(shm_path['control']['pyramid_select']) 
+epoch = np.datetime64('1970-01-01T00:00:00', 'us')
+n_fft = dao.shm(shm_path['control']['n_fft']).get_data()[0][0]
+controller_select = dao.shm(shm_path['control']['controller_select']).get_data()[0][0]
+gain_margin = dao.shm(shm_path['control']['gain_margin']).get_data()[0][0]
+dd_order_low = dao.shm(shm_path['control']['dd_order_low']).get_data()[0][0]
+dd_order_high = dao.shm(shm_path['control']['dd_order_high']).get_data()[0][0]
+dd_update_rate_low = dao.shm(shm_path['control']['dd_update_rate_low']).get_data()[0][0]
+dd_update_rate_high = dao.shm(shm_path['control']['dd_update_rate_high']).get_data()[0][0]
+n_modes_int = dao.shm(shm_path['control']['n_modes_int']).get_data()[0][0]
+n_modes_dd_low = dao.shm(shm_path['control']['n_modes_dd_low']).get_data()[0][0]
+n_modes_dd_high = dao.shm(shm_path['control']['n_modes_dd_high']).get_data()[0][0]
+record_time = dao.shm(shm_path['control']['record_time']).get_data()[0][0]
+delay = dao.shm(shm_path['control']['delay']).get_data()[0][0]
+M2V = dao.shm(shm_path['control']['M2V']).get_data()
+M2S = dao.shm(shm_path['control']['M2S']).get_data()
+int_gain = dao.shm(shm_path['control']['K_mat_int']).get_data()[0,0]
+
+norm_flux_pyr_img_shm = dao.shm(shm_path_flux['norm_flux_pyr_img'])
+strehl_ratio_shm = dao.shm(shm_path_flux['strehl_ratio'])
+
+record_its = int(record_time*fs)
+
+results_file = TomlFileUpdater(os.path.join(full_path, "results.toml"))
+results_file.add('n_fft',n_fft)
+
+match controller_select:
+    case 0:
+        results_file.add('control mode','int')
+        results_file.add('gain',int_gain)
+    case 1:
+        results_file.add('control mode','dd')
+        results_file.add('n_fft',n_fft)
+        results_file.add('gain_margin',gain_margin)
+        results_file.add('dd_order_low',dd_order_low)
+        results_file.add('dd_order_high',dd_order_high)
+        results_file.add('dd_update_rate_low',dd_update_rate_low)
+        results_file.add('dd_update_rate_high',dd_update_rate_high)
+        results_file.add('n_modes_dd_low',n_modes_dd_low)
+        results_file.add('n_modes_dd_high',n_modes_dd_high)
+    case 2:
+        results_file.add('control mode','omgi')
+        results_file.add('n_fft',n_fft)
+        results_file.add('gain_margin',gain_margin)
+
+match pyramid_select_shm.get_data(check=False, semNb=sem_nb)[0][0]:
+    case 0:
+        results_file.add('pyramid','4 sided')
+    case 1:
+        results_file.add('pyramid','3 sided')
+
+results_file.add('delay',delay)
+results_file.add('n modes controlled',n_modes_int)
+results_file.add('record time',record_time)
+
+modes_buf = np.zeros((record_its,n_modes))
+command_buf = np.zeros((record_its,n_modes))
+voltages_buf = np.zeros((record_its,n_voltages))
+pyr_flux_buf = np.zeros((record_its,1))
+strehl_buf = np.zeros((record_its,1))
+
+modes_ts_buf = np.zeros((record_its,1),dtype=np.float64)
+command_ts_buf = np.zeros((record_its,1),dtype=np.float64)
+
+cblue_shape = cblue_shm.get_data(check=False).shape
+cblue_n_frames = 100
+cblue_count = 0
+cblue_n_avg = int(np.ceil(record_its/cblue_n_frames)) 
+cblue_buf = np.zeros((cblue_n_avg,cblue_shape[0],cblue_shape[1]),np.uint32)
+
+for i in range(record_its):
+
+    telemetry = telemetry_shm.get_data(check=True, semNb=sem_nb)
+    telemetry_ts = telemetry_ts_shm.get_data(check=False, semNb=sem_nb)
+    modes = telemetry[0, :]
+    command =  telemetry[1, :]
+    modes_ts = telemetry_ts[0, :]
+    command_ts =  telemetry_ts[1, :]
+
+    voltages = dm_shm.get_data(check=False, semNb=sem_nb).squeeze()
+    pyr_flux = norm_flux_pyr_img_shm.get_data(check=False, semNb=sem_nb).squeeze()
+    strehl = strehl_ratio_shm.get_data(check=False, semNb=sem_nb).squeeze()
+
+    modes_buf[i, :] = modes
+    voltages_buf[i, :] = voltages
+    modes_ts_buf[i, :] = modes_ts 
+    command_ts_buf[i, :] =  command_ts 
+    command_buf[i, :] = command
+    pyr_flux_buf[i, :] = pyr_flux
+    strehl_buf[i, :] = strehl
+
+    cblue_buf[cblue_count,:,:] += cblue_shm.get_data(check=False).astype(np.uint32)
+    
+    if (i+1) % cblue_n_frames == 0:
+        cblue_count += 1
+
+
+cblue_buf = cblue_buf/cblue_n_avg
+
+rms = np.mean(np.sum(np.square(modes_buf),axis=1))
+results_file.add('rms',rms)
+
+fits.writeto(os.path.join(full_path, "modes.fits"), modes_buf, overwrite = True)
+fits.writeto(os.path.join(full_path, "commands.fits"), command_buf, overwrite = True)
+fits.writeto(os.path.join(full_path, "modes_ts.fits"), modes_ts_buf, overwrite = True)
+fits.writeto(os.path.join(full_path, "commands_ts.fits"), command_ts_buf, overwrite = True)
+fits.writeto(os.path.join(full_path, "voltages.fits"), voltages_buf, overwrite = True)
+fits.writeto(os.path.join(full_path, "pyr_fluxes.fits"), pyr_flux_buf, overwrite = True)
+fits.writeto(os.path.join(full_path, "M2V.fits"), M2V, overwrite = True)
+fits.writeto(os.path.join(full_path, "M2S.fits"), M2S, overwrite = True)
+fits.writeto(os.path.join(full_path, "strehl.fits"), strehl_buf, overwrite = True)
+fits.writeto(os.path.join(full_path, "cblue.fits"), cblue_buf, overwrite = True)
+results_file.save()
+
+print('print record done')
