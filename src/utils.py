@@ -14,7 +14,13 @@ from scipy.interpolate import interp2d
 
 from src.shm_loader import shm
 
+
+# -----------------------------------------------------------------------------
+# Setup helpers
+# -----------------------------------------------------------------------------
+
 DEFAULT_SETUP = None
+
 
 def set_default_setup(setup):
     """Register a default setup used when none is provided."""
@@ -40,8 +46,8 @@ def reload_setup():
 
     DEFAULT_SETUP = _init_setup()
     return DEFAULT_SETUP
-    
-    
+
+
 def _resolve_place_of_test(place_of_test):
     """Return a test location string used by DM helper functions.
 
@@ -61,11 +67,17 @@ def _resolve_place_of_test(place_of_test):
         place = os.environ.get("PLACE_OF_TEST", None)
 
     if place is None:
-        raise RuntimeError("PLACE_OF_TEST is not defined. "
-                           "Set the environment variable or provide it explicitly.")
+        raise RuntimeError(
+            "PLACE_OF_TEST is not defined. "
+            "Set the environment variable or provide it explicitly."
+        )
 
     return place
 
+
+# -----------------------------------------------------------------------------
+# DM helpers
+# -----------------------------------------------------------------------------
 
 
 def compute_data_slm(data_dm=0, data_phase_screen=0, data_dm_flat=0, setup=None, **kwargs):
@@ -274,6 +286,12 @@ def set_data_dm(actuators=None, *, setup=None, dm_flat=None, place_of_test=None,
     data_dm = np.zeros((npix_small_pupil_grid, npix_small_pupil_grid), dtype=np.float32)
     return actuators, data_dm, None
 
+
+# -----------------------------------------------------------------------------
+# Image processing utilities
+# -----------------------------------------------------------------------------
+
+
 def create_psf_mask(psf, crop_size=100, radius=50):
     """
     Creates a mask for the PSF image by cropping a region around the center,
@@ -387,39 +405,13 @@ def get_slopes_image(mask, normalized_reference_image, pyr_img=None, setup=None,
 
 
 def compute_pyr_slopes(normalized_pyr_img, normalized_ref_img):
-    """
-    Computes the slopes between a pyramid image and a reference image.
-
-    Parameters:
-    - pyr_img (numpy array): The normalized pyramid image to process.
-    - ref_img (numpy array): The normalized reference image.
-    
-    Returns:
-    - numpy array: The slope between the processed pyramid image and the processed reference image.
-    """
+    """Compute slopes between a pyramid image and a reference image."""
 
     # Compute the slope (difference) between the normalized pyramid and reference images
     slopes_image = normalized_pyr_img - normalized_ref_img
-    
+
     return slopes_image
 
-# Function to check if a matrix file exists in a specified folder
-def matrix_exists(folder, filename):
-    """
-    Checks whether a matrix file exists in the given folder.
-
-    Parameters:
-    - folder (str): The folder path where the file is supposed to be.
-    - filename (str): The name of the file to check for existence.
-
-    Returns:
-    - bool: True if the file exists, False otherwise.
-    """
-    # Join the folder path and filename to get the full file path
-    file_path = os.path.join(folder, filename)
-    
-    # Use os.path.exists() to check if the file exists at the specified path
-    return os.path.exists(file_path)
 
 def compute_response_matrix(images, mask=None):
     """
@@ -549,6 +541,12 @@ def process_response_images(images, mask, normalized_reference_image, coms):
     processed_images = np.array(processed_images)
     return processed_images
 
+
+# -----------------------------------------------------------------------------
+# Cropping helpers
+# -----------------------------------------------------------------------------
+
+
 def find_pupil_coms(mask):
     """
     Finds the center of mass for each of the four quadrants of the mask created for pyramid images.
@@ -648,8 +646,20 @@ z
     combined_image[:crop_height, crop_width:] = crops[1]
     combined_image[crop_height:, :crop_width] = crops[2]
     combined_image[crop_height:, crop_width:] = crops[3]
-    
+
     return combined_image
+
+
+# -----------------------------------------------------------------------------
+# Miscellaneous utilities
+# -----------------------------------------------------------------------------
+
+
+def matrix_exists(folder, filename):
+    """Check whether a matrix file exists in the given folder."""
+    file_path = os.path.join(folder, filename)
+    return os.path.exists(file_path)
+
 
 def bin_matrix_2d(matrix, new_rows, new_cols):
     """Interpolates a matrix to a new shape using 2D interpolation."""
