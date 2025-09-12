@@ -732,6 +732,7 @@ class MainWindow(QMainWindow):
         self.pyramid_select_shm.set_data(np.array([[value]],np.uint32))
 
     def closeEvent(self, event):
+        self.bias_process.stop_process()
         self.valid_pixels_process.stop_process()
         self.ref_images_process.stop_process()
         self.psf_center_process.stop_process()
