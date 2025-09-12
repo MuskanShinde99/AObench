@@ -3,6 +3,12 @@ nact = 17
 img_size_wfs_cam = 124
 img_size_fp_cam = 600
 
+img_size_wfs_cam_x = 124
+img_size_wfs_cam_y = 124
+
+img_size_fp_cam_x = 600
+img_size_fp_cam_y = 600
+
 npix_small_pupil_grid = 550
 nmodes_KL = 289
 nmodes_dm = 289
