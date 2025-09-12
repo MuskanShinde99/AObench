@@ -318,69 +318,32 @@ def create_psf_mask(psf, crop_size=100, radius=50):
 
 
 
-def bias_correction(image, bias_image):
-    """
-    Subtracts the bias image from the given image.
-
-    Parameters:
-    - image (numpy array): The input image to be corrected.
-    - bias_image (numpy array): The bias image to subtract from the input image.
-
-    Returns:
-    - numpy array: The corrected image after bias subtraction.
-    """
-    
-    # Ensure the images are numpy arrays
-    image = np.asarray(image)
-    bias_image = np.asarray(bias_image)
-    
-    # Check if the image and bias image have the same shape
-    if image.shape != bias_image.shape:
-        raise ValueError("The image and bias image must have the same shape.")
-    
-    # Subtract the bias image from the input image
-    corrected_image = image - bias_image
-    
-    return corrected_image
-
-
-def normalize_image(image, mask, bias_img=None):
+def normalize_image(image, mask):
     """
     Normalizes the masked image by applying the mask, and then dividing by the absolute sum of the masked image.
-    
+
     Parameters:
     - image (numpy array): The image to normalize.
     - mask (numpy array): The mask to apply to the image.
-    - bias_img (numpy array, optional): The bias image to subtract from the image. Defaults to an array of zeros if not provided.
-    
+
     Returns:
     - numpy array: The normalized image.
     """
     norm_flux_pyr_img_shm = shm.norm_flux_pyr_img_shm
-    
-    # If bias_img is not provided, initialize it as an array of zeros
-    if bias_img is None:
-        bias_img = np.zeros_like(image)
 
-    # Apply bias correction to image
-    bias_corrected_image = bias_correction(image, bias_img)
-
-    #Apply a threshold to cut negative values
-    #bias_corrected_image[bias_corrected_image<0] = 0
-    
     # Apply the mask to the image
-    masked_image = bias_corrected_image * mask
-    
+    masked_image = image * mask
+
     # Normalize the masked image by dividing by the absolute sum of the masked image
     norm_flux = np.abs(np.sum(masked_image))
     normalized_image = masked_image / norm_flux
-    
-    norm_flux_pyr_img_shm.set_data(np.array([[norm_flux]]).astype(np.float32)) # setting shared memory
+
+    norm_flux_pyr_img_shm.set_data(np.array([[norm_flux]]).astype(np.float32))  # setting shared memory
 
     return normalized_image
 
 
-def get_slopes_image(mask, bias_image, normalized_reference_image, pyr_img=None, setup=None, **kwargs):
+def get_slopes_image(mask, normalized_reference_image, pyr_img=None, setup=None, **kwargs):
     """Capture a PyWFS frame and compute its slope image.
 
     The resulting slopes image is always written to the global
@@ -392,8 +355,6 @@ def get_slopes_image(mask, bias_image, normalized_reference_image, pyr_img=None,
         Camera used to grab a new frame when ``pyr_img`` is ``None``.
     mask : numpy.ndarray
         Processing mask applied to the raw WFS image.
-    bias_image : numpy.ndarray
-        Bias image subtracted from the captured frame.
     normalized_reference_image : numpy.ndarray
         Normalized reference image used for slope computation.
     pyr_img : numpy.ndarray, optional
@@ -417,7 +378,7 @@ def get_slopes_image(mask, bias_image, normalized_reference_image, pyr_img=None,
     if pyr_img is None:
         pyr_img = camera_wfs.get_data(check=True, semNb=5)
 
-    normalized_pyr_img = normalize_image(pyr_img, mask, bias_image)
+    normalized_pyr_img = normalize_image(pyr_img, mask)
     slopes_image = compute_pyr_slopes(normalized_pyr_img, normalized_reference_image)
     # print('slopes_image data type', slopes_image.dtype)
     # print('slopes_image shape', slopes_image.shape)
@@ -508,7 +469,7 @@ def compute_response_matrix(images, mask=None):
 
 
 
-def process_response_images_3s_pyr(images, mask, ref_image, bias_image):
+def process_response_images_3s_pyr(images, mask, ref_image):
     """
     Compute the processed response cube
 
@@ -525,7 +486,7 @@ def process_response_images_3s_pyr(images, mask, ref_image, bias_image):
     print('Number of images:', num_images)
     
     # Multiply by mask and normalize the reference image
-    normalized_reference_image = normalize_image(ref_image, mask, bias_image)
+    normalized_reference_image = normalize_image(ref_image, mask)
 
     # Initialize a list to hold the new data cube images
     processed_images = []
@@ -533,7 +494,7 @@ def process_response_images_3s_pyr(images, mask, ref_image, bias_image):
     # Process each image in the data cube
     for i in range(num_images):
         # Multiply by the mask and  Normalize by the sum of the image
-        normalized_image = normalize_image(images[i], mask, bias_image)
+        normalized_image = normalize_image(images[i], mask)
 
         # calculate slope image
         slope_image = compute_pyr_slopes(normalized_image, normalized_reference_image)
