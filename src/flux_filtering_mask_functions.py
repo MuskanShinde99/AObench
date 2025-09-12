@@ -19,7 +19,7 @@ setup = init_setup()
 
 
 
-def create_summed_image_for_mask(modulation_angles, modulation_amp, tiltx, tilty, bias_img, verbose=False, **kwargs):
+def create_summed_image_for_mask(modulation_angles, modulation_amp, tiltx, tilty, verbose=False, **kwargs):
     """Acquire and sum images for flux mask generation using tip-tilt modulation.
 
     Parameters
@@ -62,7 +62,6 @@ def create_summed_image_for_mask(modulation_angles, modulation_amp, tiltx, tilty
         # Capture image using pylon SDK wrapper function
         n_frames=50
         img = (np.mean([camera.get_data() for i in range(n_frames)], axis=0))
-        img = img - bias_img
         #img = camera.get_data(check=True)
         
         modulation_img_arr.append(img)
@@ -72,7 +71,7 @@ def create_summed_image_for_mask(modulation_angles, modulation_amp, tiltx, tilty
     return summed_image
 
 
-def create_summed_image_for_mask_dm_random(n_iter, bias_img, verbose=False,  **kwargs):
+def create_summed_image_for_mask_dm_random(n_iter, verbose=False,  **kwargs):
     """Acquire a summed image using random DM actuator patterns.
 
     Parameters
@@ -110,15 +109,14 @@ def create_summed_image_for_mask_dm_random(n_iter, bias_img, verbose=False,  **k
         
         n_frames=20
         img = (np.mean([camera.get_data() for i in range(n_frames)], axis=0))
-        bias_corrected_img = bias_correction(img, bias_img)
-        img_arr.append(bias_corrected_img)
+        img_arr.append(img)
 
     summed_image = np.sum(np.asarray(img_arr), axis=0)
 
     return summed_image
 
-def create_flux_filtering_mask(method, flux_cutoff, tiltx, tilty, bias_img,
-                               modulation_angles=np.arange(0, 360, 10), modulation_amp=15, n_iter=200, 
+def create_flux_filtering_mask(method, flux_cutoff, tiltx, tilty,
+                               modulation_angles=np.arange(0, 360, 10), modulation_amp=15, n_iter=200,
                                create_summed_image=True, verbose=False, verbose_plot=False,
                                OnSky=False, **kwargs):
     """Generate a binary mask highlighting high-flux regions.
@@ -170,13 +168,12 @@ def create_flux_filtering_mask(method, flux_cutoff, tiltx, tilty, bias_img,
 
         if method == 'tip_tilt_modulation':
             summed_image = create_summed_image_for_mask(
-                modulation_angles, modulation_amp, tiltx, tilty, bias_img=bias_img,
+                modulation_angles, modulation_amp, tiltx, tilty,
                 verbose=verbose, **kwargs
             )
         elif method == 'dm_random':
             summed_image = create_summed_image_for_mask_dm_random(
                 n_iter=n_iter,
-                bias_img=bias_img,
                 verbose=verbose,
                 **kwargs
             )

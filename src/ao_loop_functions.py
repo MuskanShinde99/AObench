@@ -32,7 +32,7 @@ dm_act_shm = shm.dm_act_shm
 
 
 def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, anim_path, aim_name, anim_title,
-                           RM_S2KL, KL2Act, Act2KL, Phs2KL,  mask, bias_image, reference_image, diffraction_limited_psf, 
+                           RM_S2KL, KL2Act, Act2KL, Phs2KL,  mask, reference_image, diffraction_limited_psf,
                            verbose=False, verbose_plot=False, **kwargs):
     """
     Performs a closed-loop adaptive optics simulation.
@@ -47,8 +47,7 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
     
     --- Image Processing and Calibration ---
     - mask: Mask for filtering valid pixels
-    - bias_image: Bias image used for normalization
-    - reference_image: Reference WFS image 
+    - reference_image: Reference WFS image
     - diffraction_limited_psf: Ideal PSF used to compute the Strehl ratio
     - RM_S2KL: Matrix mapping PyWFS measurements to KL modes
     - KL2Act: Matrix mapping KL modes to actuator positions
@@ -80,7 +79,7 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
     #deformable_mirror.flatten()
 
     # Reference image 
-    normalized_reference_image = normalize_image(reference_image, mask, bias_image)
+    normalized_reference_image = normalize_image(reference_image, mask)
     pyr_img_shape = reference_image.shape
     if verbose:
         print('Reference image shape:', pyr_img_shape)
@@ -212,7 +211,6 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
         # Capture and process WFS image
         slopes_image = get_slopes_image(
             mask,
-            bias_image,
             normalized_reference_image,
             setup=setup,
         )

@@ -19,7 +19,6 @@ def perform_push_pull_calibration_with_phase_basis(
     phase_amp,
     ref_image,
     mask,
-    bias_image,
     n_frames: int = 1,
     verbose=False,
     verbose_plot=False,
@@ -62,8 +61,8 @@ def perform_push_pull_calibration_with_phase_basis(
     # Number of phase modes
     nmodes_basis = basis.shape[0]
 
-    # Normalize reference image with explicit bias_img set to zero
-    normalized_reference_image = normalize_image(ref_image, mask, bias_image)
+    # Normalize reference image
+    normalized_reference_image = normalize_image(ref_image, mask)
 
     # Prepare number of repetitions per mode
     if mode_repetitions is None:
@@ -136,7 +135,6 @@ def perform_push_pull_calibration_with_phase_basis(
 
                     slopes_image = get_slopes_image(
                         mask,
-                        bias_image,
                         normalized_reference_image,
                         setup=setup,
                         pyr_img=pyr_img,
@@ -207,7 +205,6 @@ def create_response_matrix(
     phase_amp,
     reference_image,
     mask,
-    bias_image,
     *,
     verbose=True,
     verbose_plot=False,
@@ -280,7 +277,6 @@ def create_response_matrix(
             phase_amp,
             reference_image,
             mask,
-            bias_image,
             n_frames=n_frames,
             verbose=verbose,
             verbose_plot=verbose_plot,

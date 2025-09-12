@@ -1414,42 +1414,6 @@
        <string>wait time</string>
       </property>
      </widget>
-     <widget class="QTextEdit" name="bias_output">
-      <property name="geometry">
-       <rect>
-        <x>60</x>
-        <y>80</y>
-        <width>251</width>
-        <height>131</height>
-       </rect>
-      </property>
-     </widget>
-     <widget class="QPushButton" name="start_bias_button">
-      <property name="geometry">
-       <rect>
-        <x>60</x>
-        <y>40</y>
-        <width>141</width>
-        <height>27</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Start Bias</string>
-      </property>
-     </widget>
-     <widget class="QPushButton" name="stop_bias_button">
-      <property name="geometry">
-       <rect>
-        <x>220</x>
-        <y>40</y>
-        <width>141</width>
-        <height>27</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Stop Bias</string>
-      </property>
-     </widget>
      <widget class="QTextEdit" name="valid_pixels_output">
       <property name="geometry">
        <rect>
