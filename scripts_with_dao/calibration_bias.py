@@ -20,10 +20,6 @@ import dao
 from src.dao_setup import init_setup, las
 from src.utils import set_data_dm, reload_setup
 
-# Flag to identify on-sky data
-OnSky = False
-suffix = "_OnSky" if OnSky else ""
-
 #Loading setup
 setup = init_setup()
 setup = reload_setup()
@@ -41,7 +37,6 @@ from src.shm_loader import shm
 from src.scan_modes_functions import *
 from src.ao_loop_functions import *
 
-
 #Loading folder
 folder_calib = config.folder_calib
 
@@ -56,18 +51,54 @@ KL2Act_papy_shm = shm.KL2Act_papy_shm
 dm_flat_papy_shm = shm.dm_flat_papy_shm
 dm_papy_shm = shm.dm_papy_shm
 
-#%% Load mask
 
-# Load the calibration mask for processing images.
-mask_filename = f'mask_3s_pyr{suffix}.fits'
-mask = fits.getdata(os.path.join(folder_calib, mask_filename))
-print(f"Mask dimensions: {mask.shape}")
+# #%% Accessing Devices
 
-#%% Centering the PSF on the Pyramid Tip
+# # Initialize Cameras
+# camera_wfs = setup.camera_wfs
+# camera_fp = setup.camera_fp
 
-print('Start centering algorithm')
-center_psf_on_pyramid_tip(mask=mask, 
-                          bounds = [(-2.0, 2.0), (-2.0, 2.0)], variance_threshold=0.1, 
-                          update_setup_file=False, verbose=True, verbose_plot=True)
+# # Intialize DM
+# deformable_mirror = setup.defomable_mirror
 
+#%% Turn off laser
 
+# Turn off laser
+if las is not None:
+    las.enable(0)
+    time.sleep(2)  # Allow some time for laser to turn off
+    print("The laser is OFF")
+    
+else:
+    input("Turn OFF the laser and press Enter to continue")
+    
+#%% Take a bias image
+
+# Capture and average 1000 bias frames
+n_frames=1000
+bias_image = np.median([camera_wfs.get_data() for i in range(n_frames)], axis=0)
+bias_image_shm.set_data(bias_image)
+
+# Plot
+plt.figure()
+plt.imshow(bias_image, cmap='gray')
+plt.title('Bias image')
+plt.colorbar()
+plt.show()
+
+# Save the Bias Image
+
+fits.writeto(os.path.join(folder_calib, f'bias_image.fits'), np.asarray(bias_image), overwrite=True)
+
+# Set bias image to zero for PAPY SIM tests
+#bias_image=np.zeros_like(bias_image) #TODO: Remove it
+
+#%% Turn on laser
+
+if las is not None:
+    las.enable(1)
+    time.sleep(2)
+    print("The laser is ON")
+    
+else:
+    input("Turn ON the laser and press Enter to continue")

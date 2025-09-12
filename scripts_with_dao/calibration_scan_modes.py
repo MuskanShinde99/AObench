@@ -63,11 +63,12 @@ mask_filename = f'mask_3s_pyr{suffix}.fits'
 mask = fits.getdata(os.path.join(folder_calib, mask_filename))
 print(f"Mask dimensions: {mask.shape}")
 
-#%% Centering the PSF on the Pyramid Tip
+ #%% Scanning modes to find zero of the pyramid
 
-print('Start centering algorithm')
-center_psf_on_pyramid_tip(mask=mask, 
-                          bounds = [(-2.0, 2.0), (-2.0, 2.0)], variance_threshold=0.1, 
-                          update_setup_file=False, verbose=True, verbose_plot=True)
-
-
+test_values = np.arange(-0.5, 0.5, 0.05)
+mode_index = 3 # 0 - focus, 1 - astimgatism, 2 -astigmatism 
+#scan_othermode_amplitudes(test_values, mode_index, update_setup_file=True)
+scan_othermode_amplitudes_wfs_std(test_values, mode_index, mask, 
+                                  update_setup_file=False)
+  
+#revise the crieteria to standard deviation of intensities within the valid pixels

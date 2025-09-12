@@ -6,6 +6,9 @@ Created on Fri Mar 14 13:33:29 2025
 @author: laboptic
 """
 # Standard library
+
+import time
+from datetime import datetime
 import numpy as np
 import os
 import matplotlib.pyplot as plt
@@ -130,7 +133,7 @@ plt.title('PSF radial profile')
 plt.show()
 
 #%%
-phase_amp = 0.05
+phase_amp = 0.15
 
 # Number of times to repeat the whole calibration
 calibration_repetitions = 2
