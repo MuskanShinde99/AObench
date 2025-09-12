@@ -375,6 +375,12 @@ class MainWindow(QMainWindow):
         self.update_pyramid_select(self.pyramid_select_dial.value())
 
     def init_process(self):
+        self.bias_process = ProcessManager("calibration_bias.py",self.start_bias_button, self.stop_bias_button, self.bias_output)
+        self.valid_pixels_process = ProcessManager("calibration_bias.py",self.start_valid_pixels_button, self.stop_valid_pixels_button, self.valid_pixels_output)
+        self.ref_images_process = ProcessManager("calibration_bias.py",self.start_ref_images_button, self.stop_ref_images_button, self.ref_images_output)
+        self.psf_center_process = ProcessManager("calibration_bias.py",self.start_psf_center_button, self.stop_psf_center_button, self.psf_center_output)
+        self.scan_modes_process = ProcessManager("calibration_bias.py",self.start_scan_modes_button, self.stop_scan_modes_button, self.scan_modes_output)
+        self.im_process = ProcessManager("calibration_bias.py",self.start_im_button, self.stop_im_button, self.im_output)
         self.record_process = ProcessManager("recorder.py",self.start_record_button, None, self.record_output)
         self.pol_reconstructor_process = ProcessManager("pol_reconstructor.py",self.start_pol_reconstructor_button, self.stop_pol_reconstructor_button, self.pol_reconstructor_output)
         self.freq_mag_estimator_process = ProcessManager("freq_mag_estimator.py",self.start_freq_mag_estimator_button, self.stop_freq_mag_estimator_button, self.freq_mag_estimator_output)
