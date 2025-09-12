@@ -44,6 +44,7 @@ __all__ = ["ShmLoader", "shm"]
 # # KL2Phs_shm               = dao.shm(shm_path['KL2Phs'])
 
 # # valid_pixels_mask_shm    = dao.shm(shm_path['valid_pixels_mask'])
+# # bias_image_shm           = dao.shm(shm_path['bias_image'])
 # # reference_psf_shm        = dao.shm(shm_path['reference_psf'])
 # # normalized_ref_psf_shm   = dao.shm(shm_path['normalized_ref_psf'])
 # # reference_image_shm      = dao.shm(shm_path['reference_image'])
