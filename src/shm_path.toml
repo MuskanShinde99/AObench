@@ -22,6 +22,7 @@ Act2KL                  = '/tmp/Act2KL.im.shm'
 # Phs2KL                  = '/tmp/Phs2KL.im.shm'
 
 valid_pixels_mask       = '/tmp/valid_pixels_mask.im.shm'
+bias_image              = '/tmp/bias_image.im.shm'
 reference_psf           = '/tmp/reference_psf.im.shm'
 normalized_ref_psf      = '/tmp/normalized_ref_psf.im.shm'
 reference_image         = '/tmp/reference_image.im.shm'
