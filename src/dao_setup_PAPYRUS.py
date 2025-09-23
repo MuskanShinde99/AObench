@@ -55,10 +55,10 @@ fps_fp = shm.cam2Fps_shm #dao.shm('/tmp/cam2Fps.im.shm')
 #fps_fp.set_data(fps_fp.get_data()*0+20)
 
 img = camera_wfs.get_data()
-img_size_wfs_cam_x, img_size_wfs_cam_y =  127, 160 #160, 128 #240, 240
+img_size_wfs_cam_x, img_size_wfs_cam_y =  240, 240 #160, 128 #240, 240
 
 img_fp = camera_fp.get_data()
-img_size_fp_cam_x, img_size_fp_cam_y =  816, 624 #600, 600
+img_size_fp_cam_x, img_size_fp_cam_y =  600, 600 #816, 624 #600, 600
 
 # # To get camera image
 # camera_wfs.get_data()
