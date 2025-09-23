@@ -201,7 +201,7 @@ calibration_repetitions = 1
 #mode_repetitions = {0: 10, 3: 10} # Repeat the 0th mode ten times, the 3rd mode ten times, rest default to 1
 #mode_repetitions = [2, 3]  # Repeat the 0th mode twice, the 1st mode three times, beyond the 1st default to 1
 
-mode_repetitions = [50]*150
+mode_repetitions = [2, 2]
 #mode_repetitions = [200] * setup.nmodes_KL
 
 # Run calibration and compute matrices
@@ -211,7 +211,6 @@ response_matrix_full, response_matrix_filtered = create_response_matrix(
     phase_amp,
     reference_image,
     mask,
-    bias_image,
     verbose=True,
     verbose_plot=False,
     calibration_repetitions=calibration_repetitions,
