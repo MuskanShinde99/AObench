@@ -87,15 +87,15 @@ KL2Act_papy = KL2Act_papy_shm.get_data().T
 
 #%% Creating a Flux Filtering Mask
 
-method='tip_tilt_modulation'
-flux_cutoff = 0.00000001# 0.06 - papy dm random; 0.2 - geneva dm random
+method='dm_random'
+flux_cutoff = 0.08 #0.00000001 # 0.08 - papy dm random; 0.2 - geneva dm random
 modulation_angles = np.arange(0, 2000, 1)  # angles of modulation
 modulation_amp = 2 # in lamda/D
 n_iter=500 # number of iternations for dm random commands
 
-mask = create_flux_filtering_mask(method, flux_cutoff, KL2Act_papy[0], KL2Act_papy[1], bias_image,
+mask = create_flux_filtering_mask(method, flux_cutoff, KL2Act_papy[0], KL2Act_papy[1],
                                modulation_angles, modulation_amp, n_iter, 
-                               create_summed_image=True, verbose=False, verbose_plot=True,
+                               create_summed_image=False, verbose=False, verbose_plot=True,
                                OnSky=False, )
 
 valid_pixels_mask_shm.set_data(mask)
