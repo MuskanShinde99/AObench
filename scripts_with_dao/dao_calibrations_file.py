@@ -60,12 +60,6 @@ dm_papy_shm = shm.dm_papy_shm
 
 # # Intialize DM
 # deformable_mirror = setup.defomable_mirror
-    
-#%%
-# Load the bias image
-bias_filename = f'bias_image.fits'
-bias_image = fits.getdata(os.path.join(folder_calib, bias_filename))
-print(f"Bias image shape: {bias_image.shape}")
 
 #%% Setting DM to flat
 
