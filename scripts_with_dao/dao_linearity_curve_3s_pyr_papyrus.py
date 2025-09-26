@@ -239,12 +239,21 @@ plt.savefig(crosscorr_png_timestamped_path, dpi=300)
 plt.show()
 
 # Save cross-correlation matrix as FITS
-fits_path = folder_calib / f"crosscorrelation_matrix.fits"
-fits.writeto(fits_path, crosscorrelation_matrix, overwrite=True)
+crosscorr_fits_path = folder_calib / "crosscorrelation_matrix.fits"
+crosscorr_fits_timestamped_path = (
+    folder_calib / f"crosscorrelation_matrix_{crosscorr_timestamp}.fits"
+)
+fits.writeto(crosscorr_fits_path, crosscorrelation_matrix, overwrite=True)
+fits.writeto(
+    crosscorr_fits_timestamped_path, crosscorrelation_matrix, overwrite=True
+)
 
 print(
-    "Cross-correlation matrix saved to: "
-    f"{crosscorr_png_path}, {crosscorr_png_timestamped_path}, {fits_path}"
+    "Cross-correlation matrix saved to:"
+    f"\n - {crosscorr_png_path}"
+    f"\n - {crosscorr_png_timestamped_path}"
+    f"\n - {crosscorr_fits_path}"
+    f"\n - {crosscorr_fits_timestamped_path}"
 )
 
 #DM set to flat
