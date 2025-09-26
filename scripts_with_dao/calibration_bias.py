@@ -43,7 +43,7 @@ folder_calib = config.folder_calib
 #Loading shared memories
 bias_image_shm = shm.bias_image_shm
 
-#%% Turn off laser
+# Turn off laser
 
 # Turn off laser
 if las is not None:
@@ -54,7 +54,7 @@ if las is not None:
 else:
     input("Turn OFF the laser and press Enter to continue")
     
-#%% Take a bias image
+# Take a bias image
 
 # Capture and average 1000 bias frames
 n_frames=1000
@@ -75,7 +75,7 @@ fits.writeto(os.path.join(folder_calib, f'bias_image.fits'), np.asarray(bias_ima
 # Set bias image to zero for PAPY SIM tests
 #bias_image=np.zeros_like(bias_image) #TODO: Remove it
 
-#%% Turn on laser
+# Turn on laser
 
 if las is not None:
     las.enable(1)
