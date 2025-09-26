@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 from astropy.io import fits
 import scipy
 from matplotlib.colors import LogNorm
+from datetime import datetime
 
 # Import Specific Modules
 from src.config import config
@@ -222,13 +223,22 @@ plt.xlabel('Reconstructed KL mode index')
 plt.ylabel('Applied KL mode index')
 plt.grid(False)
 plt.tight_layout()
+
+crosscorr_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+crosscorr_png_path = folder_calib / "crosscorrelation_matrix.png"
+crosscorr_png_timestamped_path = folder_calib / f"crosscorrelation_matrix_{crosscorr_timestamp}.png"
+plt.savefig(crosscorr_png_path, dpi=300)
+plt.savefig(crosscorr_png_timestamped_path, dpi=300)
 plt.show()
 
 # Save cross-correlation matrix as FITS
 fits_path = folder_calib / f"crosscorrelation_matrix.fits"
 fits.writeto(fits_path, crosscorrelation_matrix, overwrite=True)
 
-print(f"Cross-correlation matrix saved to: {fits_path}")
+print(
+    "Cross-correlation matrix saved to: "
+    f"{crosscorr_png_path}, {crosscorr_png_timestamped_path}, {fits_path}"
+)
 
 #DM set to flat
 set_data_dm(setup=setup)
