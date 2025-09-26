@@ -85,6 +85,11 @@ _ In terminal in VS Code
 - export PYTHONPATH=“/home/ristretto-dao/optlab-master/PROJECTS_3/RISTRETTO/Banc\ AO:$PYTHONPATH”
 - python dao_calibrations_file.py
 
+To check path
+- go to python3
+- import sys
+- print(“\n”.join(sys.path))
+
 - Run the following steps:  
   - Import libraries & shared memories  
   - Set DM to flat  
