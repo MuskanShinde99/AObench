@@ -19,7 +19,7 @@ System Setup Procedure
   (Opens shared memories viewer)  
 
 3. Run Papyrus SIM / Papyrus GUI  
-------------------------------  
+--------------------------------  
 - Open new terminal  
 - cd ~/dao/daoPapyrus/  
 - Start SIM: daoPapyrusSimStart -b 1  
@@ -28,7 +28,7 @@ System Setup Procedure
   **To be handled by PAPYRUS team when at OHP**
 
 4. Open Spyder  or VS code
---------------  
+--------------------------  
 Spyder:
 - Set the working directory to *Banc AO* 
 - Go to: Tools/PYTHONPATH manager 
@@ -55,21 +55,14 @@ _ In terminal in VS Code
 - Set the path in Spyder console to: cd /home/ristretto-dao/optlab-master/PROJECTS_3/RISTRETTO/Banc\ AO/src
 - Run the file  
 
-7. Start the GUI from Isaac  
----------------------------  
-- Open a new terminal  
-- cd /home/ristretto-dao/optlab-master/PROJECTS_3/RISTRETTO/Banc\ AO/src  
-- Run:  
-    python gui.py  
-    
-8. Check dao setup file  
----------------------------------  
+7. Check dao setup file  
+----------------------- 
 - Open src/dao_setup.py in Spyder  
 - Check that place of test is set to OHP: PLACE_OF_TEST = os.environ.get("PLACE_OF_TEST", "OHP")
 - Open src/dao_setup_PAPYRUS.py in Spyder  
 - Check all the parameters for Papyrus
 
-9. Capture bias image
+8. Capture bias image
 ---------------------
 - Open scripts_with_dao/dao_setup.py in Spyder 
 - Run the file 
@@ -79,13 +72,13 @@ _ In terminal in VS Code
   - Turn on the laser  
 - Check in calibration folder if the file was saved
 
-10. Cropping cred3 frames and bias subsraction
+9. Cropping cred3 frames and bias subsraction
 ----------------------------------------------
 - Open scripts_with_dao/dao_setup.py in Spyder 
 - Run the file and check if cred_bias_subtracted & cred_cropped shared memories are created
 
-11. Run Calibrations  
--------------------  
+10. Run Calibrations  
+--------------------  
 - Open scripts_with_dao/dao_calibrations_file.py  
 - Run the following steps:  
   - Import libraries & shared memories  
@@ -96,7 +89,7 @@ _ In terminal in VS Code
   - Capture reference image and PSF  
   - Perform push-pull calibration  
 
-12. Linearity Curve and Cross-Correlation Matrix Computation  
+11. Linearity Curve and Cross-Correlation Matrix Computation  
 ------------------------------------------------------------  
 - Open scripts_with_dao/dao_linearity_curve_3s_pyr_papyrus.py  
 - Run the following steps:  
@@ -104,29 +97,41 @@ _ In terminal in VS Code
     **(OnSky = False)**  
   - Set DM to flat  
   - Load transformation matrix from KL2Act_papy_shm  
-  - Load bias image, calibration mask, and interaction matrix  
-  - Load reference image and PSF  
+  - Load Calibration mask
+  - Load reference image
   - Define the number of KL modes used  
   - Compute linearity curves  
   - Compute cross-correlation matrix  
   
-11. Run Open Loop Modes Computation - Day
------------------------------------------ 
-- Open scripts_with_dao/dao_AO_open_loop_with_kl_3s_pyr_papyrus.py  
-- Run the following steps:  
-  - Import libraries & shared memories  
-    **(OnSky = False during the day)**  
-  - Set DM to flat  
-  - Load transformation matrix from KL2Act_papy_shm  
-  - Load bias image, calibration mask, and interaction matrix  
-    **(bias frame is set to zero for tests with Papyrus simulator – remove that part)**  
-  - Load reference image and PSF  
-  - Define the number of KL modes used  
-  - Run AO loop  
+12. Run Modes and DM Commands computation - Day
+----------------------------------------------- 
+- Open a new terminl
+  - cd /home/ristretto-dao/optlab-master/PROJECTS_3/RISTRETTO/ARPOGE
+  - run this command in terminal to set path: LD_LIBRARY_PATH=../lib:$LD_LIBRARY_PATH
+- add required files in ARPOGE/data/:
+  bias_image.fits
+  mask.fits
+  reference_image_normalized.fits
+  RM_S2KL.fits (dimensions: n_kl × n_slopes)
+- Open a new trminal 
+  - cd ARPOGE/
+  - ru commands in this terminal:
+    waf configure
+    waf
+    waf install
+- cd ARPOGE/apps/
+  - start the shared memory and GUI:
+    ipython setup_shm.py
+    ipython gui.py
+- Open a new terminal 
+  - cd ARPOGE/bin/
+  - run ./hrtc
+- Open a new terminal 
+  - cd ARPOGE/bin/
+  - run ./pix2modes_cuda
   
-  
-12. Start Control
-----------------
+13. Start Control
+-----------------
 - Open GUI - Run: python gui.py  
 - Go to "Calibration" tab:
   - Make sure there is no turbulence running
@@ -136,10 +141,6 @@ _ In terminal in VS Code
 - Go to "Process" tab:
   - Click on "start pol reconstruction"
   - Click on "start freq mag estimation"
-- Go to terminal:
-  - Open a new terminal
-  - cd /home/ristretto-dao/optlab-master/PROJECTS_3/RISTRETTO/Banc\ AO/src  
-  - Run: python hrtc.py 
 - Go to "Control" tab
   - You should see the top plot updating
   - We are now ready to close the loop
@@ -147,27 +148,21 @@ _ In terminal in VS Code
   - Check the "loop closed" botton
   - You should see the bottom plot updating now
   
-12. Creating On Sky Mask  
+14. Creating On Sky Mask  
 ------------------------
 - Run the following steps:  
-  - Open scripts_with_dao/dao_calibrations_file.py 
-  - Import libraries & shared memories   
-  - Set DM to flat  
-  - Load transformation matrix from KL2Act_papy_shm  
-  - Create a flux filtering mask – OnSky = True  
-  - Create shared memories based on the number of valid pixels  
+  - Open a new terminal
+  - Open cd /home/ristretto-dao/optlab-master/PROJECTS_3/RISTRETTO/Banc\ AO/scripts_with_dao
+  - Run python dao_calibrations_file_with_CLI.py --cells create_mask --on-sky 
   
-13. Run Open Loop Modes Computation - Night
--------------------------------------------
+15. Run Modes and DM Commands computation - Night
+------------------------------------------------- 
 - Open scripts_with_dao/dao_AO_open_loop_with_kl_3s_pyr_papyrus.py  
-- Run the following steps:  
-  - Import libraries & shared memories  
-    **(OnSky = True during the night)**  
-  - Set DM to flat  
-  - Load transformation matrix from KL2Act_papy_shm  
-  - Load bias image, calibration mask, and interaction matrix  
-    **(bias frame is set to zero for tests with Papyrus simulator – remove that part)**  
-  - Load reference image and PSF  
-  - Define the number of KL modes used  
-  - Run AO loop 
-  
+- Open a new terminl
+  - cd /home/ristretto-dao/optlab-master/PROJECTS_3/RISTRETTO/ARPOGE
+  - run this command in terminal to set path: LD_LIBRARY_PATH=../lib:$LD_LIBRARY_PATH
+- add required files in ARPOGE/data/:
+  bias_image.fits
+  mask_OnSky.fits
+  reference_image_normalized.fits
+  RM_S2KL.fits (dimensions: n_kl × n_slopes) (make sure it is onsky mask used for filtering)
