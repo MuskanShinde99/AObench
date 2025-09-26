@@ -14,6 +14,7 @@ from src.dao_setup import init_setup
 from src.tilt_functions import apply_intensity_tilt_kl
 from src.utils import *
 from astropy.io import fits
+from datetime import datetime
 
 setup = init_setup()
 
@@ -161,6 +162,7 @@ def create_flux_filtering_mask(method, flux_cutoff, tiltx, tilty,
 
     suffix = "_OnSky" if OnSky else ""
     summed_img_path = os.path.join(folder_calib, f'summed_pyr_images_3s_pyr{suffix}.fits')
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
     if create_summed_image:
         if verbose:
@@ -180,7 +182,8 @@ def create_flux_filtering_mask(method, flux_cutoff, tiltx, tilty,
         else:
             raise ValueError("Invalid method. Use 'tip_tilt_modulation' or 'dm_random'.")
 
-        fits.writeto(summed_img_path, summed_image.astype(np.float32), overwrite=True)
+        fits.writeto(os.path.join(folder_calib, f'summed_pyr_images_3s_pyr{suffix}.fits'), summed_image.astype(np.float32), overwrite=True)
+        fits.writeto(os.path.join(folder_calib, f'summed_pyr_images_3s_pyr{suffix}_{timestamp}.fits'), summed_image.astype(np.float32), overwrite=True)
         if verbose:
             print(f'Summed image saved to: {summed_img_path}')
     else:
@@ -225,11 +228,14 @@ def create_flux_filtering_mask(method, flux_cutoff, tiltx, tilty,
 
     fits.writeto(
         os.path.join(folder_calib, f'masked_pyr_images_3s_pyr{suffix}.fits'),
-        masked_summed_image.astype(np.float32), overwrite=True
-    )
+        masked_summed_image.astype(np.float32), overwrite=True)
+    
     fits.writeto(
         os.path.join(folder_calib, f'mask_3s_pyr{suffix}.fits'),
-        mask.astype(np.uint8), overwrite=True
-    )
+        mask.astype(np.uint8), overwrite=True)
+    fits.writeto(
+        os.path.join(folder_calib, f'mask_3s_pyr{suffix}_{timestamp}.fits'),
+        mask.astype(np.uint8), overwrite=True)
+    
 
     return mask

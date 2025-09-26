@@ -6,31 +6,27 @@ from matplotlib import pyplot as plt
 import numpy as np
 
 folder_calib = config.folder_calib
+folder = '/home/ristretto-dao/optlab-master/PROJECTS_3/RISTRETTO/ARPOGE/record'
 
-#img = fits.getdata(os.path.join(folder_calib, f'summed_pyr_images_3s_pyr.fits'))
-img = fits.getdata('/home/daouser/RISTRETTO/AObench/src/record/2025-08-08_18-29-42/cblue.fits')
-# bias_image_shm = shm.bias_image_shm
-# bias_image_shm.set_data(bias.astype(np.float64))
-print(img.shape)
-plt.figure()
-#plt.imshow(np.log10(np.mean(img[0])/np.mean(img[0]).max()))
-plt.imshow((img[0]/img[0].max()))
-plt.colorbar()
-plt.clim([0.65,0.75])
-plt.title('psf')
-plt.show()
+#2D plot
+# img = fits.getdata(os.path.join(folder, f'2025-09-23_13-59-55/dm3.fits'))
 
-
+# print(img.shape)
 # plt.figure()
-# plt.imshow(img[1])
-# plt.title('mode 1')
+# plt.imshow((img[0]/img[0].max()))
 # plt.colorbar()
+# plt.title('')
 # plt.show()
 
-# # plt.figure()
-# # plt.imshow(img[31])
-# # plt.title('mode 31')
-# # plt.colorbar()
+#1D plot
+data = fits.getdata(os.path.join(folder, f'2025-09-26_11-40-30/dm3.fits'))
+
+print(data.shape)
+plt.figure()
+plt.plot(data)
+plt.title('')
+plt.show()
+
 
 # # plt.show()
 

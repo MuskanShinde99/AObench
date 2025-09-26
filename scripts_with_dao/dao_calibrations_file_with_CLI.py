@@ -91,31 +91,55 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--n-frames-bias", type=int, default=1000, help="Frames for bias image (median)")
     p.add_argument("--laser-wait", type=float, default=2.0, help="Seconds to wait after laser toggle")
 
-    # Tunables frequently tweaked from terminal
+    # Create mask options
     p.add_argument("--flux-cutoff", type=float, default=0.08,
                    help="Flux cutoff for mask (default: 0.08)")
     p.add_argument("--mod-amp", type=float, default=2.0, help="Modulation amplitude (λ/D)")
     p.add_argument("--mod-steps", type=int, default=2000, help="Number of modulation angles")
     p.add_argument("--dm-random-iters", type=int, default=500, help="DM random iterations")
+    p.add_argument("--on-sky", "--onsky", dest="on_sky", action="store_true", 
+                   help="Use on-sky acquisition for mask creation (default: off ).")
 
+    # center_psf options
     p.add_argument("--center-bounds", type=str, default="-2,2,-2,2",
                    help="Centering bounds as xmin,xmax,ymin,ymax (default: -2,2,-2,2)")
     p.add_argument("--center-var-thresh", type=float, default=0.1,
                    help="Centering variance threshold (default: 0.1)")
-
+    
+    # scan_modes options
     p.add_argument("--scan-start", type=float, default=-0.5, help="Scan start")
     p.add_argument("--scan-stop", type=float, default=0.5, help="Scan stop")
     p.add_argument("--scan-step", type=float, default=0.05, help="Scan step")
     p.add_argument("--scan-mode-index", type=int, default=3, help="Mode index for scanning")
 
+    # capture_reference options
     p.add_argument("--n-frames-ref-wfs", type=int, default=1000, help="Frames for WFS reference image")
     p.add_argument("--n-frames-ref-fp", type=int, default=20, help="Frames for FP image")
 
+    # calibration_push_pull options
     p.add_argument("--phase-amp", type=float, default=0.05, help="Phase amplitude for calibration")
     p.add_argument("--cal-reps", type=int, default=1, help="Calibration repetitions")
     p.add_argument("--mode-reps", type=str, default="2,2",
                    help="Mode repetitions as list (e.g. '2,2' or single integer '200' to repeat all)")
     p.add_argument("--n-frames-cal", type=int, default=100, help="Frames per mode during calibration")
+
+    
+
+    # ---------- create_summed_image toggle (default True) ----------
+    group = p.add_mutually_exclusive_group()
+    group.add_argument(
+        "--create-summed-image",
+        dest="create_summed_image",
+        action="store_true",
+        help="Create summed image during mask creation (default: enabled)."
+    )
+    group.add_argument(
+        "--no-summed-image",
+        dest="create_summed_image",
+        action="store_false",
+        help="Disable summed image creation during mask creation."
+    )
+    p.set_defaults(create_summed_image=True)
 
     return p
 
@@ -182,7 +206,16 @@ if __name__ == "__main__":
                     print(f"Warning: skip name '{s}' not in known cells")
                 run_flags[s] = False
 
+    # --- Always run the setup cell ---
+    # Force-enable setup regardless of --cells or --skip
+    run_flags["setup"] = True
+
     setup_matplotlib(args.no_plots)
+
+    # Top-level: echo global flags
+    print("[global] cells =", args.cells)
+    print("[global] skip =", args.skip if args.skip else "(none)")
+    print("[global] no_plots =", args.no_plots)
 
     # Shared context across cells
     folder_calib = config.folder_calib
@@ -193,9 +226,9 @@ if __name__ == "__main__":
 
 
     # -------- Cell: setup --------
-    
     if run_flags["setup"]:
         print("[setup] Initializing setup and shared memories…")
+        # (no flags specific to setup cell)
         setup = init_setup()
         setup = reload_setup()
 
@@ -211,86 +244,47 @@ if __name__ == "__main__":
         dm_papy_shm = shm.dm_papy_shm
         
         
-    # -------- Cell: capture_bias --------
+    # # -------- Cell: capture_bias --------
     
-    # If capture_bias is skipped, attempt to auto-load bias image from disk
-    if not run_flags.get("capture_bias", False):
-        try:
-            bias_path = folder_calib / 'bias_image.fits'
-            if hasattr(bias_path, 'exists') and bias_path.exists():
-                bias_image = fits.getdata(bias_path)
-            else:
-                bias_image = fits.getdata(os.path.join(folder_calib, 'bias_image.fits'))
-            shm.bias_image_shm.set_data(bias_image)
-            print("[capture_bias] skipped -> loaded bias_image from calib folder (bias_image.fits)")
-        except Exception:
-            print("[auto-load] bias_image.fits not found.")
+    # # If capture_bias is skipped, attempt to auto-load bias image from disk
+    # if not run_flags.get("capture_bias", False):
+    #     try:
+    #         bias_path = folder_calib / 'bias_image.fits'
+    #         if hasattr(bias_path, 'exists') and bias_path.exists():
+    #             bias_image = fits.getdata(bias_path)
+    #         else:
+    #             bias_image = fits.getdata(os.path.join(folder_calib, 'bias_image.fits'))
+    #         shm.bias_image_shm.set_data(bias_image)
+    #         print("[capture_bias] skipped -> loaded bias_image from calib folder (bias_image.fits)")
+    #     except Exception:
+    #         print("[auto-load] bias_image.fits not found.")
             
-    # If capture_bias is done
-    if run_flags["capture_bias"]:
-        print("[capture_bias] Capturing bias image…")
-        if setup is None:
-            setup = init_setup()
-            setup = reload_setup()
-        # Laser OFF
-        try:
-            if las is not None:
-                las.enable(0)
-                time.sleep(args.laser_wait)
-                print("The laser is OFF")
-            else:
-                input("Turn OFF the laser and press Enter to continue")
-        except Exception as e:
-            print(f"[capture_bias] Laser OFF control failed: {e}. Prompting manual switch.")
-            input("Turn OFF the laser and press Enter to continue")
-
-        # Capture bias frames
-        try:
-            camera_wfs = setup.camera_wfs
-        except Exception as e:
-            print("ERROR: camera_wfs not available from setup:", e)
-            sys.exit(7)
-
-        n_frames = args.n_frames_bias
-        bias_image = np.median([camera_wfs.get_data() for _ in range(n_frames)], axis=0)
-        shm.bias_image_shm.set_data(bias_image)
-
-        if not args.no_plots:
-            plt.figure(); plt.imshow(bias_image, cmap='gray'); plt.title('Bias image'); plt.colorbar(); plt.show()
-
-        # Save to disk
-        try:
-            outpath = (folder_calib / 'bias_image.fits') if hasattr(folder_calib, '__truediv__') else os.path.join(folder_calib, 'bias_image.fits')
-            fits.writeto(outpath, np.asarray(bias_image), overwrite=True)
-            print(f"[capture_bias] Saved bias_image.fits to {folder_calib}")
-        except Exception as e:
-            print("[capture_bias] WARNING: could not save bias_image.fits:", e)
-
-        # Laser ON
-        try:
-            if las is not None:
-                las.enable(1)
-                time.sleep(args.laser_wait)
-                print("The laser is ON")
-            else:
-                input("Turn ON the laser and press Enter to continue")
-        except Exception as e:
-            print(f"[capture_bias] Laser ON control failed: {e}. Prompting manual switch.")
-            input("Turn ON the laser and press Enter to continue")
-
-        # Optional reload check
-        try:
-            reload_path = (folder_calib / 'bias_image.fits') if hasattr(folder_calib, '__truediv__') else os.path.join(folder_calib, 'bias_image.fits')
-            _bias_loaded = fits.getdata(reload_path)
-            print(f"Bias image shape: {_bias_loaded.shape}")
-        except Exception as e:
-            print(f"[capture_bias] Could not reload saved bias to confirm: {e}")
+    # # If capture_bias is done
+    # if run_flags["capture_bias"]:
+    #     print("[capture_bias] Capturing bias image…")
+    #     print(f"[capture_bias] n_frames_bias = {args.n_frames_bias}")
+    #     print(f"[capture_bias] laser_wait = {args.laser_wait} s")
+    #     if setup is None:
+    #         setup = init_setup()
+    #         setup = reload_setup()
+    #     # Laser OFF
+    #     try:
+    #         if las is not None:
+    #             las.enable(0)
+    #             time.sleep(args.laser_wait)
+    #             print("The laser is OFF")
+    #         else:
+    #             input("Turn OFF the laser and press Enter to continue")
+    #     except Exception as e:
+    #         print(f"[capture_bias] Laser OFF control failed: {e}. Prompting manual switch.")
+    #         input("Turn OFF the laser and press Enter to continue")
+    #     # ... (rest unchanged)
 
 
     # -------- Cell: set_dm_flat --------
-    
     if run_flags["set_dm_flat"]:
         print("[set_dm_flat] Setting DM to flat…")
+        # (no tunable flags here)
         if setup is None:
             setup = init_setup()
             setup = reload_setup()
@@ -300,19 +294,18 @@ if __name__ == "__main__":
 
 
     # -------- Cell: load_transformation_matrices --------
-    
     if run_flags["load_transformation_matrices"]:
         print("[load_transformation_matrices] Loading KL2Act from shared memory…")
+        # (no tunable flags here)
         try:
             KL2Act_papy = shm.KL2Act_papy_shm.get_data().T
-            print(f"KL2Act_papy shape: {KL2Act_papy.shape}")
+            print(f"[load_transformation_matrices] KL2Act_papy shape = {KL2Act_papy.shape}")
         except Exception as e:
             print("ERROR: Could not read KL2Act_papy from shared memory:", e)
             sys.exit(2)
 
 
     # -------- Cell: create_mask --------
-    
     if run_flags["create_mask"]:
         print("[create_mask] Creating flux filtering mask…")
         if KL2Act_papy is None:
@@ -323,20 +316,29 @@ if __name__ == "__main__":
         modulation_amp = args.mod_amp
         n_iter = args.dm_random_iters
 
+        # New: report chosen flags for this cell
+        print(f"[create_mask] flux_cutoff = {flux_cutoff}")
+        print(f"[create_mask] mod_amp = {modulation_amp} (λ/D)")
+        print(f"[create_mask] mod_steps = {args.mod_steps}")
+        print(f"[create_mask] dm_random_iters = {n_iter}")
+        print(f"[create_mask] OnSky = {args.on_sky}")
+        print(f"[create_mask] create_summed_image = {args.create_summed_image}")
+
         mask = create_flux_filtering_mask(
             method, flux_cutoff, KL2Act_papy[0], KL2Act_papy[1],
             modulation_angles, modulation_amp, n_iter,
-            create_summed_image=False, verbose=False, verbose_plot=(not args.no_plots),
-            OnSky=False,
+            create_summed_image=args.create_summed_image,
+            verbose=False, verbose_plot=(args.no_plots),
+            OnSky=args.on_sky,
         )
-        print(f"Mask dimensions: {mask.shape}")
+        print(f"[create_mask] Mask dimensions: {mask.shape}")
         shm.valid_pixels_mask_shm.set_data(mask)
 
         # compute npix_valid
         valid_pixels_indices = np.where(mask > 0)
         npix_valid = valid_pixels_indices[0].shape[0]
         shm.npix_valid_shm.set_data(np.array([[npix_valid]]))
-        print(f"Number of valid pixels = {npix_valid}")
+        print(f"[create_mask] Number of valid pixels = {npix_valid}")
 
         # Reset DM to flat after mask creation
         set_data_dm(setup=setup)
@@ -353,6 +355,8 @@ if __name__ == "__main__":
     
     # if run_flags["center_psf"]:
     #     print("[center_psf] Centering PSF on pyramid tip…")
+    #     print(f"[center_psf] center_bounds = {args.center_bounds}")
+    #     print(f"[center_psf] center_var_thresh = {args.center_var_thresh}")
     #     if mask is None:
     #         try:
     #             mask = shm.valid_pixels_mask_shm.get_data()
@@ -366,7 +370,7 @@ if __name__ == "__main__":
     #         variance_threshold=args.center_var_thresh,
     #         update_setup_file=True,
     #         verbose=True,
-    #         verbose_plot=(not args.no_plots),
+    #         verbose_plot=False,
     #     )
 
 
@@ -374,6 +378,10 @@ if __name__ == "__main__":
     
     # if run_flags["scan_modes"]:
     #     print("[scan_modes] Scanning mode amplitudes…")
+    #     print(f"[scan_modes] scan_start = {args.scan_start}")
+    #     print(f"[scan_modes] scan_stop = {args.scan_stop}")
+    #     print(f"[scan_modes] scan_step = {args.scan_step}")
+    #     print(f"[scan_modes] scan_mode_index = {args.scan_mode_index}")
     #     if mask is None:
     #         try:
     #             mask = shm.valid_pixels_mask_shm.get_data()
@@ -391,38 +399,41 @@ if __name__ == "__main__":
     
     # If capture_reference is skipped, attempt to auto-load reference images from disk
     if not run_flags.get("capture_reference", False):
+        print("[capture_reference] skipped -> will try auto-load from disk.")
         try:
             ref_path = folder_calib / 'reference_image_raw.fits'
             if hasattr(ref_path, 'exists') and ref_path.exists():
                 reference_image = fits.getdata(ref_path)
                 shm.reference_image_shm.set_data(reference_image)
-                print(f"[capture_reference] skipped -> loaded reference_image from calib folder ({ref_path.name})")
+                print(f"[capture_reference] auto-loaded reference_image ({ref_path.name})")
             else:
                 try:
                     reference_image = fits.getdata(os.path.join(folder_calib, 'reference_image_raw.fits'))
                     shm.reference_image_shm.set_data(reference_image)
-                    print("[capture_reference] skipped -> loaded reference_image from calib folder (reference_image_raw.fits)")
+                    print("[capture_reference] auto-loaded reference_image (reference_image_raw.fits)")
                 except Exception:
-                    print("[auto-load] reference_image_raw.fits not found; will rely on shared memory or fail later.")
+                    print("[capture_reference] auto-load: reference_image_raw.fits not found; will rely on shared memory or fail later.")
 
             psf_path = folder_calib / 'reference_psf.fits'
             if hasattr(psf_path, 'exists') and psf_path.exists():
                 fp_image = fits.getdata(psf_path)
                 shm.reference_psf_shm.set_data(fp_image)
-                print(f"[capture_reference] skipped -> loaded reference_psf from calib folder ({psf_path.name})")
+                print(f"[capture_reference] auto-loaded reference_psf ({psf_path.name})")
             else:
                 try:
                     fp_image = fits.getdata(os.path.join(folder_calib, 'reference_psf.fits'))
                     shm.reference_psf_shm.set_data(fp_image)
-                    print("[capture_reference] skipped -> loaded reference_psf from calib folder (reference_psf.fits)")
+                    print("[capture_reference] auto-loaded reference_psf (reference_psf.fits)")
                 except Exception:
-                    print("[auto-load] reference_psf.fits not found.")
+                    print("[capture_reference] auto-load: reference_psf.fits not found.")
         except Exception as e:
-            print("[auto-load] Could not auto-load references from folder_calib:", e)
+            print("[capture_reference] auto-load error from folder_calib:", e)
 
-    # If capture_refrence is done
+    # If capture_reference is done
     if run_flags["capture_reference"]:
         print("[capture_reference] Capturing reference images…")
+        print(f"[capture_reference] n_frames_ref_wfs = {args.n_frames_ref_wfs}")
+        print(f"[capture_reference] n_frames_ref_fp = {args.n_frames_ref_fp}")
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
         # (Re)load setup to access cameras
@@ -465,6 +476,10 @@ if __name__ == "__main__":
     # -------- Cell: calibration_push_pull --------
     if run_flags["calibration_push_pull"]:
         print("[calibration_push_pull] Running push/pull calibration…")
+        print(f"[calibration_push_pull] phase_amp = {args.phase_amp}")
+        print(f"[calibration_push_pull] cal_reps = {args.cal_reps}")
+        print(f"[calibration_push_pull] mode_reps (raw) = {args.mode_reps}")
+        print(f"[calibration_push_pull] n_frames_cal = {args.n_frames_cal}")
         if KL2Act_papy is None:
             KL2Act_papy = shm.KL2Act_papy_shm.get_data().T
         if reference_image is None:
@@ -488,6 +503,7 @@ if __name__ == "__main__":
         phase_amp = args.phase_amp
         calibration_repetitions = args.cal_reps
         mode_repetitions = parse_mode_reps(args.mode_reps, setup.nmodes_KL)
+        print(f"[calibration_push_pull] mode_reps (parsed) length = {len(mode_repetitions)}")
 
         response_matrix_full, response_matrix_filtered = create_response_matrix(
             KL2Act_papy,
@@ -506,8 +522,8 @@ if __name__ == "__main__":
         # Reset DM to flat
         set_data_dm(setup=setup)
 
-        print("Full response matrix shape:    ", response_matrix_full.shape)
-        print("Filtered response matrix shape:", response_matrix_filtered.shape)
+        print("[calibration_push_pull] Full response matrix shape:", response_matrix_full.shape)
+        print("[calibration_push_pull] Filtered response matrix shape:", response_matrix_filtered.shape)
 
         if not args.no_plots:
             plt.figure(); plt.imshow(response_matrix_filtered, cmap='gray', aspect='auto')
