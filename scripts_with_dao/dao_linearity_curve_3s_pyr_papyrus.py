@@ -67,15 +67,7 @@ set_data_dm(setup=setup)
 
 KL2Act_papy = KL2Act_papy_shm.get_data().T
 
-#%% Load Bias Image, Calibration Mask and Interaction Matrix
-
-# Load the bias image
-bias_filename = f'bias_image.fits'
-bias_image = fits.getdata(os.path.join(folder_calib, bias_filename))
-print(f"Bias image shape: {bias_image.shape}")
-
-# Set bias image to zero for PAPY SIM tests
-# bias_image=np.zeros_like(bias_image) #TODO: Remove it
+#%% Load Calibration Mask and Interaction Matrix
 
 # Load the calibration mask for processing images.
 mask_filename = f'mask_3s_pyr{suffix}.fits'
@@ -94,13 +86,11 @@ RM_S2KL = np.linalg.pinv(IM_KL2S, rcond=0.10)
 print(f"Shape of the reconstruction matrix: {RM_S2KL.shape}")
 
 
-#%% Load Reference Image and PSF
+#%% Load Reference Image 
 
 # Load reference image
 reference_image = fits.getdata(folder_calib / 'reference_image_raw.fits')
-#reference_image = fits.getdata(os.path.join(folder_calib, f'mask_3s_pyr.fits'))
-#bias_image_old = fits.getdata(folder_calib / 'bias_image_medium_gain_500Hz.fits')
-normalized_reference_image = normalize_image(reference_image, mask, bias_image)
+normalized_reference_image = normalize_image(reference_image, mask)
 pyr_img_shape = reference_image.shape
 print('Reference image shape:', pyr_img_shape)
 
@@ -144,7 +134,6 @@ for j, mode in enumerate(np.arange(0, 10, 1)):
         # Capture image and compute slopes
         slopes_image = get_slopes_image(
             mask,
-            bias_image,
             normalized_reference_image,
             setup=setup,
         )
@@ -209,7 +198,6 @@ for mode in range(num_modes):
     # Capture image and compute slopes
     slopes_image = get_slopes_image(
         mask,
-        bias_image,
         normalized_reference_image,
         setup=setup,
     )
@@ -222,13 +210,6 @@ for mode in range(num_modes):
 
     # Save reconstructed KL amplitudes
     reconstructed_all[mode, :] = computed_modes
-
-# # Compute cross-correlation matrix between input and output modes
-# for i in range(num_modes):
-#     for j in range(num_modes):
-#         num = np.dot(reconstructed_all[i], reconstructed_all[j])
-#         den = np.linalg.norm(reconstructed_all[i]) * np.linalg.norm(reconstructed_all[j])
-#         crosscorrelation_matrix[i, j] = num / den if den != 0 else 0
 
 crosscorrelation_matrix = reconstructed_all/amp
 

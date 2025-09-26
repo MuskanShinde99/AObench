@@ -26,6 +26,6 @@ while True:
     current_count = cred[0,0]
     cred_bias_subtracted = cred - bias
     cred_bias_subtracted_shm.set_data(cred_bias_subtracted)
-    cred_cropped = cred[1:,:]
+    cred_cropped = cred_bias_subtracted[1:,:]
     cred_cropped_shm.set_data(cred_cropped)
     cred_frame_counter_shm.set_data(np.array([[current_count-start_count]]))

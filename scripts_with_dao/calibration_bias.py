@@ -42,24 +42,6 @@ folder_calib = config.folder_calib
 
 #Loading shared memories
 bias_image_shm = shm.bias_image_shm
-valid_pixels_mask_shm = shm.valid_pixels_mask_shm
-npix_valid_shm = shm.npix_valid_shm
-reference_image_shm = shm.reference_image_shm
-normalized_ref_image_shm = shm.normalized_ref_image_shm
-reference_psf_shm = shm.reference_psf_shm
-KL2Act_papy_shm = shm.KL2Act_papy_shm
-dm_flat_papy_shm = shm.dm_flat_papy_shm
-dm_papy_shm = shm.dm_papy_shm
-
-
-# #%% Accessing Devices
-
-# # Initialize Cameras
-# camera_wfs = setup.camera_wfs
-# camera_fp = setup.camera_fp
-
-# # Intialize DM
-# deformable_mirror = setup.defomable_mirror
 
 #%% Turn off laser
 
