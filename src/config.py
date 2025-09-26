@@ -14,6 +14,7 @@ class Config:
         self.root_dir = self.project_root
 
         # Pre-compute commonly used output folders
+        self.folder_cred3 = self.root_dir / 'outputs/CRED3_missed_frames'
         self.folder_calib = self.root_dir / 'outputs/Calibration_files_papyrus'
         self.folder_pyr_mask = self.root_dir / 'outputs/3s_pyr_mask'
         self.folder_transformation_matrices = self.root_dir / 'outputs/Transformation_matrices'
