@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 from astropy.io import fits
 import scipy
 from matplotlib.colors import LogNorm
+from datetime import datetime
 
 # Import Specific Modules
 from src.config import config
@@ -166,11 +167,18 @@ plt.tight_layout()
 
 
 # Save to file
+timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 save_path = folder_calib / "linearity_curves.png"
+timestamped_save_path = folder_calib / f"linearity_curves_{timestamp}.png"
 plt.savefig(save_path, dpi=300)
+plt.savefig(timestamped_save_path, dpi=300)
 plt.show()
 
-print(f"Linearity curves saved to: {save_path}")
+print(
+    "Linearity curves saved to:"
+    f"\n - {save_path}"
+    f"\n - {timestamped_save_path}"
+)
 
 #DM set to flat
 set_data_dm(setup=setup)
