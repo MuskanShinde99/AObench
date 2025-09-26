@@ -64,7 +64,7 @@ _ In terminal in VS Code
 
 8. Capture bias image
 ---------------------
-- Open scripts_with_dao/dao_setup.py in Spyder 
+- Open scripts_with_dao/calibration_bias.py in Spyder 
 - Run the file 
   - Turn off the laser  
   - Take a bias frame  
@@ -74,12 +74,16 @@ _ In terminal in VS Code
 
 9. Cropping cred3 frames and bias subsraction
 ----------------------------------------------
-- Open scripts_with_dao/dao_setup.py in Spyder 
+- Open scripts_with_dao/cred3_crop.py in Spyder 
 - Run the file and check if cred_bias_subtracted & cred_cropped shared memories are created
 
 10. Run Calibrations  
 --------------------  
-- Open scripts_with_dao/dao_calibrations_file.py  
+- Open scripts_with_dao/dao_calibrations_file_with_CLI.py 
+- Open a new terminal
+- export PYTHONPATH=“/home/ristretto-dao/optlab-master/PROJECTS_3/RISTRETTO/Banc\ AO:$PYTHONPATH”
+- python dao_calibrations_file.py
+
 - Run the following steps:  
   - Import libraries & shared memories  
   - Set DM to flat  
@@ -91,7 +95,7 @@ _ In terminal in VS Code
 
 11. Linearity Curve and Cross-Correlation Matrix Computation  
 ------------------------------------------------------------  
-- Open scripts_with_dao/dao_linearity_curve_3s_pyr_papyrus.py  
+- Open scripts_with_dao/dao_linearity_curve_3s_pyr_papyrus.py in spyder
 - Run the following steps:  
 - Import libraries & shared memories  
     **(OnSky = False)**  
