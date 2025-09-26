@@ -25,17 +25,24 @@ System Setup Procedure
 - Start SIM: daoPapyrusSimStart -b 1  
 - GUI: papyCtrl.py  
 - DM display: daoDmDisp.py -s dmCmd -m dm241Map  
+  **To be handled by PAPYRUS team when at OHP**
 
-4. Open Spyder  
+4. Open Spyder  or VS code
 --------------  
+Spyder:
 - Set the working directory to *Banc AO* 
 - Go to: Tools/PYTHONPATH manager 
 - Add full path to Banc AO
 
+VS Code:
+_ In terminal in VS Code
+- Setting the PYTHONPATH to AO bench: 
+      export PYTHONPATH=“/home/daouser/RISTRETTO/AObench:$PYTHONPATH”
+- Setting the PYTHONPATH to dao:
+      export PYTHONPATH=“path/to/dao:$PYTHONPATH”
+
 5. Change the location in Config file
 -------------------------------------
-- Open a new terminal  
-- cd /home/ristretto-dao/optlab-master/PROJECTS_3/RISTRETTO/Banc\ AO  
 - Open src/config.py in Spyder
 - Change locations of: opt_lab_root & project_root 
 
@@ -62,25 +69,34 @@ System Setup Procedure
 - Open src/dao_setup_PAPYRUS.py in Spyder  
 - Check all the parameters for Papyrus
 
-9. Run Calibrations  
--------------------  
-- Open scripts_with_dao/dao_calibrations_file.py  
-- Run the following steps:  
-  - Import libraries & shared memories  
+9. Capture bias image
+---------------------
+- Open scripts_with_dao/dao_setup.py in Spyder 
+- Run the file 
   - Turn off the laser  
   - Take a bias frame  
     **(bias frame is set to zero for tests with Papyrus simulator – remove that part)**  
   - Turn on the laser  
+- Check in calibration folder if the file was saved
+
+10. Cropping cred3 frames and bias subsraction
+----------------------------------------------
+- Open scripts_with_dao/dao_setup.py in Spyder 
+- Run the file and check if cred_bias_subtracted & cred_cropped shared memories are created
+
+11. Run Calibrations  
+-------------------  
+- Open scripts_with_dao/dao_calibrations_file.py  
+- Run the following steps:  
+  - Import libraries & shared memories  
   - Set DM to flat  
   - Load transformation matrix from KL2Act_papy_shm  
   - Create a flux filtering mask – OnSky = False  
   - Create shared memories based on the number of valid pixels  
-  - Scan modes to find the pyramid's zero ??  
   - Capture reference image and PSF  
-  - **Bias image was set to zero for tests with Papyrus simulator – remove that**  
   - Perform push-pull calibration  
 
-10. Linearity Curve and Cross-Correlation Matrix Computation  
+12. Linearity Curve and Cross-Correlation Matrix Computation  
 ------------------------------------------------------------  
 - Open scripts_with_dao/dao_linearity_curve_3s_pyr_papyrus.py  
 - Run the following steps:  
@@ -89,7 +105,6 @@ System Setup Procedure
   - Set DM to flat  
   - Load transformation matrix from KL2Act_papy_shm  
   - Load bias image, calibration mask, and interaction matrix  
-    **(bias frame is set to zero for tests with Papyrus simulator – remove that part)**  
   - Load reference image and PSF  
   - Define the number of KL modes used  
   - Compute linearity curves  
