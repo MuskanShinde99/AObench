@@ -186,7 +186,7 @@ plt.title('PSF radial profile')
 plt.show()
 
 #%%
-phase_amp = 0.05
+phase_amp = 0.1
 
 # Number of times to repeat the whole calibration
 calibration_repetitions = 1
@@ -195,7 +195,7 @@ calibration_repetitions = 1
 #mode_repetitions = {0: 10, 3: 10} # Repeat the 0th mode ten times, the 3rd mode ten times, rest default to 1
 #mode_repetitions = [2, 3]  # Repeat the 0th mode twice, the 1st mode three times, beyond the 1st default to 1
 
-mode_repetitions = [2, 2]
+mode_repetitions = [1, 1]
 #mode_repetitions = [200] * setup.nmodes_KL
 
 # Run calibration and compute matrices
@@ -235,4 +235,8 @@ plt.show()
 #saving the flattened push-pull images in shared memory
 KL2PWFS_cube_shm.set_data(np.asanyarray(response_matrix_full).astype(np.float64))
 KL2S_shm.set_data(np.asanyarray(response_matrix_filtered).astype(np.float64))
+
+S2KL = np.linalg.pinv(response_matrix_filtered, rcond=0.10)
+fits.writeto(folder_calib / 'RM_S2KL.fits',np.asanyarray(S2KL.T).astype(np.float64), overwrite=True)
+
 

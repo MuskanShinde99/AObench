@@ -131,7 +131,14 @@ def perform_push_pull_calibration_with_phase_basis(
 
                     # Capture the image and compute slopes
                     t8 = time.time()
-                    pyr_img = np.median([camera_wfs.get_data() for i in range(n_frames)], axis=0)
+                    # pyr_img = np.median([camera_wfs.get_data() for i in range(n_frames)], axis=0)
+                    
+                    slopes_image = get_slopes_image(
+                        mask,
+                        normalized_reference_image,
+                        setup=setup,
+                    )
+
 
                     # slopes_image = get_slopes_image(
                     #     mask,
@@ -145,12 +152,12 @@ def perform_push_pull_calibration_with_phase_basis(
                     # Store images for push & pull
                     t12 = time.time()
                     if amp > 0:
-                        pull_acc += pyr_img / abs(amp)
+                        pull_acc += slopes_image / abs(amp)
                     else:
-                        push_acc += pyr_img / abs(amp)
+                        push_acc += slopes_image / abs(amp)
 
                     # Combine push-pull intensity
-                    push_pull_img += pyr_img / (2 * amp)
+                    push_pull_img += slopes_image / (2 * amp)
                     t13 = time.time()
 
                 # Save the combined response for this order

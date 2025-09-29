@@ -117,7 +117,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--n-frames-ref-fp", type=int, default=1000, help="Frames for FP image")
 
     # calibration_push_pull options
-    p.add_argument("--phase-amp", type=float, default=0.05, help="Phase amplitude for calibration in units of KL")
+    p.add_argument("--phase-amp", type=float, default=0.2, help="Phase amplitude for calibration in units of KL")
     p.add_argument("--cal-reps", type=int, default=1, help="Calibration repetitions")
     p.add_argument("--mode-reps", type=str, default="2,2",
                    help="Mode repetitions as list (e.g. '2,2' or single integer '200' to repeat all)")
@@ -544,7 +544,7 @@ if __name__ == "__main__":
         S2KL = np.linalg.pinv(response_matrix_filtered, rcond=0.10)
         S2KL_shm = dao.shm('/tmp/S2KL.im.shm', np.zeros((setup.nmodes_KL, response_matrix_filtered.shape[1]), dtype=np.float64))
         S2KL_shm.set_data(np.asanyarray(S2KL.T).astype(np.float64))
-        fits.writeto(folder_calib / 'RM_S2KL.fits', S2KL.T, overwrite=True)
+        fits.writeto(folder_calib / 'RM_S2KL.fits',np.asanyarray(S2KL.T).astype(np.float64), overwrite=True)
 
 
     print("Done.")
