@@ -68,8 +68,7 @@ set_data_dm(setup=setup)
 
 KL2Act_papy = KL2Act_papy_shm.get_data().T
 
-#%% Load Calibration Mask and Interaction Matrix
-
+#%% Load Calibration Mask and Interaction Matrix 
 # Load the calibration mask for processing images.
 mask_filename = f'mask_3s_pyr{suffix}.fits'
 mask = fits.getdata(os.path.join(folder_calib, mask_filename))

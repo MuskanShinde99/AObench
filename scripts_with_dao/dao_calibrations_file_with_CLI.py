@@ -117,7 +117,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--n-frames-ref-fp", type=int, default=1000, help="Frames for FP image")
 
     # calibration_push_pull options
-    p.add_argument("--phase-amp", type=float, default=0.05, help="Phase amplitude for calibration")
+    p.add_argument("--phase-amp", type=float, default=0.05, help="Phase amplitude for calibration in units of KL")
     p.add_argument("--cal-reps", type=int, default=1, help="Calibration repetitions")
     p.add_argument("--mode-reps", type=str, default="2,2",
                    help="Mode repetitions as list (e.g. '2,2' or single integer '200' to repeat all)")
@@ -327,7 +327,7 @@ if __name__ == "__main__":
         mask = create_flux_filtering_mask(
             method, flux_cutoff, KL2Act_papy[0], KL2Act_papy[1],
             modulation_angles, modulation_amp, n_iter,
-            create_summed_image=args.create_summed_image,
+            create_summed_image=False,
             verbose=False, verbose_plot=True,
             OnSky=args.on_sky,
         )
@@ -456,6 +456,10 @@ if __name__ == "__main__":
         shm.reference_image_shm.set_data(reference_image)
         fits.writeto(folder_calib / 'reference_image_raw.fits', reference_image, overwrite=True)
         fits.writeto(folder_calib / f'reference_image_raw_{timestamp}.fits', reference_image, overwrite=True)
+        normalized_reference_image = normalize_image(reference_image, mask)
+        fits.writeto(folder_calib / 'reference_image_normalized.fits', normalized_reference_image, overwrite=True)
+        fits.writeto(folder_calib / f'reference_image_normalized_{timestamp}.fits', normalized_reference_image, overwrite=True)
+
 
         if not args.no_plots:
             plt.figure(); plt.imshow(reference_image); plt.colorbar(); plt.title('Reference Image'); plt.show()

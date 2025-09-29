@@ -62,7 +62,7 @@ KL2Phs_shm           = dao.shm('/tmp/KL2Phs.im.shm',           np.zeros((nmodes_
 valid_pixels_mask_shm        = dao.shm('/tmp/valid_pixels_mask.im.shm',        np.zeros((img_size_wfs_cam_x, img_size_wfs_cam_y), dtype=np.uint8))
 bias_image_shm               = dao.shm('/tmp/bias_image.im.shm',               np.zeros((img_size_wfs_cam_x, img_size_wfs_cam_y), dtype=np.uint16))
 reference_image_shm          = dao.shm('/tmp/reference_image.im.shm',          np.zeros((img_size_wfs_cam_x, img_size_wfs_cam_y), dtype=np.uint16))
-normalized_ref_image_shm     = dao.shm('/tmp/normalized_ref_image.im.shm',     np.zeros((img_size_wfs_cam_x, img_size_wfs_cam_y), dtype=np.float64))
+normalized_ref_image_shm     = dao.shm('/tmp/ref_img_norm.im.shm',     np.zeros((img_size_wfs_cam_x, img_size_wfs_cam_y), dtype=np.float64))
 reference_psf_shm            = dao.shm('/tmp/reference_psf.im.shm',            np.zeros((img_size_fp_cam_x, img_size_fp_cam_y), dtype=np.uint16))
 normalized_ref_psf_shm       = dao.shm('/tmp/normalized_ref_psf.im.shm',       np.zeros((img_size_fp_cam_x, img_size_fp_cam_y), dtype=np.float64))
 
