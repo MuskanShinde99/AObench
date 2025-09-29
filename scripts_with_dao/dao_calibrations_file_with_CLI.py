@@ -540,6 +540,10 @@ if __name__ == "__main__":
 
         KL2S_shm = dao.shm('/tmp/KL2S.im.shm', np.zeros((setup.nmodes_KL, response_matrix_filtered.shape[1]), dtype=np.float64))
         KL2S_shm.set_data(np.asanyarray(response_matrix_filtered).astype(np.float64))
+        
+        S2KL = np.linalg.pinv(IM_KL2S, rcond=0.10)
+        S2KL_shm = dao.shm('/tmp/S2KL.im.shm', np.zeros((response_matrix_filtered.shape[1], setup.nmodes_KL), dtype=np.float64))
+        S2KL_shm.set_data(np.asanyarray(RM_S2KL).astype(np.float64))
 
     print("Done.")
     

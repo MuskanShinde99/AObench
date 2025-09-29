@@ -37,6 +37,7 @@ valid_pixels_mask_shm = shm.valid_pixels_mask_shm
 #Loading folder
 folder_calib = config.folder_calib
 folder_gui = setup.folder_gui
+folder_ARPOGE = 
 
 # Load hardware and configuration parameters
 camera_wfs = setup.camera_wfs
@@ -69,6 +70,8 @@ normalized_reference_image = normalize_image(reference_image, mask)
 pyr_img_shape = reference_image.shape
 print('Reference image shape:', pyr_img_shape)
 
+
+#Load in shared memories
 mask_arpoge_shm = dao.shm('/tmp/mask.shm')
 mask_arpoge_shm.set_data(mask)
 
@@ -82,3 +85,7 @@ shm.reference_image_normalized_shm.set_data(normalized_reference_image)
 S2KL_shm = dao.shm('/tmp/S2KL.im.shm', np.zeros((npix_valid, setup.nmodes_KL), dtype=np.float64))
 S2KL_shm.set_data(np.asanyarray(RM_S2KL).astype(np.float64))
 
+#Save to ARPOGE
+fits.writeto(folder_ARPOGE / 'mask.fits', mask, overwrite=True)
+fits.writeto(folder_ARPOGE / 'reference_image_normalized.fits', normalized_reference_image, overwrite=True)
+fits.writeto(folder_ARPOGE / 'RM_S2KL.fits', RM_S2KL, overwrite=True)
