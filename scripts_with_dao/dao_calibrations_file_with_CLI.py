@@ -114,7 +114,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     # capture_reference options
     p.add_argument("--n-frames-ref-wfs", type=int, default=1000, help="Frames for WFS reference image")
-    p.add_argument("--n-frames-ref-fp", type=int, default=20, help="Frames for FP image")
+    p.add_argument("--n-frames-ref-fp", type=int, default=1000, help="Frames for FP image")
 
     # calibration_push_pull options
     p.add_argument("--phase-amp", type=float, default=0.05, help="Phase amplitude for calibration")
