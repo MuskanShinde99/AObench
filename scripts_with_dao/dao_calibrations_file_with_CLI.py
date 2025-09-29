@@ -328,7 +328,7 @@ if __name__ == "__main__":
             method, flux_cutoff, KL2Act_papy[0], KL2Act_papy[1],
             modulation_angles, modulation_amp, n_iter,
             create_summed_image=args.create_summed_image,
-            verbose=False, verbose_plot=(args.no_plots),
+            verbose=False, verbose_plot=True,
             OnSky=args.on_sky,
         )
         print(f"[create_mask] Mask dimensions: {mask.shape}")
@@ -538,3 +538,9 @@ if __name__ == "__main__":
         KL2S_shm.set_data(np.asanyarray(response_matrix_filtered).astype(np.float64))
 
     print("Done.")
+    
+    
+    if not args.no_plots:
+        plt.ioff()            # ensure blocking mode
+        plt.show()            # block here until windows are closed
+
