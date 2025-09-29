@@ -37,7 +37,7 @@ valid_pixels_mask_shm = shm.valid_pixels_mask_shm
 #Loading folder
 folder_calib = config.folder_calib
 folder_gui = setup.folder_gui
-folder_ARPOGE = 
+folder_ARPOGE = '/home/ristretto-dao/optlab-master/PROJECTS_3/RISTRETTO/ARPOGE/data'
 
 # Load hardware and configuration parameters
 camera_wfs = setup.camera_wfs
@@ -62,6 +62,7 @@ IM_filename = f'processed_response_cube_KL2PWFS_push-pull_nact_17_amp_0.05_3s_py
 IM_KL2S_full = fits.getdata(os.path.join(folder_calib, IM_filename))  # /0.1
 IM_KL2S = compute_response_matrix(IM_KL2S_full, mask).astype(np.float32)
 RM_S2KL = np.linalg.pinv(IM_KL2S, rcond=0.10)
+RM_S2KL = RM_S2KL.T
 print(f"Shape of the reconstruction matrix: {RM_S2KL.shape}")
 
 # Load reference image
@@ -72,8 +73,8 @@ print('Reference image shape:', pyr_img_shape)
 
 
 #Load in shared memories
-mask_arpoge_shm = dao.shm('/tmp/mask.shm')
-mask_arpoge_shm.set_data(mask)
+# mask_arpoge_shm = dao.shm('/tmp/mask.shm')
+# mask_arpoge_shm.set_data(mask)
 
 shm.valid_pixels_mask_shm.set_data(mask)
 shm.npix_valid_shm.set_data(np.array([[npix_valid]]))
@@ -82,7 +83,7 @@ shm.reference_image_shm.set_data(reference_image)
 shm.reference_image_normalized_shm.set_data(normalized_reference_image)
 # KL2S_shm = dao.shm('/tmp/KL2S.im.shm', np.zeros((setup.nmodes_KL, npix_valid), dtype=np.float64))
 # KL2S_shm.set_data(np.asanyarray(response_matrix_filtered).astype(np.float64))
-S2KL_shm = dao.shm('/tmp/S2KL.im.shm', np.zeros((npix_valid, setup.nmodes_KL), dtype=np.float64))
+S2KL_shm = dao.shm('/tmp/S2KL.im.shm', np.zeros((setup.nmodes_KL, npix_valid), dtype=np.float64))
 S2KL_shm.set_data(np.asanyarray(RM_S2KL).astype(np.float64))
 
 #Save to ARPOGE
