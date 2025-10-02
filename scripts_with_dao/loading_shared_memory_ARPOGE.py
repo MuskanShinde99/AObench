@@ -37,7 +37,7 @@ valid_pixels_mask_shm = shm.valid_pixels_mask_shm
 #Loading folder
 folder_calib = config.folder_calib
 folder_gui = setup.folder_gui
-folder_ARPOGE = '/home/ristretto-dao/optlab-master/PROJECTS_3/RISTRETTO/ARPOGE/data'
+folder_ARPOGE = '/home/daouser/RISTRETTO/ARPOGE/data'
 
 # Load hardware and configuration parameters
 camera_wfs = setup.camera_wfs
@@ -51,6 +51,7 @@ npix_small_pupil_grid = setup.npix_small_pupil_grid
 mask_filename = f'mask_3s_pyr{suffix}.fits'
 mask = fits.getdata(os.path.join(folder_calib, mask_filename))
 print(f"Mask dimensions: {mask.shape}")
+fits.writeto(os.path.join(folder_ARPOGE, 'mask.fits'), mask, overwrite=True)
 
 # Get valid pixel indices from the cropped mask
 valid_pixels_indices = np.where(mask > 0)
@@ -67,10 +68,14 @@ print(f"Shape of the reconstruction matrix: {RM_S2KL.shape}")
 
 # Load reference image
 reference_image = fits.getdata(folder_calib / 'reference_image_raw.fits')
-normalized_reference_image = normalize_image(reference_image, mask)
+normalized_reference_image = normalize_image(mask, mask)
 pyr_img_shape = reference_image.shape
 print('Reference image shape:', pyr_img_shape)
 
+plt.figure()
+plt.imshow(normalized_reference_image)
+plt.colorbar()
+plt.show()
 
 #Load in shared memories
 # mask_arpoge_shm = dao.shm('/tmp/mask.shm')
@@ -80,13 +85,13 @@ shm.valid_pixels_mask_shm.set_data(mask)
 shm.npix_valid_shm.set_data(np.array([[npix_valid]]))
 shm.valid_pixels_mask_shm.set_data(mask)
 shm.reference_image_shm.set_data(reference_image)
-shm.reference_image_normalized_shm.set_data(normalized_reference_image)
+#shm.reference_image_normalized_shm.set_data(normalized_reference_image)
 # KL2S_shm = dao.shm('/tmp/KL2S.im.shm', np.zeros((setup.nmodes_KL, npix_valid), dtype=np.float64))
 # KL2S_shm.set_data(np.asanyarray(response_matrix_filtered).astype(np.float64))
-S2KL_shm = dao.shm('/tmp/S2KL.im.shm', np.zeros((setup.nmodes_KL, npix_valid), dtype=np.float64))
-S2KL_shm.set_data(np.asanyarray(RM_S2KL).astype(np.float64))
+# S2KL_shm = dao.shm('/tmp/S2KL.im.shm', np.zeros((setup.nmodes_KL, npix_valid), dtype=np.float64))
+# S2KL_shm.set_data(np.asanyarray(RM_S2KL).astype(np.float64))
 
 #Save to ARPOGE
-fits.writeto(folder_ARPOGE / 'mask.fits', mask, overwrite=True)
-fits.writeto(folder_ARPOGE / 'reference_image_normalized.fits', normalized_reference_image, overwrite=True)
-fits.writeto(folder_ARPOGE / 'RM_S2KL.fits', RM_S2KL, overwrite=True)
+
+fits.writeto(os.path.join(folder_ARPOGE, 'reference_image_normalized.fits') , normalized_reference_image, overwrite=True)
+fits.writeto(os.path.join(folder_ARPOGE, 'RM_S2KL.fits'), RM_S2KL, overwrite=True)

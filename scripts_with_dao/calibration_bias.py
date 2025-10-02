@@ -39,6 +39,7 @@ from src.ao_loop_functions import *
 
 #Loading folder
 folder_calib = config.folder_calib
+folder_ARPOGE = '/home/daouser/RISTRETTO/ARPOGE/data/'
 
 #Loading shared memories
 bias_image_shm = shm.bias_image_shm
@@ -57,9 +58,12 @@ else:
 # Take a bias image
 
 # Capture and average 1000 bias frames
+cred_shm = dao.shm('/tmp/cred3.im.shm')
+
 n_frames=1000
-bias_image = np.median([camera_wfs.get_data() for i in range(n_frames)], axis=0)
-bias_image_shm.set_data(bias_image)
+bias_image = np.median([cred_shm.get_data() for i in range(n_frames)], axis=0)
+print('bias image shape',bias_image.shape)
+bias_image_shm.set_data(bias_image.astype(np.float32))
 
 # Plot
 plt.figure()
@@ -71,6 +75,7 @@ plt.show()
 # Save the Bias Image
 
 fits.writeto(os.path.join(folder_calib, f'bias_image.fits'), np.asarray(bias_image), overwrite=True)
+fits.writeto(os.path.join(folder_ARPOGE, f'bias_image.fits'), np.asarray(bias_image), overwrite=True)
 
 # Set bias image to zero for PAPY SIM tests
 #bias_image=np.zeros_like(bias_image) #TODO: Remove it

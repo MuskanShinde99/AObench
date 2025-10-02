@@ -70,8 +70,8 @@ dm_papy_shm = shm.dm_papy_shm
 
 # DM set to flat
 set_data_dm(setup=setup)
-#dm_flat_papy_shm.set_data(setup.dm_flat.astype(np.float32))
-#fits.writeto(folder_calib / 'dm_flat_papy.fits', setup.dm_flat.astype(np.float32), overwrite=True)
+# dm_flat_papy_shm.set_data(setup.dm_flat.astype(np.float32))
+# fits.writeto(folder_calib / 'dm_flat_papy.fits', setup.dm_flat.astype(np.float32), overwrite=True)
 
 #%% Load transformation matrices
 
@@ -92,15 +92,15 @@ KL2Act_papy = KL2Act_papy_shm.get_data().T
 #%% Creating a Flux Filtering Mask
 
 method='dm_random'
-flux_cutoff = 0.08 #0.00000001 # 0.08 - papy dm random; 0.2 - geneva dm random
-modulation_angles = np.arange(0, 2000, 1)  # angles of modulation
+flux_cutoff = 0.03 #0.116 #0.00000001 # 0.08 - papy dm random; 0.2 - geneva dm random
+modulation_angles = np.arange(0, 1000, 1)  # angles of modulation
 modulation_amp = 2 # in lamda/D
-n_iter=500 # number of iternations for dm random commands
+n_iter=2000 # number of iternations for dm random commands
 
 mask = create_flux_filtering_mask(method, flux_cutoff, KL2Act_papy[0], KL2Act_papy[1],
                                modulation_angles, modulation_amp, n_iter, 
-                               create_summed_image=False, verbose=False, verbose_plot=True,
-                               OnSky=False, )
+                               create_summed_image=True, verbose=False, verbose_plot=True,
+                               OnSky=True, )
 
 print(f"Mask dimensions: {mask.shape}")
 
@@ -123,120 +123,128 @@ KL2S_shm = dao.shm('/tmp/KL2S.im.shm' , np.zeros((setup.nmodes_KL, npix_valid), 
 S2KL_shm = dao.shm('/tmp/S2KL.im.shm' , np.zeros((npix_valid, setup.nmodes_KL), dtype=np.float64))
 
 
-#%% Centering the PSF on the Pyramid Tip
+# #%% Centering the PSF on the Pyramid Tip
 
-print('Start centering algorithm')
-center_psf_on_pyramid_tip(mask=mask, 
-                          bounds = [(-2.0, 2.0), (-2.0, 2.0)], variance_threshold=0.1, 
-                          update_setup_file=True, verbose=True, verbose_plot=True)
+# print('Start centering algorithm')
+# center_psf_on_pyramid_tip(mask=mask, 
+#                           bounds = [(-2.0, 2.0), (-2.0, 2.0)], variance_threshold=0.1, 
+#                           update_setup_file=True, verbose=True, verbose_plot=True)
 
- #%% Scanning modes to find zero of the pyramid
+#  #%% Scanning modes to find zero of the pyramid
 
-test_values = np.arange(-0.5, 0.5, 0.05)
-mode_index = 3 # 0 - focus, 1 - astimgatism, 2 -astigmatism 
-#scan_othermode_amplitudes(test_values, mode_index, update_setup_file=True)
-scan_othermode_amplitudes_wfs_std(test_values, mode_index, mask, 
-                                  update_setup_file=False)
+# test_values = np.arange(-0.5, 0.5, 0.05)
+# mode_index = 3 # 0 - focus, 1 - astimgatism, 2 -astigmatism 
+# #scan_othermode_amplitudes(test_values, mode_index, update_setup_file=True)
+# scan_othermode_amplitudes_wfs_std(test_values, mode_index, mask, 
+#                                   update_setup_file=False)
   
-# #revise the crieteria to standard deviation of intensities within the valid pixels
+#revise the crieteria to standard deviation of intensities within the valid pixels
 
-#%% Capture Reference Image
+# #%% Capture Reference Image
 
-#Timestamp
-timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+# #Timestamp
+# timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-# Compute and display Pupil Data on SLM
-set_data_dm(setup=setup)
+# # Compute and display Pupil Data on SLM
+# set_data_dm(setup=setup)
 
-# Capure the Reference Image
-n_frames=1000
-reference_image = (np.mean([camera_wfs.get_data().astype(np.float32) for i in range(n_frames)], axis=0)).astype(camera_wfs.get_data().dtype)
-#reference_image = fits.getdata(os.path.join(folder_calib, f'mask_3s_pyr.fits'))
-# average over several frames
-reference_image_shm.set_data(reference_image)
-fits.writeto(folder_calib / 'reference_image_raw.fits', reference_image, overwrite=True)
-fits.writeto(folder_calib / f'reference_image_raw_{timestamp}.fits', reference_image, overwrite=True)
+# # Capure the Reference Image
+# n_frames=1000
+# reference_image = (np.mean([camera_wfs.get_data().astype(np.float32) for i in range(n_frames)], axis=0)).astype(camera_wfs.get_data().dtype)
+# #reference_image = fits.getdata(os.path.join(folder_calib, f'mask_3s_pyr.fits'))
+# # average over several frames
+# reference_image_shm.set_data(reference_image)
+# fits.writeto(folder_calib / 'reference_image_raw.fits', reference_image, overwrite=True)
+# fits.writeto(folder_calib / f'reference_image_raw_{timestamp}.fits', reference_image, overwrite=True)
 
-#Plot
-plt.figure()
-plt.imshow(reference_image)
-plt.colorbar()
-plt.title('Reference Image')
-plt.show()
+# normalized_reference_image = normalize_image(reference_image, mask)
+# fits.writeto(folder_calib / 'reference_image_normalized.fits', normalized_reference_image, overwrite=True)
 
-# Display the Focal plane image
-n_frames=20
-fp_image = (np.mean([camera_fp.get_data().astype(np.float32) for i in range(n_frames)], axis=0)).astype(camera_fp.get_data().dtype)
-reference_psf_shm.set_data(fp_image)
-fits.writeto(folder_calib / 'reference_psf.fits', fp_image, overwrite=True)
-fits.writeto(folder_calib / f'reference_psf_{timestamp}.fits', reference_image, overwrite=True)
+# #Plot
+# plt.figure()
+# plt.imshow(reference_image)
+# plt.colorbar()
+# plt.title('Reference Image')
+# plt.show()
 
+# #Plot
+# plt.figure()
+# plt.imshow(normalized_reference_image)
+# plt.colorbar()
+# plt.title('Normalized Reference Image')
+# plt.show()
 
-#Display the PSF
-plt.figure()
-plt.imshow(fp_image) 
-plt.colorbar()
-plt.title('PSF')
-plt.show()
+# # Display the Focal plane image
+# n_frames=1000
+# fp_image = (np.mean([camera_fp.get_data().astype(np.float32) for i in range(n_frames)], axis=0)).astype(camera_fp.get_data().dtype)
+# reference_psf_shm.set_data(fp_image)
+# fits.writeto(folder_calib / 'reference_psf.fits', fp_image, overwrite=True)
+# fits.writeto(folder_calib / f'reference_psf_{timestamp}.fits', reference_image, overwrite=True)
 
-# Display the radial profile of the PSF
-plt.figure()
-plt.plot(fp_image[:, 253:273])
-plt.title('PSF radial profile')
-plt.show()
+# # #Display the PSF
+# # plt.figure()
+# # plt.imshow(fp_image) 
+# # plt.colorbar()
+# # plt.title('PSF')
+# # plt.show()
 
-#%%
-phase_amp = 0.1
+# # # Display the radial profile of the PSF
+# # plt.figure()
+# # plt.plot(fp_image[:, 253:273])
+# # plt.title('PSF radial profile')
+# # plt.show()
 
-# Number of times to repeat the whole calibration
-calibration_repetitions = 1
+# #%%
+# phase_amp = 0.05
 
-# Modes repition dictionary
-#mode_repetitions = {0: 10, 3: 10} # Repeat the 0th mode ten times, the 3rd mode ten times, rest default to 1
-#mode_repetitions = [2, 3]  # Repeat the 0th mode twice, the 1st mode three times, beyond the 1st default to 1
+# # Number of times to repeat the whole calibration
+# calibration_repetitions = 1
 
-mode_repetitions = [1, 1]
-#mode_repetitions = [200] * setup.nmodes_KL
+# # Modes repition dictionary
+# #mode_repetitions = {0: 10, 3: 10} # Repeat the 0th mode ten times, the 3rd mode ten times, rest default to 1
+# #mode_repetitions = [2, 3]  # Repeat the 0th mode twice, the 1st mode three times, beyond the 1st default to 1
 
-# Run calibration and compute matrices
-# use the ref img, mask directly from shared memories 
-response_matrix_full, response_matrix_filtered = create_response_matrix(
-    KL2Act_papy,
-    phase_amp,
-    reference_image,
-    mask,
-    verbose=True,
-    verbose_plot=False,
-    calibration_repetitions=calibration_repetitions,
-    mode_repetitions=mode_repetitions,
-    push_pull=False,
-    pull_push=True,
-    n_frames=100,
-)
+# #mode_repetitions = [1, 1]
+# mode_repetitions = [1] * setup.nmodes_KL
 
-#Reset the DM to flat
-set_data_dm(setup=setup)
+# # Run calibration and compute matrices
+# # use the ref img, mask directly from shared memories 
+# response_matrix_full, response_matrix_filtered = create_response_matrix(
+#     KL2Act_papy,
+#     phase_amp,
+#     reference_image,
+#     mask,
+#     verbose=True,
+#     verbose_plot=False,
+#     calibration_repetitions=calibration_repetitions,
+#     mode_repetitions=mode_repetitions,
+#     push_pull=False,
+#     pull_push=True,
+#     n_frames=1000,
+# )
 
-#response_matrix_filtered = response_matrix_full[:, mask.ravel() > 0]
+# #Reset the DM to flat
+# set_data_dm(setup=setup)
 
-# Print shapes ---
-print("Full response matrix shape:    ", response_matrix_full.shape)
-print("Filtered response matrix shape:", response_matrix_filtered.shape)
+# #response_matrix_filtered = response_matrix_full[:, mask.ravel() > 0]
 
-# Plot filtered matrix 
-plt.figure()
-plt.imshow(response_matrix_filtered, cmap='gray', aspect='auto')
-plt.title('Filtered Push-Pull Response Matrix')
-plt.xlabel('Slopes')
-plt.ylabel('Modes')
-plt.colorbar()
-plt.show()
+# # Print shapes ---
+# print("Full response matrix shape:    ", response_matrix_full.shape)
+# print("Filtered response matrix shape:", response_matrix_filtered.shape)
 
-#saving the flattened push-pull images in shared memory
-KL2PWFS_cube_shm.set_data(np.asanyarray(response_matrix_full).astype(np.float64))
-KL2S_shm.set_data(np.asanyarray(response_matrix_filtered).astype(np.float64))
+# # Plot filtered matrix 
+# plt.figure()
+# plt.imshow(response_matrix_filtered, cmap='gray', aspect='auto')
+# plt.title('Filtered Push-Pull Response Matrix')
+# plt.xlabel('Slopes')
+# plt.ylabel('Modes')
+# plt.colorbar()
+# plt.show()
 
-S2KL = np.linalg.pinv(response_matrix_filtered, rcond=0.10)
-fits.writeto(folder_calib / 'RM_S2KL.fits',np.asanyarray(S2KL.T).astype(np.float64), overwrite=True)
+# #saving the flattened push-pull images in shared memory
+# KL2PWFS_cube_shm.set_data(np.asanyarray(response_matrix_full).astype(np.float64))
+# KL2S_shm.set_data(np.asanyarray(response_matrix_filtered).astype(np.float64))
 
+# S2KL = np.linalg.pinv(response_matrix_filtered, rcond=0.10)
+# fits.writeto(folder_calib / 'RM_S2KL.fits',np.asanyarray(S2KL.T).astype(np.float64), overwrite=True)
 

@@ -16,11 +16,11 @@ nmodes_dm = 289
 [ohp]
 nact = 17
 
-img_size_wfs_cam_x = 240 #127 #240
-img_size_wfs_cam_y = 240 #160 #240
+img_size_wfs_cam_x = 128 #127 #240
+img_size_wfs_cam_y = 160 #160 #240
 
-img_size_fp_cam_x = 600 #816 #600
-img_size_fp_cam_y = 600 #624 #600
+img_size_fp_cam_x = 816 #816 #600
+img_size_fp_cam_y = 624 #624 #600
 
 npix_small_pupil_grid = 550
 nmodes_KL = 195

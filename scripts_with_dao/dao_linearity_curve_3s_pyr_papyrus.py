@@ -186,7 +186,7 @@ set_data_dm(setup=setup)
 
 # Parameters
 num_modes = 195
-amp = 0.1 # Use only a single amplitude
+amp = 0.05 # Use only a single amplitude
 crosscorrelation_matrix = np.zeros((num_modes, num_modes))
 
 # For storing full reconstructed vectors if needed

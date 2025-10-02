@@ -6,8 +6,8 @@ class Config:
     """Central configuration of file system paths."""
 
     def __init__(self):
-        self.opt_lab_root = Path(os.environ.get("OPT_LAB_ROOT", "/home/ristretto-dao/optlab-master"))
-        self.project_root = Path(os.environ.get("PROJECT_ROOT", "/home/ristretto-dao/optlab-master/PROJECTS_3/RISTRETTO/Banc AO"))
+        self.opt_lab_root = Path(os.environ.get("OPT_LAB_ROOT", "/home/daouser/RISTRETTO"))
+        self.project_root = Path(os.environ.get("PROJECT_ROOT", "/home//daouser/RISTRETTO/AObench"))
         # Ensure modules in optlab and project can be imported
         sys.path.append(str(self.opt_lab_root))
         sys.path.append(str(self.project_root))

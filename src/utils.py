@@ -351,6 +351,7 @@ def normalize_image(image, mask):
 
     # Apply the mask to the image
     masked_image = image * mask
+    #masked_image = image
 
     # Normalize the masked image by dividing by the absolute sum of the masked image
     norm_flux = np.abs(np.sum(masked_image))
@@ -394,7 +395,8 @@ def get_slopes_image(mask, normalized_reference_image, pyr_img=None, setup=None,
     camera_wfs = kwargs.get("camera_wfs", setup.camera_wfs)
 
     if pyr_img is None:
-        pyr_img = camera_wfs.get_data(check=True, semNb=5)
+        #pyr_img = camera_wfs.get_data(check=True, semNb=5)
+        pyr_img = np.median([camera_wfs.get_data() for i in range(100)], axis=0)
 
     normalized_pyr_img = normalize_image(pyr_img, mask)
     slopes_image = compute_pyr_slopes(normalized_pyr_img, normalized_reference_image)

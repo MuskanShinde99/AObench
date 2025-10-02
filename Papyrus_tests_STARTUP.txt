@@ -82,7 +82,7 @@ _ In terminal in VS Code
 - Open scripts_with_dao/dao_calibrations_file_with_CLI.py 
 - Open a new terminal
 - cd /home/ristretto-dao/optlab-master/PROJECTS_3/RISTRETTO/Banc\ AO/scripts_with_dao
-- export PYTHONPATH=“/home/ristretto-dao/optlab-master/PROJECTS_3/RISTRETTO/Banc\ AO:$PYTHONPATH”
+- export PYTHONPATH=“/home/daouser/RISTRETTO/AObench:$PYTHONPATH”
 - python dao_calibrations_file_with_CLI.py
 
 To check path
@@ -176,3 +176,6 @@ To check path
   mask_OnSky.fits
   reference_image_normalized.fits
   RM_S2KL.fits (dimensions: n_kl × n_slopes) (make sure it is onsky mask used for filtering)
+
+
+RUN taskset -c 6-11 ./daoHwCamCtrlSR.py -s /tmp/cred3.im.shm on ~/scetre (pwd)

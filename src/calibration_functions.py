@@ -131,7 +131,7 @@ def perform_push_pull_calibration_with_phase_basis(
 
                     # Capture the image and compute slopes
                     t8 = time.time()
-                    # pyr_img = np.median([camera_wfs.get_data() for i in range(n_frames)], axis=0)
+                    #pyr_img = np.median([camera_wfs.get_data() for i in range(n_frames)], axis=0)
                     
                     slopes_image = get_slopes_image(
                         mask,

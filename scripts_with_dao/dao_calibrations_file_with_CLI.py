@@ -290,6 +290,7 @@ if __name__ == "__main__":
             setup = reload_setup()
         set_data_dm(setup=setup)
         # Optionally write flat to disk
+        # dm_flat_papy_shm.set_data(setup.dm_flat.astype(np.float32))
         # fits.writeto(folder_calib / 'dm_flat_papy.fits', setup.dm_flat.astype(np.float32), overwrite=True)
 
 
@@ -310,7 +311,7 @@ if __name__ == "__main__":
         print("[create_mask] Creating flux filtering mask…")
         if KL2Act_papy is None:
             KL2Act_papy = shm.KL2Act_papy_shm.get_data().T
-        method = 'dm_random'
+        method = 'tip_tilt_modulation'
         flux_cutoff = args.flux_cutoff
         modulation_angles = np.arange(0, args.mod_steps, 1)
         modulation_amp = args.mod_amp
@@ -327,7 +328,7 @@ if __name__ == "__main__":
         mask = create_flux_filtering_mask(
             method, flux_cutoff, KL2Act_papy[0], KL2Act_papy[1],
             modulation_angles, modulation_amp, n_iter,
-            create_summed_image=False,
+            create_summed_image=True,
             verbose=False, verbose_plot=True,
             OnSky=args.on_sky,
         )
