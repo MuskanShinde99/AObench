@@ -50,6 +50,7 @@ npix_small_pupil_grid = setup.npix_small_pupil_grid
 # Load the calibration mask 
 mask_filename = f'mask_3s_pyr{suffix}.fits'
 mask = fits.getdata(os.path.join(folder_calib, mask_filename))
+#mask = fits.getdata(os.path.join(folder_calib, f'mask_fake.fits'))
 print(f"Mask dimensions: {mask.shape}")
 fits.writeto(os.path.join(folder_ARPOGE, 'mask.fits'), mask, overwrite=True)
 
@@ -62,13 +63,13 @@ shm.npix_valid_shm.set_data(np.array([[npix_valid]]))
 IM_filename = f'processed_response_cube_KL2PWFS_push-pull_nact_17_amp_0.05_3s_pyr.fits'
 IM_KL2S_full = fits.getdata(os.path.join(folder_calib, IM_filename))  # /0.1
 IM_KL2S = compute_response_matrix(IM_KL2S_full, mask).astype(np.float32)
-RM_S2KL = np.linalg.pinv(IM_KL2S, rcond=0.10)
+RM_S2KL = np.linalg.pinv(IM_KL2S, rcond=0.1)
 RM_S2KL = RM_S2KL.T
 print(f"Shape of the reconstruction matrix: {RM_S2KL.shape}")
 
 # Load reference image
 reference_image = fits.getdata(folder_calib / 'reference_image_raw.fits')
-normalized_reference_image = normalize_image(mask, mask)
+normalized_reference_image = normalize_image(reference_image, mask)
 pyr_img_shape = reference_image.shape
 print('Reference image shape:', pyr_img_shape)
 

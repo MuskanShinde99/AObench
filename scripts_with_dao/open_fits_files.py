@@ -5,26 +5,47 @@ from matplotlib import pyplot as plt
 #from src.shm_loader import shm
 import numpy as np
 
-#folder_calib = config.folder_calib
+# #folder_calib = config.folder_calib
 # folder = '/home/daouser/RISTRETTO/AObench/outputs/Calibration_files_papyrus'
-#folder = '/home/daouser/RISTRETTO/ARPOGE/data'
-#2D plot
-# img = fits.getdata(os.path.join(folder, f'mask_3s_pyr_OnSky.fits'))
+# #folder = '/home/daouser/RISTRETTO/ARPOGE/data'
 
-# print(img.shape)
+# mask = fits.getdata(os.path.join(folder, f'mask_3s_pyr.fits'))
+
+# summed = fits.getdata(os.path.join(folder, f'summed_pyr_images_3s_pyr.fits'))
+
+# ref = fits.getdata(os.path.join(folder, f'reference_image_raw.fits'))
+
 # plt.figure()
-# plt.imshow((img))
+# plt.imshow(np.log10(summed))
 # plt.colorbar()
 # plt.title('')
+
+# plt.figure()
+# plt.imshow((mask))
+# plt.colorbar()
+# plt.title('')
+
+# plt.figure()
+# plt.imshow(np.log10(mask*summed))
+# plt.colorbar()
+# plt.title('mask*summed')
+
+# plt.figure()
+# plt.imshow(np.log10(mask*ref))
+# plt.colorbar()
+# plt.title('mask*ref')
+
 # plt.show()
-folder = '/home/daouser/RISTRETTO/ARPOGE/record'
+
+
+folder = '/home/daouser/RISTRETTO/ARPOGE/data'
 
 #2D plot
-img = fits.getdata(os.path.join(folder, f'2025-10-01_06-37-19/pixels_4sided.fits'))
+img = fits.getdata(os.path.join(folder, f'mask.fits'))
 
 print(img.shape)
 plt.figure()
-plt.imshow((img[8]))
+plt.imshow((img))
 plt.colorbar()
 plt.title('')
 plt.show()

@@ -92,17 +92,19 @@ KL2Act_papy = KL2Act_papy_shm.get_data().T
 #%% Creating a Flux Filtering Mask
 
 method='dm_random'
-flux_cutoff = 0.03 #0.116 #0.00000001 # 0.08 - papy dm random; 0.2 - geneva dm random
+flux_cutoff = 0.02 #0.116 #0.00000001 # 0.08 - papy dm random; 0.2 - geneva dm random
 modulation_angles = np.arange(0, 1000, 1)  # angles of modulation
 modulation_amp = 2 # in lamda/D
-n_iter=2000 # number of iternations for dm random commands
+n_iter=1000 # number of iternations for dm random commands
 
 mask = create_flux_filtering_mask(method, flux_cutoff, KL2Act_papy[0], KL2Act_papy[1],
                                modulation_angles, modulation_amp, n_iter, 
-                               create_summed_image=True, verbose=False, verbose_plot=True,
-                               OnSky=True, )
+                               create_summed_image=False, verbose=False, verbose_plot=True,
+                               OnSky=False, )
 
 print(f"Mask dimensions: {mask.shape}")
+
+#mask = fits.getdata(os.path.join(folder_calib, f'mask_fake.fits'))
 
 valid_pixels_mask_shm.set_data(mask)
 
@@ -140,111 +142,111 @@ S2KL_shm = dao.shm('/tmp/S2KL.im.shm' , np.zeros((npix_valid, setup.nmodes_KL), 
   
 #revise the crieteria to standard deviation of intensities within the valid pixels
 
-# #%% Capture Reference Image
+#%% Capture Reference Image
 
-# #Timestamp
-# timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+#Timestamp
+timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-# # Compute and display Pupil Data on SLM
-# set_data_dm(setup=setup)
+# Compute and display Pupil Data on SLM
+set_data_dm(setup=setup)
 
-# # Capure the Reference Image
-# n_frames=1000
-# reference_image = (np.mean([camera_wfs.get_data().astype(np.float32) for i in range(n_frames)], axis=0)).astype(camera_wfs.get_data().dtype)
-# #reference_image = fits.getdata(os.path.join(folder_calib, f'mask_3s_pyr.fits'))
-# # average over several frames
-# reference_image_shm.set_data(reference_image)
-# fits.writeto(folder_calib / 'reference_image_raw.fits', reference_image, overwrite=True)
-# fits.writeto(folder_calib / f'reference_image_raw_{timestamp}.fits', reference_image, overwrite=True)
+# Capure the Reference Image
+n_frames=1000
+reference_image = (np.mean([camera_wfs.get_data().astype(np.float32) for i in range(n_frames)], axis=0)).astype(camera_wfs.get_data().dtype)
+#reference_image = fits.getdata(os.path.join(folder_calib, f'mask_3s_pyr.fits'))
+# average over several frames
+reference_image_shm.set_data(reference_image)
+fits.writeto(folder_calib / 'reference_image_raw.fits', reference_image, overwrite=True)
+fits.writeto(folder_calib / f'reference_image_raw_{timestamp}.fits', reference_image, overwrite=True)
 
-# normalized_reference_image = normalize_image(reference_image, mask)
-# fits.writeto(folder_calib / 'reference_image_normalized.fits', normalized_reference_image, overwrite=True)
+normalized_reference_image = normalize_image(reference_image, mask)
+fits.writeto(folder_calib / 'reference_image_normalized.fits', normalized_reference_image, overwrite=True)
 
-# #Plot
+#Plot
+plt.figure()
+plt.imshow(reference_image)
+plt.colorbar()
+plt.title('Reference Image')
+plt.show()
+
+#Plot
+plt.figure()
+plt.imshow(normalized_reference_image)
+plt.colorbar()
+plt.title('Normalized Reference Image')
+plt.show()
+
+# Display the Focal plane image
+n_frames=1000
+fp_image = (np.mean([camera_fp.get_data().astype(np.float32) for i in range(n_frames)], axis=0)).astype(camera_fp.get_data().dtype)
+reference_psf_shm.set_data(fp_image)
+fits.writeto(folder_calib / 'reference_psf.fits', fp_image, overwrite=True)
+fits.writeto(folder_calib / f'reference_psf_{timestamp}.fits', reference_image, overwrite=True)
+
+# #Display the PSF
 # plt.figure()
-# plt.imshow(reference_image)
+# plt.imshow(fp_image) 
 # plt.colorbar()
-# plt.title('Reference Image')
+# plt.title('PSF')
 # plt.show()
 
-# #Plot
+# # Display the radial profile of the PSF
 # plt.figure()
-# plt.imshow(normalized_reference_image)
-# plt.colorbar()
-# plt.title('Normalized Reference Image')
+# plt.plot(fp_image[:, 253:273])
+# plt.title('PSF radial profile')
 # plt.show()
 
-# # Display the Focal plane image
-# n_frames=1000
-# fp_image = (np.mean([camera_fp.get_data().astype(np.float32) for i in range(n_frames)], axis=0)).astype(camera_fp.get_data().dtype)
-# reference_psf_shm.set_data(fp_image)
-# fits.writeto(folder_calib / 'reference_psf.fits', fp_image, overwrite=True)
-# fits.writeto(folder_calib / f'reference_psf_{timestamp}.fits', reference_image, overwrite=True)
+#%%
+phase_amp = 0.05
 
-# # #Display the PSF
-# # plt.figure()
-# # plt.imshow(fp_image) 
-# # plt.colorbar()
-# # plt.title('PSF')
-# # plt.show()
+# Number of times to repeat the whole calibration
+calibration_repetitions = 1
 
-# # # Display the radial profile of the PSF
-# # plt.figure()
-# # plt.plot(fp_image[:, 253:273])
-# # plt.title('PSF radial profile')
-# # plt.show()
+# Modes repition dictionary
+#mode_repetitions = {0: 10, 3: 10} # Repeat the 0th mode ten times, the 3rd mode ten times, rest default to 1
+#mode_repetitions = [2, 3]  # Repeat the 0th mode twice, the 1st mode three times, beyond the 1st default to 1
 
-# #%%
-# phase_amp = 0.05
+#mode_repetitions = [1, 1]
+mode_repetitions = [1] * setup.nmodes_KL
 
-# # Number of times to repeat the whole calibration
-# calibration_repetitions = 1
+# Run calibration and compute matrices
+# use the ref img, mask directly from shared memories 
+response_matrix_full, response_matrix_filtered = create_response_matrix(
+    KL2Act_papy,
+    phase_amp,
+    reference_image,
+    mask,
+    verbose=True,
+    verbose_plot=False,
+    calibration_repetitions=calibration_repetitions,
+    mode_repetitions=mode_repetitions,
+    push_pull=False,
+    pull_push=True,
+    n_frames=1000,
+)
 
-# # Modes repition dictionary
-# #mode_repetitions = {0: 10, 3: 10} # Repeat the 0th mode ten times, the 3rd mode ten times, rest default to 1
-# #mode_repetitions = [2, 3]  # Repeat the 0th mode twice, the 1st mode three times, beyond the 1st default to 1
+#Reset the DM to flat
+set_data_dm(setup=setup)
 
-# #mode_repetitions = [1, 1]
-# mode_repetitions = [1] * setup.nmodes_KL
+#response_matrix_filtered = response_matrix_full[:, mask.ravel() > 0]
 
-# # Run calibration and compute matrices
-# # use the ref img, mask directly from shared memories 
-# response_matrix_full, response_matrix_filtered = create_response_matrix(
-#     KL2Act_papy,
-#     phase_amp,
-#     reference_image,
-#     mask,
-#     verbose=True,
-#     verbose_plot=False,
-#     calibration_repetitions=calibration_repetitions,
-#     mode_repetitions=mode_repetitions,
-#     push_pull=False,
-#     pull_push=True,
-#     n_frames=1000,
-# )
+# Print shapes ---
+print("Full response matrix shape:    ", response_matrix_full.shape)
+print("Filtered response matrix shape:", response_matrix_filtered.shape)
 
-# #Reset the DM to flat
-# set_data_dm(setup=setup)
+# Plot filtered matrix 
+plt.figure()
+plt.imshow(response_matrix_filtered, cmap='gray', aspect='auto')
+plt.title('Filtered Push-Pull Response Matrix')
+plt.xlabel('Slopes')
+plt.ylabel('Modes')
+plt.colorbar()
+plt.show()
 
-# #response_matrix_filtered = response_matrix_full[:, mask.ravel() > 0]
+#saving the flattened push-pull images in shared memory
+KL2PWFS_cube_shm.set_data(np.asanyarray(response_matrix_full).astype(np.float64))
+KL2S_shm.set_data(np.asanyarray(response_matrix_filtered).astype(np.float64))
 
-# # Print shapes ---
-# print("Full response matrix shape:    ", response_matrix_full.shape)
-# print("Filtered response matrix shape:", response_matrix_filtered.shape)
-
-# # Plot filtered matrix 
-# plt.figure()
-# plt.imshow(response_matrix_filtered, cmap='gray', aspect='auto')
-# plt.title('Filtered Push-Pull Response Matrix')
-# plt.xlabel('Slopes')
-# plt.ylabel('Modes')
-# plt.colorbar()
-# plt.show()
-
-# #saving the flattened push-pull images in shared memory
-# KL2PWFS_cube_shm.set_data(np.asanyarray(response_matrix_full).astype(np.float64))
-# KL2S_shm.set_data(np.asanyarray(response_matrix_filtered).astype(np.float64))
-
-# S2KL = np.linalg.pinv(response_matrix_filtered, rcond=0.10)
-# fits.writeto(folder_calib / 'RM_S2KL.fits',np.asanyarray(S2KL.T).astype(np.float64), overwrite=True)
+S2KL = np.linalg.pinv(response_matrix_filtered, rcond=0.10)
+fits.writeto(folder_calib / 'RM_S2KL.fits',np.asanyarray(S2KL.T).astype(np.float64), overwrite=True)
 

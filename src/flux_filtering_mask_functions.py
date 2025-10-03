@@ -201,6 +201,7 @@ def create_flux_filtering_mask(method, flux_cutoff, tiltx, tilty,
 
     flux_limit_upper = summed_image.max() * flux_cutoff
     mask = summed_image >= flux_limit_upper
+    mask[0, :] = 0 
 
     if verbose:
         print(f'Flux filtering mask created using cutoff {flux_cutoff:.2f}')
