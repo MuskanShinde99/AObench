@@ -160,6 +160,7 @@ def create_flux_filtering_mask(method, flux_cutoff, tiltx, tilty,
 
     folder_pyr_mask = kwargs.get("folder_pyr_mask", setup.folder_pyr_mask)
     folder_calib = kwargs.get("folder_calib", setup.folder_calib)
+    os.makedirs(folder_calib, exist_ok=True)
 
     suffix = "_OnSky" if OnSky else ""
     summed_img_path = os.path.join(folder_calib, f'summed_pyr_images_3s_pyr{suffix}.fits')

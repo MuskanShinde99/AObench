@@ -15,10 +15,10 @@ class Config:
 
         # Pre-compute commonly used output folders
         self.folder_cred3 = self.root_dir / 'outputs/CRED3_missed_frames'
-        self.folder_calib = self.root_dir / 'outputs/Calibration_files_papyrus'
+        self.folder_calib = self.root_dir / 'outputs/Calibration_files_2026'
         self.folder_pyr_mask = self.root_dir / 'outputs/3s_pyr_mask'
         self.folder_transformation_matrices = self.root_dir / 'outputs/Transformation_matrices'
-        self.folder_closed_loop_tests = self.root_dir / 'outputs/Closed_loop_tests'
+        self.folder_closed_loop_tests = self.root_dir / 'outputs/Closed_loop_tests_2026'
         self.folder_turbulence = self.root_dir / 'outputs/Phase_screens'
         self.folder_gui = self.root_dir / 'outputs/GUI_tests'
 

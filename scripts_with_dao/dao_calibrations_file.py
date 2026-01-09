@@ -98,7 +98,7 @@ n_iter=500 # number of iternations for dm random commands
 
 mask = create_flux_filtering_mask(method, flux_cutoff, KL2Act[0], KL2Act[1],
                                modulation_angles, modulation_amp, n_iter, 
-                               create_summed_image=False, verbose=False, verbose_plot=True,
+                               create_summed_image=True, verbose=False, verbose_plot=True,
                                OnSky=False, )
 
 print(f"Mask dimensions: {mask.shape}")
@@ -203,7 +203,7 @@ mode_repetitions = [1, 1]
 # Run calibration and compute matrices
 # use the ref img, mask directly from shared memories 
 response_matrix_full, response_matrix_filtered = create_response_matrix(
-    KL2Act_papy,
+    KL2Act,
     phase_amp,
     reference_image,
     mask,
