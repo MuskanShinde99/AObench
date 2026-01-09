@@ -64,26 +64,27 @@ dm_papy_shm = shm.dm_papy_shm
 #%% Setting DM to flat
 
 # Compute and display Pupil Data on SLM
-# data_slm = compute_data_slm()
-# slm.set_data(data_slm)
-# time.sleep(wait_time)
+data_slm = compute_data_slm()
+slm.set_data(data_slm)
+time.sleep(wait_time)
 
 # DM set to flat
-set_data_dm(setup=setup)
+#set_data_dm(setup=setup)
 #dm_flat_papy_shm.set_data(setup.dm_flat.astype(np.float32))
 #fits.writeto(folder_calib / 'dm_flat_papy.fits', setup.dm_flat.astype(np.float32), overwrite=True)
 
 #%% Load transformation matrices
 
 # # Load transformation matrices from shared memories
-# KL2Act = KL2Act_shm.get_data()
-# KL2Phs = KL2Phs_shm.get_data()
+#KL2Act = KL2Act_shm.get_data()
+#KL2Phs = KL2Phs_shm.get_data()
 
 # From folder 
-# KL2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Act_nkl_{setup.nmodes_KL}_nact_{setup.nact}.fits'))
-# KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_{setup.nmodes_KL}_npupil_{setup.npix_small_pupil_grid}.fits'))
+KL2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Act_nkl_{setup.nmodes_KL}_nact_{setup.nact}.fits'))
+KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_{setup.nmodes_KL}_npupil_{setup.npix_small_pupil_grid}.fits'))
 
 KL2Act_papy = KL2Act_papy_shm.get_data().T
+
 
 # plt.figure()
 # plt.plot(KL2Act_papy[1,:])
@@ -97,7 +98,7 @@ modulation_angles = np.arange(0, 2000, 1)  # angles of modulation
 modulation_amp = 2 # in lamda/D
 n_iter=500 # number of iternations for dm random commands
 
-mask = create_flux_filtering_mask(method, flux_cutoff, KL2Act_papy[0], KL2Act_papy[1],
+mask = create_flux_filtering_mask(method, flux_cutoff, KL2Act[0], KL2Act[1],
                                modulation_angles, modulation_amp, n_iter, 
                                create_summed_image=False, verbose=False, verbose_plot=True,
                                OnSky=False, )

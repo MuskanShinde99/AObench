@@ -9,23 +9,23 @@ ROOT_DIR = config.root_dir
 with open("setup_params.toml", "r") as f:
     config = toml.load(f)
 
-# nact = config["geneva"]["nact"]
-# img_size_wfs_cam_x = config["geneva"]["img_size_wfs_cam_x"]
-# img_size_wfs_cam_y = config["geneva"]["img_size_wfs_cam_y"]
-# img_size_fp_cam_x = config["geneva"]["img_size_fp_cam_x"]
-# img_size_fp_cam_y = config["geneva"]["img_size_fp_cam_y"]
-# npix_small_pupil_grid = config["geneva"]["npix_small_pupil_grid"]
-# nmodes_KL = config["geneva"]["nmodes_KL"]
-# nmodes_dm = config["geneva"]["nmodes_dm"]
+nact = config["geneva"]["nact"]
+img_size_wfs_cam_x = config["geneva"]["img_size_wfs_cam_x"]
+img_size_wfs_cam_y = config["geneva"]["img_size_wfs_cam_y"]
+img_size_fp_cam_x = config["geneva"]["img_size_fp_cam_x"]
+img_size_fp_cam_y = config["geneva"]["img_size_fp_cam_y"]
+npix_small_pupil_grid = config["geneva"]["npix_small_pupil_grid"]
+nmodes_KL = config["geneva"]["nmodes_KL"]
+nmodes_dm = config["geneva"]["nmodes_dm"]
 
-nact = config["ohp"]["nact"]
-img_size_wfs_cam_x = config["ohp"]["img_size_wfs_cam_x"]
-img_size_wfs_cam_y = config["ohp"]["img_size_wfs_cam_y"]
-img_size_fp_cam_x = config["ohp"]["img_size_fp_cam_x"]
-img_size_fp_cam_y = config["ohp"]["img_size_fp_cam_y"]
-npix_small_pupil_grid = config["ohp"]["npix_small_pupil_grid"]
-nmodes_KL = config["ohp"]["nmodes_KL"]
-nmodes_dm = config["ohp"]["nmodes_dm"]
+# nact = config["ohp"]["nact"]
+# img_size_wfs_cam_x = config["ohp"]["img_size_wfs_cam_x"]
+# img_size_wfs_cam_y = config["ohp"]["img_size_wfs_cam_y"]
+# img_size_fp_cam_x = config["ohp"]["img_size_fp_cam_x"]
+# img_size_fp_cam_y = config["ohp"]["img_size_fp_cam_y"]
+# npix_small_pupil_grid = config["ohp"]["npix_small_pupil_grid"]
+# nmodes_KL = config["ohp"]["nmodes_KL"]
+# nmodes_dm = config["ohp"]["nmodes_dm"]
 
 
 
@@ -62,7 +62,7 @@ KL2Phs_shm           = dao.shm('/tmp/KL2Phs.im.shm',           np.zeros((nmodes_
 valid_pixels_mask_shm        = dao.shm('/tmp/valid_pixels_mask.im.shm',        np.zeros((img_size_wfs_cam_x, img_size_wfs_cam_y), dtype=np.uint8))
 bias_image_shm               = dao.shm('/tmp/bias_image.im.shm',               np.zeros((img_size_wfs_cam_x, img_size_wfs_cam_y), dtype=np.uint16))
 reference_image_shm          = dao.shm('/tmp/reference_image.im.shm',          np.zeros((img_size_wfs_cam_x, img_size_wfs_cam_y), dtype=np.uint16))
-normalized_ref_image_shm     = dao.shm('/tmp/ref_img_norm.im.shm',     np.zeros((img_size_wfs_cam_x, img_size_wfs_cam_y), dtype=np.float64))
+normalized_ref_image_shm     = dao.shm('/tmp/ref_img_norm.im.shm',             np.zeros((img_size_wfs_cam_x, img_size_wfs_cam_y), dtype=np.float64))
 reference_psf_shm            = dao.shm('/tmp/reference_psf.im.shm',            np.zeros((img_size_fp_cam_x, img_size_fp_cam_y), dtype=np.uint16))
 normalized_ref_psf_shm       = dao.shm('/tmp/normalized_ref_psf.im.shm',       np.zeros((img_size_fp_cam_x, img_size_fp_cam_y), dtype=np.float64))
 
@@ -75,7 +75,7 @@ npix_valid_shm               = dao.shm('/tmp/npix_valid.im.shm',               n
 # S2KL_shm                   = dao.shm('/tmp/S2KL.im.shm',                     np.zeros((npix_valid, nmodes_KL), dtype=np.float64))
 
 # Control Parameters
-delay_set_shm                = dao.shm('/tmp/delay_set.im.shm',                   np.zeros((1, 1), dtype=np.uint32))
+delay_set_shm                = dao.shm('/tmp/delay_set.im.shm',               np.zeros((1, 1), dtype=np.uint32))
 gain_shm                     = dao.shm('/tmp/gain.im.shm',                    np.zeros((1, 1), dtype=np.float32))
 leakage_shm                  = dao.shm('/tmp/leakage.im.shm',                 np.zeros((1, 1), dtype=np.float32))
 num_iterations_shm           = dao.shm('/tmp/num_iterations.im.shm',          np.zeros((1, 1), dtype=np.uint32))
