@@ -62,7 +62,7 @@ def cost_function(amplitudes, pupil_coords, radius, iteration, variance_threshol
     pupil_setup.update_pupil(tt_amplitudes=amplitudes)
     # Apply the updated flat map to the DM and SLM
     set_data_dm(setup=setup)
-    dm_flat_papy_shm.set_data(setup.dm_flat.astype(np.float32)) #TODO: check this
+    #dm_flat_papy_shm.set_data(setup.dm_flat.astype(np.float32)) #TODO: check this
 
     # Capture and average 5 images
     num_images = 5
