@@ -64,12 +64,10 @@ dm_papy_shm = shm.dm_papy_shm
 #%% Setting DM to flat
 
 # Compute and display Pupil Data on SLM
-data_slm = compute_data_slm()
-slm.set_data(data_slm)
-time.sleep(wait_time)
 
 # DM set to flat
-#set_data_dm(setup=setup)
+set_data_dm(setup=setup)
+
 #dm_flat_papy_shm.set_data(setup.dm_flat.astype(np.float32))
 #fits.writeto(folder_calib / 'dm_flat_papy.fits', setup.dm_flat.astype(np.float32), overwrite=True)
 
@@ -83,7 +81,7 @@ time.sleep(wait_time)
 KL2Act = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Act_nkl_{setup.nmodes_KL}_nact_{setup.nact}.fits'))
 KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_{setup.nmodes_KL}_npupil_{setup.npix_small_pupil_grid}.fits'))
 
-KL2Act_papy = KL2Act_papy_shm.get_data().T
+#KL2Act_papy = KL2Act_papy_shm.get_data().T
 
 
 # plt.figure()

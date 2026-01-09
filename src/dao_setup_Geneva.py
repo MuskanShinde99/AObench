@@ -93,7 +93,7 @@ npix_pupil = int(pupil_size / pixel_size)   # Convert pupil size to pixels
 blaze_period_outer = 20
 blaze_period_inner = 15
 tilt_amp_outer = 150
-tilt_amp_inner = -70.5  # -70.5 -67 -40
+tilt_amp_inner = -80  # -70.5 -67 -40
 
 # Create the circular pupil mask
 pupil_grid = make_pupil_grid([dataWidth, dataHeight], [dataWidth * pixel_size, dataHeight * pixel_size])
@@ -177,7 +177,7 @@ data_pupil = data_pupil + data_focus
 
 # [-1.6510890005150187, 0.14406016044318903]
 # Create a Tip-Tilt (TT) matrix with specified amplitudes as the diagonal elements
-tt_amplitudes = [-1.7213249180817631, 0.13755631783036204] # Tip and Tilt amplitudes
+tt_amplitudes = [-0.15, 0.33755631783036204] # Tip and Tilt amplitudes
 tt_amplitude_matrix = np.diag(tt_amplitudes)
 tt_matrix = tt_amplitude_matrix @ KL2Act[0:2, :]  # Select modes 1 (tip) and 2 (tilt)
 
