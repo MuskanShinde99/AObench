@@ -193,10 +193,10 @@ def center_psf_on_pyramid_tip(
     radii = [np.sqrt(stats[i, cv2.CC_STAT_AREA] / np.pi) for i in range(1, num_labels)]
     radius = int(round(np.mean(radii)))  # Average radius
 
+
     if verbose:
         print(f"Found {len(pupil_centers)} pupils")
         print(f"Average pupil radius: {radius:.2f}")
-
     # Optimize tip-tilt amplitudes using Bayesian optimization
     optimized_tt_amplitudes = optimize_amplitudes(
         pupil_centers,
