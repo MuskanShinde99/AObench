@@ -138,9 +138,10 @@ mode_index = 3 # 0 - focus, 1 - astimgatism, 2 -astigmatism
 #scan_othermode_amplitudes(test_values, mode_index, update_setup_file=True)
 scan_othermode_amplitudes_wfs_std(test_values, mode_index, mask, 
                                   update_setup_file=False)
-  
-# #revise the crieteria to standard deviation of intensities within the valid pixels
 
+#Reset the DM to flat
+set_data_dm(setup=setup)
+  
 #%% Capture Reference Image
 
 #Timestamp
