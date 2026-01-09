@@ -104,7 +104,8 @@ def create_summed_image_for_mask_dm_random(n_iter, verbose=False,  **kwargs):
         if verbose:
             print(f"Iteration {i + 1}")
 
-        act_random = np.random.choice([-0.3, 0.3], size=nact_valid)
+        act_random = np.random.choice([-0.3, 0.3], size=nact_total)
+        print('nact_total', nact_total)
         #act_random = np.random.choice([-0.3, 0.3], size=nact_valid)
         actuators, _, _  = set_data_dm(act_random, setup=setup,)
         

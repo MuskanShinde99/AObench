@@ -91,7 +91,7 @@ KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_
 #%% Creating a Flux Filtering Mask
 
 method='dm_random'
-flux_cutoff = 0.08 #0.00000001 # 0.08 - papy dm random; 0.2 - geneva dm random
+flux_cutoff = 0.1 #0.00000001 # 0.08 - papy dm random; 0.2 - geneva dm random
 modulation_angles = np.arange(0, 2000, 1)  # angles of modulation
 modulation_amp = 2 # in lamda/D
 n_iter=500 # number of iternations for dm random commands
@@ -103,7 +103,7 @@ mask = create_flux_filtering_mask(method, flux_cutoff, KL2Act[0], KL2Act[1],
 
 print(f"Mask dimensions: {mask.shape}")
 
-valid_pixels_mask_shm.set_data(mask)
+#valid_pixels_mask_shm.set_data(mask)
 
 # Get valid pixels from the mask
 #put with in the function to create mask
@@ -115,11 +115,13 @@ print(f'Number of valid pixels = {npix_valid}')
 #Reset the DM to flat
 set_data_dm(setup=setup)
 
-# Create shared memories that depends on number of valid pixels
-KL2PWFS_cube_shm = dao.shm('/tmp/KL2PWFS_cube.im.shm' , np.zeros((setup.nmodes_KL, setup.img_size_wfs_cam_x*setup.img_size_wfs_cam_y), dtype=np.float64))
-slopes_shm = dao.shm('/tmp/slopes.im.shm', np.zeros((npix_valid, 1), dtype=np.uint64))
-KL2S_shm = dao.shm('/tmp/KL2S.im.shm' , np.zeros((setup.nmodes_KL, npix_valid), dtype=np.float64))
-S2KL_shm = dao.shm('/tmp/S2KL.im.shm' , np.zeros((npix_valid, setup.nmodes_KL), dtype=np.float64))
+#%%
+
+# # Create shared memories that depends on number of valid pixels
+# KL2PWFS_cube_shm = dao.shm('/tmp/KL2PWFS_cube.im.shm' , np.zeros((setup.nmodes_KL, setup.img_size_wfs_cam_x*setup.img_size_wfs_cam_y), dtype=np.float64))
+# slopes_shm = dao.shm('/tmp/slopes.im.shm', np.zeros((npix_valid, 1), dtype=np.uint64))
+# KL2S_shm = dao.shm('/tmp/KL2S.im.shm' , np.zeros((setup.nmodes_KL, npix_valid), dtype=np.float64))
+# S2KL_shm = dao.shm('/tmp/S2KL.im.shm' , np.zeros((npix_valid, setup.nmodes_KL), dtype=np.float64))
 
 
 #%% Centering the PSF on the Pyramid Tip

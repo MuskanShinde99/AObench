@@ -182,6 +182,7 @@ def set_dm_actuators(actuators=None, dm_flat=None, setup=None, *, place_of_test=
         
         actuators = np.asarray(actuators)
         act_pos = actuators #+ dm_flat
+        print('act_pos shape', act_pos.shape)
         
         #Set 2D map shared memory
         dm_act_shm.set_data(act_pos.astype(np.float64).reshape(setup.nact, setup.nact))
