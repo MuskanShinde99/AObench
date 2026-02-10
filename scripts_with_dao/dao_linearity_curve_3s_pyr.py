@@ -73,7 +73,7 @@ print(f"Mask dimensions: {mask.shape}")
 valid_pixels_indices = np.where(mask > 0)
 
 # Load the response matrix 
-IM_filename = f'response_matrix_KL2S_filtered_nact_{setup.nact}_amp_0.05_3s_pyr.fits'
+IM_filename = f'response_matrix_KL2S_filtered_nact_{setup.nact}_amp_0.1_3s_pyr.fits'
 IM_KL2S = fits.getdata(os.path.join(folder_calib, IM_filename))  # /0.1
 
 RM_S2KL = np.linalg.pinv(IM_KL2S, rcond=0.10)
@@ -83,7 +83,7 @@ print(f"Shape of the response matrix: {RM_S2KL.shape}")
 
 # Load reference image
 reference_image = fits.getdata(folder_calib / 'reference_image_raw.fits')
-normalized_reference_image = normalize_image(reference_image, mask, bias_image)
+normalized_reference_image = normalize_image(reference_image, mask)
 pyr_img_shape = reference_image.shape
 print('Reference image shape:', pyr_img_shape)
 
@@ -99,16 +99,19 @@ plt.imshow(normalized_reference_image)
 plt.colorbar()
 plt.title('Normalized Reference Image')
 plt.show()
-#%% Linearity plot KL basis: Phase KL2Act
+#%%  Compute linearity curves
+
+plt.close('all')
 
 # Number of KL modes to plot
 num_modes = 10
-applied_phase_amp = np.arange(-2, 2, 0.1) # 
+applied_phase_amp = np.arange(-1.0, 1.1, 0.1) # 
 computed_phase_amp = np.zeros((num_modes, len(applied_phase_amp)))
 
 # Loop through each Zernike mode
-for mode in range(num_modes):
+for j, mode in enumerate(np.arange(0, 10, 1)):
     
+    mode = mode
     print(f"Applying phase for mode: {mode}")
     
     for i, amp in enumerate(applied_phase_amp):
@@ -122,19 +125,19 @@ for mode in range(num_modes):
         # Capture image and compute slopes
         slopes_image = get_slopes_image(
             mask,
-            bias_image,
             normalized_reference_image,
             setup=setup,
         )
-        slopes_image_shm.set_data(slopes_image) # setting the shared memory separately because setting inside the function is not working
 
         slopes = slopes_image[valid_pixels_indices].flatten()
 
         # Compute modes using the response matrix
         computed_modes = slopes @ RM_S2KL 
+        computed_modes_shm.set_data(np.asanyarray(computed_modes).astype(np.float32)) # setting shared memory
 
         # Store computed modes for this mode
-        computed_phase_amp[mode, i] = computed_modes[mode]
+        computed_phase_amp[j, i] = computed_modes[mode]
+        
 
 # Plot the results in subplots
 fig, axes = plt.subplots(nrows=2, ncols=5, figsize=(20, 8))
@@ -151,4 +154,97 @@ for mode in range(num_modes):
     axes[mode].grid(True)
 
 plt.tight_layout()
+
+
+# Save to file
+timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+save_path = folder_calib / "linearity_curves.png"
+timestamped_save_path = folder_calib / f"linearity_curves_{timestamp}.png"
+plt.savefig(save_path, dpi=300)
+plt.savefig(timestamped_save_path, dpi=300)
 plt.show()
+
+print(
+    "Linearity curves saved to:"
+    f"\n - {save_path}"
+    f"\n - {timestamped_save_path}"
+)
+
+#DM set to flat
+set_data_dm(setup=setup)
+
+#%% Compute cross correlation matrix
+
+# Parameters
+num_modes = 1036
+amp = 0.1 # Use only a single amplitude
+crosscorrelation_matrix = np.zeros((num_modes, num_modes))
+
+# For storing full reconstructed vectors if needed
+reconstructed_all = np.zeros((num_modes, num_modes))
+
+# Loop over each mode
+for mode in range(num_modes):
+    print(f"Applying KL mode {mode}")
+    
+    # Generate DM command for this KL mode
+    kl_mode = amp * KL2Act[mode]
+
+    # Apply DM command
+    set_data_dm(kl_mode, setup=setup)
+
+    # Capture image and compute slopes
+    slopes_image = get_slopes_image(
+        mask,
+        normalized_reference_image,
+        setup=setup,
+    )
+
+    slopes = slopes_image[valid_pixels_indices].flatten()
+
+    # Reconstruct the phase vector in KL basis
+    computed_modes = slopes @ RM_S2KL
+    computed_modes_shm.set_data(np.asanyarray(computed_modes).astype(np.float32))
+
+    # Save reconstructed KL amplitudes
+    reconstructed_all[mode, :] = computed_modes
+    
+#DM set to flat
+set_data_dm(setup=setup)
+
+crosscorrelation_matrix = reconstructed_all/amp
+
+# Optionally plot the cross-correlation matrix
+plt.figure(figsize=(8, 6))
+plt.imshow(crosscorrelation_matrix, cmap='viridis', interpolation='nearest')
+plt.colorbar(label='Cross-correlation')
+plt.title(f'Cross-correlation matrix (Amp = {amp})')
+plt.xlabel('Reconstructed KL mode index')
+plt.ylabel('Applied KL mode index')
+plt.grid(False)
+plt.tight_layout()
+
+crosscorr_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+crosscorr_png_path = folder_calib / "crosscorrelation_matrix.png"
+crosscorr_png_timestamped_path = folder_calib / f"crosscorrelation_matrix_{crosscorr_timestamp}.png"
+plt.savefig(crosscorr_png_path, dpi=300)
+plt.savefig(crosscorr_png_timestamped_path, dpi=300)
+plt.show()
+
+# Save cross-correlation matrix as FITS
+crosscorr_fits_path = folder_calib / "crosscorrelation_matrix.fits"
+crosscorr_fits_timestamped_path = (
+    folder_calib / f"crosscorrelation_matrix_{crosscorr_timestamp}.fits"
+)
+fits.writeto(crosscorr_fits_path, crosscorrelation_matrix, overwrite=True)
+fits.writeto(
+    crosscorr_fits_timestamped_path, crosscorrelation_matrix, overwrite=True
+)
+
+print(
+    "Cross-correlation matrix saved to:"
+    f"\n - {crosscorr_png_path}"
+    f"\n - {crosscorr_png_timestamped_path}"
+    f"\n - {crosscorr_fits_path}"
+    f"\n - {crosscorr_fits_timestamped_path}"
+)

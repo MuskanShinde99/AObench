@@ -137,7 +137,6 @@ def perform_push_pull_calibration_with_phase_basis(
                         mask,
                         normalized_reference_image,
                         setup=setup,
-                        pyr_img=pyr_img,
                     )
 
 

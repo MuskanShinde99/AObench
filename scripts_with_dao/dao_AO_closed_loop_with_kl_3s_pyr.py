@@ -57,12 +57,12 @@ KL2Phs = fits.getdata(os.path.join(folder_transformation_matrices, f'KL2Phs_nkl_
 #%% Load Bias Image, Calibration Mask and Interaction Matrix
 
 # Load the bias image
-bias_filename = f'binned_bias_image.fits'
+bias_filename = f'bias_image.fits'
 bias_image = fits.getdata(os.path.join(folder_calib, bias_filename))
 print(f"Bias image shape: {bias_image.shape}")
 
 # Load the calibration mask for processing images.
-mask_filename = f'binned_mask_3s_pyr.fits'
+mask_filename = f'mask_3s_pyr.fits'
 mask = fits.getdata(os.path.join(folder_calib, mask_filename))
 print(f"Mask dimensions: {mask.shape}")
 
@@ -70,7 +70,7 @@ print(f"Mask dimensions: {mask.shape}")
 valid_pixels_indices = np.where(mask > 0)
 
 # Load the response matrix 
-IM_filename = f'binned_response_matrix_KL2S_filtered_nact_{setup.nact}_amp_0.1_3s_pyr.fits'
+IM_filename = f'response_matrix_KL2S_filtered_nact_{setup.nact}_amp_0.1_3s_pyr.fits'
 IM_KL2S = fits.getdata(os.path.join(folder_calib, IM_filename))  # /0.1
 
 RM_S2KL = np.linalg.pinv(IM_KL2S, rcond=0.10)
@@ -80,7 +80,7 @@ print(f"Shape of the response matrix: {RM_S2KL.shape}")
 
 # Load reference image
 reference_image = fits.getdata(folder_calib / 'reference_image_raw.fits')
-normalized_reference_image = normalize_image(reference_image, mask, bias_image)
+normalized_reference_image = normalize_image(reference_image, mask)
 pyr_img_shape = reference_image.shape
 print('Reference image shape:', pyr_img_shape)
 
@@ -133,7 +133,7 @@ plt.show()
 plt.close('all')
 
 # Define KL modes to consider
-nmodes_kl = 175
+nmodes_kl = 195
 KL2Phs_new = KL2Phs[:nmodes_kl, :]
 Phs2KL_new = scipy.linalg.pinv(KL2Phs_new)
 KL2Act_new = KL2Act[:nmodes_kl, :]
@@ -147,19 +147,24 @@ RM_S2KL_new = np.linalg.pinv(IM_KL2S_new, rcond=0.10)
 setup.deformable_mirror.flatten() 
 
 # Load the FITS data
-seeing = 4.0# in arcsec
-wl= 1500  #in nm
+seeing = 0.7# in arcsec
+wl= 1400  #in nm
 
-pup = 1.52 #in m
+pup = 8.0 #in m
 wl_ref = 500 #in nm
-seeing_ref = 2.0 # in arcsec
+seeing_ref = 0.7 # in arcsec
 loopspeed = 1.0 # in KHz
 
 #filename = f'phase_screen_cube_phase_seeing_{seeing}arcsec_L_40m_tau0_5ms_lambda_{wl}nm_pup_{pup}m_{loopspeed}kHz.fits'
-filename = f'Papyrus/turbulence_cube_phase_seeing_2arcsec_L_40m_tau0_5ms_lambda_500nm_pup_1.52m_1.0kHz.fits'
+#filename = f'Papyrus/turbulence_cube_phase_seeing_2arcsec_L_40m_tau0_5ms_lambda_500nm_pup_1.52m_1.0kHz.fits'
+#filename = f'Papyrus/trials/turbulence_cube_phase_seeing_2arcsec_L_40m_windspeed_5mps_lambda_500nm_pup_1.52m_1.0kHz.fits'
+
+filename = f'Papyrus/trials/vlt_turbulence_cube_phase_seeing_0.7arcsec_L_40m_windspeed_5mps_lambda_500nm_pup_8m_1.0kHz.fits'
+
+
 hdul = fits.open(os.path.join(folder_turbulence, filename))
 hdu = hdul[0]
-fits_data = hdu.data[0:501, :, :]
+fits_data = hdu.data[:, :, :]
 
 # Initialize the phase screen array to hold all frames
 num_frames = fits_data.shape[0]
@@ -197,15 +202,17 @@ delay= 0
 # delay = int(leakage_shm.get_data()[0][0])
 
 # defining path for saving plots
-anim_path = folder_closed_loop_tests / 'Papyrus'
-anim_name= f'AO_bench_closed_loop_seeing_{seeing}arcsec_L_40m_tau0_5ms_lambda_{wl}nm_pup_{pup}m_{loopspeed}kHz_gain_{gain}_iterations_{num_iterations}.gif'
+anim_path = folder_closed_loop_tests
+anim_name= f'AO_bench_closed_loop_seeing_{seeing}arcsec_L_40m_tau0_5ms_lambda_{wl}nm_pup_{pup}m_{loopspeed}kHz_gain_{gain}_delay_{delay}_leakage_{leakage}_iterations_{num_iterations}.gif'
 anim_title= f'Seeing: {seeing} arcsec, λ: {wl} nm, Loop speed: {loopspeed} kHz'
 
 #AO loop
 strehl_ratios, residual_phases = closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, anim_path, anim_name, anim_title,
-                           RM_S2KL_new, KL2Act_new, Act2KL_new, Phs2KL_new, mask, bias_image, 
-                           reference_image=reference_image, diffraction_limited_psf=diffraction_limited_psf,
-                           verbose=True, verbose_plot=False)
+                           RM_S2KL_new, KL2Act_new, Act2KL_new, Phs2KL_new, mask, 
+                           reference_image, diffraction_limited_psf, verbose=True, verbose_plot=False)
+
+#DM set to flat
+set_data_dm(setup=setup)
 
 # save strehl ratio and phase residual arrays
 strehl_ratios_path = os.path.join(anim_path, f"strehl_ratios_{anim_name.replace('.gif', '.npy')}")
@@ -225,11 +232,71 @@ plt.subplot(1, 2, 2)
 plt.plot(residual_phases, marker='o')
 plt.xlabel('Iteration')
 plt.ylabel('Residual Phase [2π rad]')
+plt.ylim(0, 0.55)
 plt.title(f'AO Bench -- {anim_title}')
 
 plt.tight_layout()
 plt.show()
 
+#%%
+   
+# Main loop parameters
+num_iterations = 1200
+leakage = 0
+
+#delay = 1
+gains = [1, 0.8,0.6,0.4, 1, 0.8, 0.6, 0.4, 1, 0.8,0.6, 0.4]
+delays = [0, 0, 0, 0, 1, 1,1, 1,2, 2, 2, 2] 
+
+# Create subplots with two axes
+fig, axs = plt.subplots(1, 2, figsize=(12, 5))
+
+for gain, delay in zip(gains, delays):
+    
+    print("delay:", delay, "gain:", gain)
+
+    # defining path for saving plots
+    anim_path = folder_closed_loop_tests
+    anim_name= f'AO_bench_closed_loop_seeing_{seeing}arcsec_L_40m_tau0_5ms_lambda_{wl}nm_pup_{pup}m_{loopspeed}kHz_gain_{gain}_delay_{delay}_leakage_{leakage}_iterations_{num_iterations}.gif'
+    anim_title= f'Seeing: {seeing} arcsec, λ: {wl} nm, Loop speed: {loopspeed} kHz'
+    
+    #AO loop
+    strehl_ratios, residual_phases = closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, anim_path, anim_name, anim_title,
+                               RM_S2KL_new, KL2Act_new, Act2KL_new, Phs2KL_new, mask, 
+                               reference_image, diffraction_limited_psf, verbose=True, verbose_plot=False)
+    
+    #DM set to flat
+    set_data_dm(setup=setup)
+    
+    # save strehl ratio and phase residual arrays
+    strehl_ratios_path = os.path.join(anim_path, f"strehl_ratios_{anim_name.replace('.gif', '.npy')}")
+    residual_phases_path = os.path.join(anim_path, f"residual_phases_{anim_name.replace('.gif', '.npy')}")
+    np.save(strehl_ratios_path, np.array(strehl_ratios))
+    np.save(residual_phases_path, np.array(residual_phases))
+    
+    # Plot the results for each delay using axs[0] for Strehl ratio and axs[1] for residual phase
+    axs[0].plot(strehl_ratios, label=f'Delay {delay}, Gain {gain}')
+    axs[1].plot(residual_phases, label=f'Delay {delay}, Gain {gain}')
+
+# Finalizing the plot
+axs[0].set_xlabel('Iteration')
+axs[0].set_ylabel('Strehl Ratio')
+axs[0].legend()
+axs[0].set_ylim(0, 1.0)
+
+axs[1].set_xlabel('Iteration')
+axs[1].set_ylabel('Residual Phase [λ]')
+axs[1].legend()
+axs[1].set_ylim(0,1.0)
+
+plt.tight_layout()
+plt.subplots_adjust(top=0.9)  # Moves everything slightly down
+fig.suptitle(f'AO Bench -- 3PWFS -- Seeing: {seeing} arcsec, λ: {wl/1e-9} nm, Loop speed: {loopspeed} kHz')
+
+# Save the figure
+fig_save_path = os.path.join(anim_path, anim_name.replace('.gif', '.png'))
+fig.savefig(fig_save_path, dpi=300)  # High-resolution save
+fig.show()
 
 #%% AO loop with a fixed KL mode 
 plt.close('all')

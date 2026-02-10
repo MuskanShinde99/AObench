@@ -48,7 +48,7 @@ bias_image_shm = shm.bias_image_shm
 # Turn off laser
 if las is not None:
     las.enable(0)
-    time.sleep(2)  # Allow some time for laser to turn off
+    time.sleep(30)  # Allow some time for laser to turn off
     print("The laser is OFF")
     
 else:

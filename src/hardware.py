@@ -24,7 +24,7 @@ class SLM(ShmWrapper):
 
 class Laser:
     """Thin wrapper around the Thorlabs MCLS1 laser."""
-    def __init__(self, port="/dev/ttyUSB0", channel=1):
+    def __init__(self, port="/dev/ttyUSB1", channel=1):
         self.dev = mcls1(port)
         self.dev.set_channel(channel)
 

@@ -98,7 +98,7 @@ n_iter=500 # number of iternations for dm random commands
 
 mask = create_flux_filtering_mask(method, flux_cutoff, KL2Act[0], KL2Act[1],
                                modulation_angles, modulation_amp, n_iter, 
-                               create_summed_image=True, verbose=False, verbose_plot=True,
+                               create_summed_image=False, verbose=False, verbose_plot=True,
                                OnSky=False, )
 
 print(f"Mask dimensions: {mask.shape}")
@@ -128,7 +128,7 @@ S2KL_shm = dao.shm('/tmp/S2KL.im.shm' , np.zeros((npix_valid, setup.nmodes_KL), 
 
 print('Start centering algorithm')
 center_psf_on_pyramid_tip(mask=mask, 
-                          bounds = [(-2.0, 2.0), (-2.0, 2.0)], variance_threshold=0.1, 
+                          bounds = [(-2.0, 2.0), (-2.0, 2.0)], variance_threshold=0.03, 
                           update_setup_file=True, verbose=True, verbose_plot=True)
 
  #%% Scanning modes to find zero of the pyramid
@@ -197,8 +197,8 @@ calibration_repetitions = 1
 #mode_repetitions = {0: 10, 3: 10} # Repeat the 0th mode ten times, the 3rd mode ten times, rest default to 1
 #mode_repetitions = [2, 3]  # Repeat the 0th mode twice, the 1st mode three times, beyond the 1st default to 1
 
-mode_repetitions = [1, 1]
-#mode_repetitions = [200] * setup.nmodes_KL
+mode_repetitions = [100, 100]
+#mode_repetitions = [100] * setup.nmodes_KL
 
 # Run calibration and compute matrices
 # use the ref img, mask directly from shared memories 

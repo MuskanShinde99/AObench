@@ -25,10 +25,11 @@ import src.dao_setup as dao_setup
 from src.transformation_matrices_functions import *
 from src.shm_loader import shm
 
-KL2Act_shm = shm.KL2Act_shm
-KL2Phs_shm = shm.KL2Phs_shm
+#KL2Act_shm = shm.KL2Act_shm
+#KL2Phs_shm = shm.KL2Phs_shm
 
 setup = init_setup()
+
 
 Act2Phs, Phs2Act = compute_Act2Phs(
     setup.nact,
@@ -61,7 +62,7 @@ fig, axes = plt.subplots(2, 5, figsize=(15, 6))
 axes_flat = axes.flatten()
 
 for i, mode in enumerate(range(10)):
-    im = axes_flat[i].imshow(KL2Act[mode].reshape(setup.nact, setup.nact), cmap='viridis')
+    im = axes_flat[i].imshow(KL2Act[mode].reshape(setup.nact, setup.nact), cmap='viridis', vmax=0.25, vmin=-0.25)
     axes_flat[i].set_title(f' KL2Act {mode}')
     axes_flat[i].axis('off')
     fig.colorbar(im, ax=axes_flat[i], fraction=0.03, pad=0.04)
@@ -86,13 +87,13 @@ plt.show()
 print('KL2Act', KL2Act.dtype)
 print('KL2Act', KL2Act.shape)
 
-# set shared memories
-KL2Act_shm.set_data(KL2Act.astype(np.float64))
-KL2Phs_shm.set_data(KL2Phs.astype(np.float64))
+# # set shared memories
+# KL2Act_shm.set_data(KL2Act.astype(np.float64))
+# KL2Phs_shm.set_data(KL2Phs.astype(np.float64))
 
-# get data
-KL2Act = KL2Act_shm.get_data()
-KL2Phs = KL2Phs_shm.get_data()
+# # get data
+# KL2Act = KL2Act_shm.get_data()
+# KL2Phs = KL2Phs_shm.get_data()
 
 plt.figure()
 plt.imshow(KL2Act[0,:].reshape(setup.nact,setup.nact))

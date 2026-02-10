@@ -217,6 +217,9 @@ for mode in range(num_modes):
 
     # Save reconstructed KL amplitudes
     reconstructed_all[mode, :] = computed_modes
+    
+#DM set to flat
+set_data_dm(setup=setup)
 
 crosscorrelation_matrix = reconstructed_all/amp
 
@@ -254,6 +257,4 @@ print(
     f"\n - {crosscorr_fits_path}"
     f"\n - {crosscorr_fits_timestamped_path}"
 )
-
-#DM set to flat
-set_data_dm(setup=setup)
+x

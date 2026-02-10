@@ -186,13 +186,13 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
             raise ValueError("data_phase_screen must be either 2D or 3D")
         
         # Update shared memory and image
-        phase_screen_shm.set_data(phase_slice) # setting shared memory
+        #phase_screen_shm.set_data(phase_slice) # setting shared memory
         #fits.writeto(os.path.join(folder_gui, f'phase_screen.fits'), phase_slice, overwrite=True)
         
         #Set DM
         current_act_pos = dm_act_shm.get_data().flatten()
         current_act_pos, data_dm, _ = set_data_dm(actuators=current_act_pos, data_phase_screen=phase_slice, setup=setup,)
-        dm_phase_shm.set_data(data_dm.astype(np.float32)* small_pupil_mask)  # setting shared memory
+        #dm_phase_shm.set_data(data_dm.astype(np.float32)* small_pupil_mask)  # setting shared memory
      
         # Compute phase residuals 
         phase_residuals = (phase_slice + data_dm) * small_pupil_mask
@@ -214,14 +214,14 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
             normalized_reference_image,
             setup=setup,
         )
-        slopes_image_shm.set_data(slopes_image)
+        #slopes_image_shm.set_data(slopes_image)
         slopes = slopes_image[valid_pixels_indices].flatten()
         #fits.writeto(os.path.join(folder_gui, f'slopes_image.fits'), slopes_image, overwrite=True)
 
         # Capture PSF
         fp_img = camera_fp.get_data()
         fp_img = np.maximum(fp_img, 1e-10)
-        normalized_psf_shm.set_data((fp_img / np.max(fp_img))) # setting shared memory
+        #normalized_psf_shm.set_data((fp_img / np.max(fp_img))) # setting shared memory
         #fits.writeto(os.path.join(folder_gui, f'normalized_psf.fits'), (fp_img / np.max(fp_img)), overwrite=True)
         
         # Compute Strehl ratio
@@ -234,11 +234,11 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
         # Compute KL modes present
         computed_modes = slopes @ RM_S2KL 
         # multiply by two because this mode is computed for DM surface and we want DM phase
-        computed_modes_shm.set_data(computed_modes) # setting shared memory
+        #computed_modes_shm.set_data(computed_modes) # setting shared memory
         
         # Compute actuator commands
         act_pos = computed_modes @ KL2Act
-        commands_shm.set_data(act_pos) # setting shared memory
+        #commands_shm.set_data(act_pos) # setting shared memory
         
         # Append current actuator command
         act_pos_queue.append(act_pos)
@@ -253,7 +253,7 @@ def closed_loop_test(num_iterations, gain, leakage, delay, data_phase_screen, an
         
         # KL modes corresponding the total actuator postion or the DM shape
         modes_act_pos_tot = current_act_pos @ Act2KL
-        dm_kl_modes_shm.set_data(modes_act_pos_tot) # setting shared memory
+        #dm_kl_modes_shm.set_data(modes_act_pos_tot) # setting shared memory
 
 
         if verbose_plot:

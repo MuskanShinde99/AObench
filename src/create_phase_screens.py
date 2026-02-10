@@ -50,19 +50,22 @@ plt.title('VLT aperture')
 plt.show()
 
 #%%
-turbulence_pupil_size = 1.52 #m
+turbulence_pupil_size = 8 #1.52 #m
 turbulence_grid = make_pupil_grid(int(npix_pupil*grid_oversizing), turbulence_pupil_size)
 
 #Turbulence parameters
-seeing = 2 # arcsec @ 500nm (convention)
+seeing = 0.7 # arcsec @ 500nm (convention)
 outer_scale = 40 # meter
-tau0 = 0.005 #ms
+
 #velocity = 5  #m/s
 wl = 1700e-9
 
 fried_parameter = seeing_to_fried_parameter(seeing)
 Cn_squared = Cn_squared_from_fried_parameter(fried_parameter, 500e-9)
+tau0 = 0.005 #ms
 velocity = 0.314 * fried_parameter / tau0
+velocity = 5 #m/s
+tau0 = 0.314 * fried_parameter / velocity #ms
 #tau0 = (0.314 * fried_parameter) / velocity  # Compute tau0 based on velocity
 
 print('r0   = {0:.1f}cm'.format(fried_parameter * 100))
@@ -102,7 +105,7 @@ folder_turbulence = config.folder_turbulence
 
 # Define parameters
 wavelengths = [500e-9]  # Measurement wavelengths in meters
-nframes = 500  # Number of frames
+nframes = 5000  # Number of frames
 framerates = [1.0]  # AO loop speeds in kHz
 
 # Loop over each framerate
@@ -137,9 +140,9 @@ for framerate in framerates:
         phase_cube = np.array(phase_cube)
        
         # Construct output filename
-        output_filename = (f'turbulence_cube_phase_seeing_{seeing}arcsec_L_{outer_scale}m_tau0_5ms_'
-                           f'lambda_{wl*1e9:.0f}nm_pup_{turbulence_pupil_size}m_{framerate:.1f}kHz_cube3.fits')
-        output_file_path = os.path.join(folder_turbulence / 'Papyrus', output_filename)
+        output_filename = (f'vlt_turbulence_cube_phase_seeing_{seeing}arcsec_L_{outer_scale}m_windspeed_{velocity}mps_'
+                           f'lambda_{wl*1e9:.0f}nm_pup_{turbulence_pupil_size}m_{framerate:.1f}kHz_cube2.fits')
+        output_file_path = os.path.join(folder_turbulence / 'Papyrus/trials', output_filename)
 
         # Save the 3D data cube as a FITS file with overwrite enabled
         fits.writeto(output_file_path, phase_cube, overwrite=True)
