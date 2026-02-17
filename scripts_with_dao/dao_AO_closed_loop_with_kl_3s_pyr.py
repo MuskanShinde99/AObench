@@ -133,7 +133,7 @@ plt.show()
 plt.close('all')
 
 # Define KL modes to consider
-nmodes_kl = 195
+nmodes_kl = 185
 KL2Phs_new = KL2Phs[:nmodes_kl, :]
 Phs2KL_new = scipy.linalg.pinv(KL2Phs_new)
 KL2Act_new = KL2Act[:nmodes_kl, :]
@@ -147,7 +147,7 @@ RM_S2KL_new = np.linalg.pinv(IM_KL2S_new, rcond=0.10)
 setup.deformable_mirror.flatten() 
 
 # Load the FITS data
-seeing = 0.7# in arcsec
+seeing = 0.6# in arcsec
 wl= 1400  #in nm
 
 pup = 8.0 #in m
@@ -184,9 +184,9 @@ data_phase_screen = data_phase_screen.astype(np.float32)
 plt.close('all')
    
 # Main loop parameters
-num_iterations = 500
+num_iterations = 1000
 gain = 1
-leakage = 0
+leakage = 0.02
 delay= 0
 
 # setting shared memories
@@ -232,7 +232,6 @@ plt.subplot(1, 2, 2)
 plt.plot(residual_phases, marker='o')
 plt.xlabel('Iteration')
 plt.ylabel('Residual Phase [2π rad]')
-plt.ylim(0, 0.55)
 plt.title(f'AO Bench -- {anim_title}')
 
 plt.tight_layout()
@@ -242,11 +241,11 @@ plt.show()
    
 # Main loop parameters
 num_iterations = 1200
-leakage = 0
+leakage = 0.02
 
 #delay = 1
-gains = [1, 0.8,0.6,0.4, 1, 0.8, 0.6, 0.4, 1, 0.8,0.6, 0.4]
-delays = [0, 0, 0, 0, 1, 1,1, 1,2, 2, 2, 2] 
+gains = [ 1]
+delays = [2] 
 
 # Create subplots with two axes
 fig, axs = plt.subplots(1, 2, figsize=(12, 5))
@@ -298,7 +297,7 @@ fig_save_path = os.path.join(anim_path, anim_name.replace('.gif', '.png'))
 fig.savefig(fig_save_path, dpi=300)  # High-resolution save
 fig.show()
 
-#%% AO loop with a fixed KL mode 
+ #%% AO loop with a fixed KL mode 
 plt.close('all')
 
 # Select KL mode and amplitude

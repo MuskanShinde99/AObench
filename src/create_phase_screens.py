@@ -64,8 +64,8 @@ fried_parameter = seeing_to_fried_parameter(seeing)
 Cn_squared = Cn_squared_from_fried_parameter(fried_parameter, 500e-9)
 tau0 = 0.005 #ms
 velocity = 0.314 * fried_parameter / tau0
-velocity = 5 #m/s
-tau0 = 0.314 * fried_parameter / velocity #ms
+#velocity = 5 #m/s
+#tau0 = 0.314 * fried_parameter / velocity #ms
 #tau0 = (0.314 * fried_parameter) / velocity  # Compute tau0 based on velocity
 
 print('r0   = {0:.1f}cm'.format(fried_parameter * 100))
@@ -140,8 +140,8 @@ for framerate in framerates:
         phase_cube = np.array(phase_cube)
        
         # Construct output filename
-        output_filename = (f'vlt_turbulence_cube_phase_seeing_{seeing}arcsec_L_{outer_scale}m_windspeed_{velocity}mps_'
-                           f'lambda_{wl*1e9:.0f}nm_pup_{turbulence_pupil_size}m_{framerate:.1f}kHz_cube2.fits')
+        output_filename = (f'vlt_turbulence_cube_phase_seeing_{seeing}arcsec_L_{outer_scale}m_tau0_5ms_'
+                           f'lambda_{wl*1e9:.0f}nm_pup_{turbulence_pupil_size}m_{framerate:.1f}kHz.fits')
         output_file_path = os.path.join(folder_turbulence / 'Papyrus/trials', output_filename)
 
         # Save the 3D data cube as a FITS file with overwrite enabled

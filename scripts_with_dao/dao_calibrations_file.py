@@ -166,6 +166,8 @@ plt.colorbar()
 plt.title('Reference Image')
 plt.show()
 
+#%%
+
 # Display the Focal plane image
 n_frames=20
 fp_image = (np.mean([camera_fp.get_data().astype(np.float32) for i in range(n_frames)], axis=0)).astype(camera_fp.get_data().dtype)
@@ -197,8 +199,8 @@ calibration_repetitions = 1
 #mode_repetitions = {0: 10, 3: 10} # Repeat the 0th mode ten times, the 3rd mode ten times, rest default to 1
 #mode_repetitions = [2, 3]  # Repeat the 0th mode twice, the 1st mode three times, beyond the 1st default to 1
 
-mode_repetitions = [100, 100]
-#mode_repetitions = [100] * setup.nmodes_KL
+mode_repetitions = [100, 100] + [4] * (setup.nmodes_KL - 2)
+#mode_repetitions = [1] * setup.nmodes_KL
 
 # Run calibration and compute matrices
 # use the ref img, mask directly from shared memories 

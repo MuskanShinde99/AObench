@@ -41,7 +41,7 @@ folder_gui = config.folder_gui
 #%% Start the laser
 
 channel = 1
-las = Laser("/dev/ttyUSB1", channel)
+las = Laser("/dev/ttyUSB0", channel)
 # las.enable(1)  # 1 to turn on laser, 0 to turn off
 las.set_current(49)  # 55mA is a good value for pyramid images
 print('Laser is Accessible')
@@ -131,7 +131,7 @@ small_pupil_mask = pupil_mask[offset_height:offset_height + npix_small_pupil_gri
 #%% Configuration deformable mirror
 
 # Number of actuators
-nact = 40
+nact = 17
 
 deformable_mirror = DM(
     small_pupil_grid,
@@ -177,7 +177,7 @@ data_pupil = data_pupil + data_focus
 
 #  [-0.20279761534322915, 0.19930230616260092]
 # Create a Tip-Tilt (TT) matrix with specified amplitudes as the diagonal elements
-tt_amplitudes = [-0.20279761534322915, 0.19930230616260092] # Tip and Tilt amplitudes
+tt_amplitudes = [-0.220008023872185, 0.14508472848073] # Tip and Tilt amplitudes
 tt_amplitude_matrix = np.diag(tt_amplitudes)
 tt_matrix = tt_amplitude_matrix @ KL2Act[0:2, :]  # Select modes 1 (tip) and 2 (tilt)
 

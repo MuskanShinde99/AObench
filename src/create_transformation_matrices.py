@@ -24,17 +24,29 @@ from src.dao_setup import init_setup
 import src.dao_setup as dao_setup
 from src.transformation_matrices_functions import *
 from src.shm_loader import shm
+from src.hardware import DM
 
 #KL2Act_shm = shm.KL2Act_shm
 #KL2Phs_shm = shm.KL2Phs_shm
 
 setup = init_setup()
 
+setup.nact = nact = 17
+
+deformable_mirror = DM(
+    setup.small_pupil_grid,
+    setup.small_pupil_mask,
+    setup.pupil_size,
+    setup.nact,
+)
+
+dm_modes_full = deformable_mirror.dm_modes_full
+
 
 Act2Phs, Phs2Act = compute_Act2Phs(
     setup.nact,
     setup.npix_small_pupil_grid,
-    dao_setup.dm_modes_full,
+    dm_modes_full,
     setup.folder_transformation_matrices,
     verbose=True,
 )
@@ -46,8 +58,8 @@ nmodes_kl = dao_setup.nact_valid
 KL2Act, KL2Phs = compute_KL(
     setup.nact,
     setup.npix_small_pupil_grid,
-    nmodes_kl,
-    dao_setup.dm_modes_full,
+    185,
+    dm_modes_full,
     Act2Phs,
     Phs2Act,
     dao_setup.small_pupil_mask,

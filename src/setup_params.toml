@@ -1,5 +1,5 @@
 [geneva]
-nact = 40
+nact = 17 #40
 img_size_wfs_cam = 124
 img_size_fp_cam = 600
 
@@ -10,8 +10,8 @@ img_size_fp_cam_x = 600
 img_size_fp_cam_y = 600
 
 npix_small_pupil_grid = 550
-nmodes_KL = 289
-nmodes_dm = 289
+nmodes_KL = 289 #1600
+nmodes_dm = 289 #1600
 
 [ohp]
 nact = 17
